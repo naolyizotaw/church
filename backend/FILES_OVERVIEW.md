@@ -420,7 +420,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 **Environment:**
 - [ ] Create `.env` file
 - [ ] Set secure `JWT_SECRET`
-- [ ] Configure `MONGO_URI`
+- [ ] Configure `CONNECTION_STRING`
 - [ ] Set `NODE_ENV=production`
 
 **Dependencies:**

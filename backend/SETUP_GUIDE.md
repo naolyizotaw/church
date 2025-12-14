@@ -47,13 +47,13 @@ Create a `.env` file in the `backend` directory:
 # For Local MongoDB:
 NODE_ENV=development
 PORT=6001
-MONGO_URI=mongodb://localhost:27017/church_db
+CONNECTION_STRING=mongodb://localhost:27017/church_db
 JWT_SECRET=your_random_secret_key_min_32_characters_long
 
 # For MongoDB Atlas (Cloud):
 NODE_ENV=development
 PORT=6001
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/church_db?retryWrites=true&w=majority
+CONNECTION_STRING=mongodb+srv://username:password@cluster.mongodb.net/church_db?retryWrites=true&w=majority
 JWT_SECRET=your_random_secret_key_min_32_characters_long
 ```
 
@@ -137,7 +137,7 @@ dotenv.config();
 
 const createAdmin = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.CONNECTION_STRING);
     console.log("Connected to MongoDB");
 
     const adminUser = await User.create({
@@ -300,7 +300,7 @@ npm install
 ### Issue: "MongoNetworkError"
 **Solution:**
 - Check if MongoDB is running (local)
-- Verify MONGO_URI in .env
+- Verify CONNECTION_STRING in .env
 - Check network/firewall settings
 - For Atlas: Whitelist your IP address in Atlas dashboard
 
@@ -322,7 +322,7 @@ npm install
 |----------|-------------|---------|
 | NODE_ENV | Environment mode | development or production |
 | PORT | Server port | 6001 |
-| MONGO_URI | MongoDB connection string | mongodb://localhost:27017/church_db |
+| CONNECTION_STRING | MongoDB connection string | mongodb://localhost:27017/church_db |
 | JWT_SECRET | Secret key for JWT tokens | 32+ character random string |
 
 ## Next Steps

@@ -405,7 +405,7 @@ router.post("/", protect, admin, upload.single("file"), createSermon);
 ```env
 NODE_ENV=production
 PORT=6001
-MONGO_URI=your_production_mongodb_uri
+CONNECTION_STRING=your_production_mongodb_uri
 JWT_SECRET=your_production_jwt_secret
 ```
 

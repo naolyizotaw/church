@@ -378,7 +378,7 @@ Create a `.env` file in the backend root:
 ```env
 NODE_ENV=development
 PORT=6001
-MONGO_URI=mongodb://localhost:27017/church_db
+CONNECTION_STRING=mongodb://localhost:27017/church_db
 JWT_SECRET=your_jwt_secret_key_here
 ```
 

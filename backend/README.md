@@ -61,7 +61,7 @@ A complete RESTful API backend for a church website built with Node.js, Express,
    ```env
    NODE_ENV=development
    PORT=6001
-   MONGO_URI=mongodb://localhost:27017/church_db
+   CONNECTION_STRING=mongodb://localhost:27017/church_db
    JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
    ```
 
@@ -345,7 +345,7 @@ Enable detailed logging by checking console output. All errors are logged with `
 ### Issue: Cannot connect to MongoDB
 **Solution**: 
 - Verify MongoDB is running
-- Check MONGO_URI in .env file
+- Check CONNECTION_STRING in .env file
 - Ensure network connectivity
 
 ## Deployment
@@ -354,7 +354,7 @@ Enable detailed logging by checking console output. All errors are logged with `
 ```env
 NODE_ENV=production
 PORT=6001
-MONGO_URI=your_production_mongodb_uri
+CONNECTION_STRING=your_production_mongodb_uri
 JWT_SECRET=your_super_secret_production_jwt_key
 ```
 
