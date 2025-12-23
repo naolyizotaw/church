@@ -89,18 +89,18 @@ const Home = () => {
     <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-white dark:bg-background-dark text-text-main dark:text-white font-body">
 
       {/* --- Header --- */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#f0f4f4] dark:bg-background-dark/95 dark:border-gray-800 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 dark:bg-background-dark/95 dark:border-gray-800 shadow-sm">
         <div className="flex items-center justify-between px-4 py-4 md:px-10">
           <div className="flex items-center gap-3">
             <Church className="text-primary" size={32} strokeWidth={2} />
             <h2 className="hidden md:block text-lg font-bold text-text-main dark:text-white">Kerabu Full Gospel Church</h2>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#home" className="text-sm font-medium hover:text-primary transition-colors">Home</a>
-            <a href="#about" className="text-sm font-medium hover:text-primary transition-colors">About</a>
-            <a href="#ministries" className="text-sm font-medium hover:text-primary transition-colors">Ministries</a>
-            <a href="#sermons" className="text-sm font-medium hover:text-primary transition-colors">Sermons</a>
-            <a href="#give" className="text-sm font-medium hover:text-primary transition-colors">Give</a>
+            <a href="#home" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Home</a>
+            <a href="#about" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">About</a>
+            <a href="#ministries" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Ministries</a>
+            <a href="#sermons" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Sermons</a>
+            <a href="#give" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Give</a>
           </nav>
           <div className="flex items-center gap-3">
             {/* Theme Toggle Button */}
@@ -113,12 +113,12 @@ const Home = () => {
               {darkMode ? (
                 <Sun size={20} className="text-yellow-500" />
               ) : (
-                <Moon size={20} className="text-gray-600" />
+                <Moon size={20} className="text-gray-700" />
               )}
             </button>
             
             {/* Language Switcher */}
-            <button className="hidden sm:flex items-center justify-center rounded-lg h-9 px-3 bg-primary/10 hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
+            <button className="hidden sm:flex items-center justify-center rounded-lg h-9 px-3 bg-gray-100 hover:bg-gray-200 dark:bg-primary/10 dark:hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
               EN | አማ
             </button>
             
@@ -136,11 +136,11 @@ const Home = () => {
         {mobileMenuOpen && (
           <div className="md:hidden bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800">
             <nav className="flex flex-col px-4 py-4 gap-2">
-              <a href="#home" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Home</a>
-              <a href="#about" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">About</a>
-              <a href="#ministries" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Ministries</a>
-              <a href="#sermons" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Sermons</a>
-              <a href="#give" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Give</a>
+              <a href="#home" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Home</a>
+              <a href="#about" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">About</a>
+              <a href="#ministries" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Ministries</a>
+              <a href="#sermons" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Sermons</a>
+              <a href="#give" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Give</a>
               
               {/* Mobile Theme Toggle */}
               <div className="border-t border-gray-200 dark:border-gray-800 mt-2 pt-3">
@@ -194,10 +194,10 @@ const Home = () => {
                 </p>
               </div>
               <div className="flex flex-wrap gap-4 justify-center z-10 mt-2">
-                <button className="flex min-w-[160px] items-center justify-center rounded-lg h-12 px-8 bg-primary hover:bg-primary-dark text-text-main font-bold text-base transition-all shadow-lg hover:shadow-xl hover:scale-105">
+                <button className="flex min-w-[160px] items-center justify-center rounded-lg h-12 px-8 bg-primary hover:bg-primary-dark text-white font-bold text-base transition-all shadow-lg hover:shadow-xl hover:scale-105">
                   Join Us This Sunday
                 </button>
-                <button className="flex min-w-[160px] items-center justify-center gap-2 rounded-lg h-12 px-8 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold text-base transition-all hover:scale-105">
+                <button className="flex min-w-[160px] items-center justify-center gap-2 rounded-lg h-12 px-8 bg-gray-800/80 hover:bg-gray-800 backdrop-blur-md border border-white/20 text-white font-bold text-base transition-all hover:scale-105">
                   <PlayCircle size={20} />
                   Watch Sermons
                 </button>
@@ -207,9 +207,9 @@ const Home = () => {
         </section>
 
         {/* --- Scripture of the Day --- */}
-        <section className="w-full py-12 md:py-16 bg-background-light dark:bg-background-dark">
+        <section className="w-full py-12 md:py-16 bg-gray-50 dark:bg-background-dark">
           <div className="w-full px-4 md:px-10">
-            <div className="bg-white dark:bg-[#1a2c32] rounded-2xl p-8 md:p-14 shadow-md border border-[#e8eded] dark:border-gray-800 flex flex-col items-center text-center">
+            <div className="bg-white dark:bg-[#1a2c32] rounded-2xl p-8 md:p-14 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center">
               <div className="flex items-center gap-3 mb-6">
                 <span className="h-px w-10 bg-primary/40"></span>
                 <p className="text-primary text-xs md:text-sm font-bold uppercase tracking-widest">Scripture of the Day | የዕለቱ ቃል</p>
@@ -219,7 +219,7 @@ const Home = () => {
                 <>
                   <h2 className="text-text-main dark:text-gray-100 text-2xl md:text-4xl font-bold leading-relaxed mb-5 font-display max-w-[800px]">{verse.text}</h2>
                   <h3 className="text-text-muted dark:text-gray-300 text-lg md:text-2xl font-normal leading-relaxed mb-7 font-display max-w-[800px]">{verse.amharic_text}</h3>
-                  <p className="text-xs md:text-sm font-bold text-text-muted dark:text-gray-400 bg-background-light dark:bg-background-dark px-5 py-2.5 rounded-full">
+                  <p className="text-xs md:text-sm font-bold text-text-muted dark:text-gray-400 bg-gray-100 dark:bg-background-dark px-5 py-2.5 rounded-full">
                     {verse.reference} | {verse.amharic_ref}
                   </p>
                 </>
@@ -261,7 +261,7 @@ const Home = () => {
         </section>
 
         {/* --- Newsletter CTA --- */}
-        <section className="w-full bg-gradient-to-br from-primary/8 via-primary/10 to-primary/5 dark:from-primary/10 dark:via-primary/5 dark:to-primary/8 border-y border-primary/15">
+        <section className="w-full bg-[#e6f7fb] dark:bg-[#0d1618] border-y border-primary/20 dark:border-gray-800">
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4 md:px-10 py-14 md:py-16">
             <div className="flex flex-col gap-2 text-center md:text-left max-w-md">
               <h3 className="text-2xl md:text-3xl font-bold text-text-main dark:text-white">Stay Connected with Kerabu</h3>
@@ -269,7 +269,7 @@ const Home = () => {
             </div>
             <form onSubmit={handleSubscribe} className="flex w-full max-w-lg gap-3">
               <input 
-                className="flex-1 h-12 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-background-dark dark:text-white px-4 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none shadow-sm transition-all" 
+                className="flex-1 h-12 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a2c32] dark:text-white px-4 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none shadow-sm transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500" 
                 placeholder="Enter your email address" 
                 type="email" 
                 value={email}
@@ -278,7 +278,7 @@ const Home = () => {
               />
               <button 
                 type="submit"
-                className="h-12 px-8 rounded-lg bg-primary text-text-main font-bold hover:bg-primary-dark transition-all shadow-sm hover:shadow-md hover:scale-105"
+                className="h-12 px-8 rounded-lg bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-sm hover:shadow-md hover:scale-105"
               >
                 Subscribe
               </button>
@@ -288,7 +288,7 @@ const Home = () => {
       </main>
 
       {/* --- Footer --- */}
-      <footer className="bg-background-light dark:bg-[#0d1618] pt-16 pb-8 border-t border-[#e8eded] dark:border-gray-800">
+      <footer className="bg-gray-50 dark:bg-[#0d1618] pt-16 pb-8 border-t border-gray-200 dark:border-gray-800">
         <div className="w-full px-4 md:px-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
             {/* Brand Column */}
