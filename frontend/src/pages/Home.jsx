@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAnnouncements } from '../services/api';
-import AnnouncementCard from '../components/AnnouncementCard.js';
+import AnnouncementCard from '../components/AnnouncementCard.jsx';
 import { Church, Menu, PlayCircle, ArrowRight, MapPin, Mail, Youtube, Facebook, Twitter, X } from 'lucide-react';
 
 const Home = () => {
