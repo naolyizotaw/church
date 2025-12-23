@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAnnouncements } from '../services/api';
 import AnnouncementCard from '../components/AnnouncementCard.jsx';
-import { Church, Menu, PlayCircle, ArrowRight, MapPin, Mail, Youtube, Facebook, Twitter, X } from 'lucide-react';
+import { Church, Menu, PlayCircle, ArrowRight, MapPin, Mail, Youtube, Facebook, Twitter, X, Sun, Moon } from 'lucide-react';
 
 const Home = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -9,6 +9,33 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    
+    // Default to light mode, only use dark mode if explicitly saved
+    if (savedTheme === 'dark') {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  // Toggle theme
+  const toggleTheme = () => {
+    setDarkMode(!darkMode);
+    if (!darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   useEffect(() => {
     const getAnnouncements = async () => {
@@ -63,7 +90,7 @@ const Home = () => {
 
       {/* --- Header --- */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#f0f4f4] dark:bg-background-dark/95 dark:border-gray-800 shadow-sm">
-        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-4 md:px-10">
+        <div className="flex items-center justify-between px-4 py-4 md:px-10">
           <div className="flex items-center gap-3">
             <Church className="text-primary" size={32} strokeWidth={2} />
             <h2 className="hidden md:block text-lg font-bold text-text-main dark:text-white">Kerabu Full Gospel Church</h2>
@@ -75,10 +102,27 @@ const Home = () => {
             <a href="#sermons" className="text-sm font-medium hover:text-primary transition-colors">Sermons</a>
             <a href="#give" className="text-sm font-medium hover:text-primary transition-colors">Give</a>
           </nav>
-          <div className="flex items-center gap-4">
-            <button className="flex items-center justify-center rounded-lg h-9 px-3 bg-primary/10 hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle Button */}
+            <button 
+              onClick={toggleTheme}
+              className="flex items-center justify-center rounded-lg h-9 w-9 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle theme"
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {darkMode ? (
+                <Sun size={20} className="text-yellow-500" />
+              ) : (
+                <Moon size={20} className="text-gray-600" />
+              )}
+            </button>
+            
+            {/* Language Switcher */}
+            <button className="hidden sm:flex items-center justify-center rounded-lg h-9 px-3 bg-primary/10 hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
               EN | አማ
             </button>
+            
+            {/* Mobile Menu Toggle */}
             <button 
               className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -97,6 +141,34 @@ const Home = () => {
               <a href="#ministries" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Ministries</a>
               <a href="#sermons" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Sermons</a>
               <a href="#give" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors">Give</a>
+              
+              {/* Mobile Theme Toggle */}
+              <div className="border-t border-gray-200 dark:border-gray-800 mt-2 pt-3">
+                <button 
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors"
+                >
+                  <span>Theme</span>
+                  <div className="flex items-center gap-2">
+                    {darkMode ? (
+                      <>
+                        <Sun size={18} className="text-yellow-500" />
+                        <span className="text-sm text-text-muted dark:text-gray-400">Light</span>
+                      </>
+                    ) : (
+                      <>
+                        <Moon size={18} className="text-gray-600" />
+                        <span className="text-sm text-text-muted dark:text-gray-400">Dark</span>
+                      </>
+                    )}
+                  </div>
+                </button>
+                
+                {/* Mobile Language Switcher */}
+                <button className="w-full sm:hidden mt-2 py-2 px-3 rounded-lg bg-primary/10 hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
+                  EN | አማ
+                </button>
+              </div>
             </nav>
           </div>
         )}
@@ -105,7 +177,7 @@ const Home = () => {
       <main className="flex-grow" id="home">
         {/* --- Hero Section --- */}
         <section className="w-full bg-white dark:bg-background-dark">
-          <div className="mx-auto max-w-[1280px] px-4 md:px-10 py-6 md:py-10">
+          <div className="w-full px-4 md:px-10 py-6 md:py-10">
             <div
               className="relative overflow-hidden rounded-2xl min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center p-8 md:p-16 gap-8 bg-cover bg-center shadow-xl"
               style={{ backgroundImage: `linear-gradient(rgba(17, 30, 33, 0.5) 0%, rgba(17, 30, 33, 0.7) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuB3T9CfnmZFfXyWfhjoQShuvSBI9_u7gJkTMIM2MF2Qbr268LX1ETxNyQyh3mFpacwwlvlO8wZQ17JDZ9GpRg26isrLyvUgzyJjFe2opGMw1Kxq_IHdQq6VmJFoK2vF_TsF4vUm9FMaRF7vVyyFukhoq-h08HN3zVZaF12qRcYz6dL2ujdenVXctDjnPwvk6F_4_oCLbCyUbCTwj2Ufyw3_SfhSWwtLgEeqin5qkwenRgY4myNSO2qSb3xNekevCEBTyRORy1IdBsQ')` }}
@@ -136,7 +208,7 @@ const Home = () => {
 
         {/* --- Scripture of the Day --- */}
         <section className="w-full py-12 md:py-16 bg-background-light dark:bg-background-dark">
-          <div className="mx-auto max-w-[960px] w-full px-4 md:px-10">
+          <div className="w-full px-4 md:px-10">
             <div className="bg-white dark:bg-[#1a2c32] rounded-2xl p-8 md:p-14 shadow-md border border-[#e8eded] dark:border-gray-800 flex flex-col items-center text-center">
               <div className="flex items-center gap-3 mb-6">
                 <span className="h-px w-10 bg-primary/40"></span>
@@ -162,7 +234,7 @@ const Home = () => {
 
         {/* --- Upcoming Events --- */}
         <section className="w-full py-12 md:py-16 bg-white dark:bg-background-dark" id="events">
-          <div className="mx-auto max-w-[1280px] w-full px-4 md:px-10">
+          <div className="w-full px-4 md:px-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4 pb-6 border-b border-[#e8eded] dark:border-gray-800">
               <div className="flex flex-col gap-2">
                 <h2 className="text-text-main dark:text-white text-3xl md:text-4xl font-bold tracking-tight">Upcoming Events</h2>
@@ -190,7 +262,7 @@ const Home = () => {
 
         {/* --- Newsletter CTA --- */}
         <section className="w-full bg-gradient-to-br from-primary/8 via-primary/10 to-primary/5 dark:from-primary/10 dark:via-primary/5 dark:to-primary/8 border-y border-primary/15">
-          <div className="mx-auto max-w-[1280px] w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4 md:px-10 py-14 md:py-16">
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4 md:px-10 py-14 md:py-16">
             <div className="flex flex-col gap-2 text-center md:text-left max-w-md">
               <h3 className="text-2xl md:text-3xl font-bold text-text-main dark:text-white">Stay Connected with Kerabu</h3>
               <p className="text-text-muted dark:text-gray-400 text-base">Get updates on services, events, and prayer requests.</p>
@@ -217,7 +289,7 @@ const Home = () => {
 
       {/* --- Footer --- */}
       <footer className="bg-background-light dark:bg-[#0d1618] pt-16 pb-8 border-t border-[#e8eded] dark:border-gray-800">
-        <div className="mx-auto max-w-[1280px] w-full px-4 md:px-10">
+        <div className="w-full px-4 md:px-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
             {/* Brand Column */}
             <div className="flex flex-col gap-4">
