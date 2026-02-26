@@ -8,6 +8,7 @@ import Events from './pages/Events';
 import Sermons from './pages/Sermons';
 import Announcements from './pages/Announcements';
 import Contact from './pages/Contact';
+import Services from './pages/Services';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/services" element={<Services />} />
         <Route path="/ministries" element={<Ministries />} />
         <Route path="/give" element={<Give />} />
         <Route path="/events" element={<Events />} />

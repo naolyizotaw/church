@@ -24,9 +24,10 @@ export default function Navbar() {
         </Link>
         <div style={styles.links}>
           <Link to="/" style={linkStyle('/')}>Home</Link>
-          <Link to="/about" style={linkStyle('/about')}>About Us</Link>
-          <Link to="/ministries" style={linkStyle('/ministries')}>Ministries</Link>
-          <Link to="/sermons" style={linkStyle('/sermons')}>Sermons</Link>
+          <Link to="/about" style={linkStyle('/about')}>About</Link>
+          <Link to="/services" style={linkStyle('/services')}>Services</Link>
+          <Link to="/events" style={linkStyle('/events')}>Events</Link>
+          <Link to="/contact" style={linkStyle('/contact')}>Contact</Link>
           <Link to="/give" style={styles.giveBtn}>Give</Link>
         </div>
       </div>

@@ -12,6 +12,8 @@ import pageRoutes from "./routes/pageRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import sermonRoutes from "./routes/sermonRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import serviceRoutes from "./routes/serviceRoutes.js";
+import programRoutes from "./routes/programRoutes.js";
 
 dotenv.config();
 
@@ -38,6 +40,8 @@ app.use("/api/pages", pageRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/sermons", sermonRoutes);
 app.use("/api/contacts", contactRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/programs", programRoutes);
 
 
 
