@@ -1,387 +1,472 @@
-import React, { useState, useEffect } from 'react';
-import { fetchAnnouncements } from '../services/api';
-import AnnouncementCard from '../components/AnnouncementCard.jsx';
-import { Church, Menu, PlayCircle, ArrowRight, MapPin, Mail, Youtube, Facebook, Twitter, X, Sun, Moon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import api from '../api/axios';
+import Footer from '../components/Footer';
 
-const Home = () => {
-  const [announcements, setAnnouncements] = useState([]);
-  const [verse, setVerse] = useState(null);
-  const [loading, setLoading] = useState(true);
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+const EVENT_GRADIENTS = [
+  'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+  'linear-gradient(135deg, #10b981 0%, #0ea5e9 100%)',
+  'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+];
+
+const PlayIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 6 }}>
+    <circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.25)" />
+    <polygon points="6,4.5 12,8 6,11.5" fill="white" />
+  </svg>
+);
+
+export default function Home() {
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
   const [email, setEmail] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Initialize theme from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    
-    // Default to light mode, only use dark mode if explicitly saved
-    if (savedTheme === 'dark') {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  // Toggle theme
-  const toggleTheme = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
-    const getAnnouncements = async () => {
-      try {
-        const data = await fetchAnnouncements();
-        setAnnouncements(data);
-      } catch (error) {
-        console.error("Failed to fetch announcements:", error);
-      }
-    };
-
-    const getVerse = async () => {
-      try {
-        // Fetching the specific verse from the design for consistency
-        const response = await fetch('https://bible-api.com/hebrews%2013:8');
-        const data = await response.json();
-        setVerse({
-          text: `"${data.text.trim()}"`,
-          reference: `${data.reference}`,
-          amharic_text: '"ኢየሱስ ክርስቶስ ትናንትና ዛሬ እንዲሁም ለዘላለም አንድ ነው።"',
-          amharic_ref: "ዕብራውያን 13፥8"
-        });
-      } catch (error) {
-        console.error("Failed to fetch verse:", error);
-        // Fallback verse in case of API failure
-        setVerse({
-          text: '"Jesus Christ is the same yesterday and today and forever."',
-          reference: "Hebrews 13:8",
-          amharic_text: '"ኢየሱስ ክርስቶስ ትናንትና ዛሬ እንዲሁም ለዘላለም አንድ ነው።"',
-          amharic_ref: "ዕብራውያን 13፥8"
-        });
-      }
-    };
-
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([getAnnouncements(), getVerse()]);
-      setLoading(false);
-    };
-
-    loadData();
+    api.get('/events')
+      .then((res) => setEvents(res.data.slice(0, 3)))
+      .catch(() => {})
+      .finally(() => setEventsLoading(false));
   }, []);
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-    console.log('Subscribing email:', email);
-    setEmail('');
+    if (email) setSubscribed(true);
   };
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-white dark:bg-background-dark text-text-main dark:text-white font-body">
+    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-      {/* --- Header --- */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 dark:bg-background-dark/95 dark:border-gray-800 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-4 md:px-10">
-          <div className="flex items-center gap-3">
-            <Church className="text-primary" size={32} strokeWidth={2} />
-            <h2 className="hidden md:block text-lg font-bold text-text-main dark:text-white">Kerabu Full Gospel Church</h2>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#home" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Home</a>
-            <a href="#about" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">About</a>
-            <a href="#ministries" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Ministries</a>
-            <a href="#sermons" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Sermons</a>
-            <a href="#give" className="text-sm font-medium text-text-main dark:text-gray-300 hover:text-primary transition-all border-b-2 border-transparent hover:border-primary pb-1">Give</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            {/* Theme Toggle Button */}
-            <button 
-              onClick={toggleTheme}
-              className="flex items-center justify-center rounded-lg h-9 w-9 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle theme"
-              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {darkMode ? (
-                <Sun size={20} className="text-yellow-500" />
-              ) : (
-                <Moon size={20} className="text-gray-700" />
-              )}
-            </button>
-            
-            {/* Language Switcher */}
-            <button className="hidden sm:flex items-center justify-center rounded-lg h-9 px-3 bg-gray-100 hover:bg-gray-200 dark:bg-primary/10 dark:hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
-              EN | አማ
-            </button>
-            
-            {/* Mobile Menu Toggle */}
-            <button 
-              className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section style={heroStyles.section}>
+        <div style={heroStyles.overlay} />
+        <div style={heroStyles.content}>
+          <h1 style={heroStyles.title}>
+            Welcome to Kerabu Full Gospel<br />Believers Church
+          </h1>
+          <p style={heroStyles.amharic}>
+            እንኳን ወደ ከራቡ ሙሉ ወንጌል አማኞች ቤተክርስቲያን በደህና መጡ
+          </p>
+          <p style={heroStyles.subtitle}>
+            A place of faith, hope, and community where everyone is welcome.
+          </p>
+          <div style={heroStyles.buttons}>
+            <Link to="/events" style={heroStyles.primaryBtn}>Join Us This Sunday</Link>
+            <Link to="/sermons" style={heroStyles.secondaryBtn}>
+              <PlayIcon />
+              Watch Sermons
+            </Link>
           </div>
         </div>
-        
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800">
-            <nav className="flex flex-col px-4 py-4 gap-2">
-              <a href="#home" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Home</a>
-              <a href="#about" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">About</a>
-              <a href="#ministries" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Ministries</a>
-              <a href="#sermons" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Sermons</a>
-              <a href="#give" className="py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary font-medium transition-all border-l-2 border-transparent hover:border-primary">Give</a>
-              
-              {/* Mobile Theme Toggle */}
-              <div className="border-t border-gray-200 dark:border-gray-800 mt-2 pt-3">
-                <button 
-                  onClick={toggleTheme}
-                  className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors"
-                >
-                  <span>Theme</span>
-                  <div className="flex items-center gap-2">
-                    {darkMode ? (
-                      <>
-                        <Sun size={18} className="text-yellow-500" />
-                        <span className="text-sm text-text-muted dark:text-gray-400">Light</span>
-                      </>
-                    ) : (
-                      <>
-                        <Moon size={18} className="text-gray-600" />
-                        <span className="text-sm text-text-muted dark:text-gray-400">Dark</span>
-                      </>
-                    )}
+      </section>
+
+      {/* ── Scripture of the Day ─────────────────────────── */}
+      <section style={scriptureStyles.section}>
+        <div style={scriptureStyles.card}>
+          <div style={scriptureStyles.label}>
+            <span style={scriptureStyles.dot} />
+            <span style={scriptureStyles.labelText}>SCRIPTURE OF THE DAY &nbsp;|&nbsp; የዕለቱ ቃል</span>
+            <span style={scriptureStyles.dot} />
+          </div>
+          <div style={scriptureStyles.quoteIcon}>&ldquo;</div>
+          <blockquote style={scriptureStyles.quote}>
+            "Jesus Christ is the same yesterday and today and forever."
+          </blockquote>
+          <p style={scriptureStyles.amharic}>
+            "ኢየሱስ ክርስቶስ ትናንትና ዛሬ እንዲሁም ለዘላለም አንድ ነው::"
+          </p>
+          <p style={scriptureStyles.reference}>Hebrews 13:8 &nbsp;|&nbsp; ዕብራውያን 13:8</p>
+        </div>
+      </section>
+
+      {/* ── Upcoming Events ──────────────────────────────── */}
+      <section style={eventStyles.section}>
+        <div style={eventStyles.inner}>
+          <div style={eventStyles.header}>
+            <div>
+              <h2 style={eventStyles.heading}>Upcoming Events</h2>
+              <p style={eventStyles.subheading}>የቅርብ ጊዜ መርሃ ግብሮች</p>
+            </div>
+            <Link to="/events" style={eventStyles.viewAll}>View All Events &rarr;</Link>
+          </div>
+
+          {eventsLoading ? (
+            <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>Loading events…</p>
+          ) : events.length === 0 ? (
+            <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>No upcoming events at this time.</p>
+          ) : (
+            <div style={eventStyles.grid}>
+              {events.map((event, i) => {
+                const d = new Date(event.date);
+                const month = MONTH_ABBR[d.getMonth()];
+                const day = d.getDate();
+                const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                return (
+                  <div key={event._id} style={eventStyles.card}>
+                    <div style={{ ...eventStyles.cardImg, background: EVENT_GRADIENTS[i % 3] }}>
+                      <div style={eventStyles.dateBadge}>
+                        <span style={eventStyles.badgeMonth}>{month}</span>
+                        <span style={eventStyles.badgeDay}>{day}</span>
+                      </div>
+                    </div>
+                    <div style={eventStyles.cardBody}>
+                      <p style={eventStyles.cardTime}>{timeStr}</p>
+                      <h3 style={eventStyles.cardTitle}>{event.title}</h3>
+                      <p style={eventStyles.cardDesc}>{event.description}</p>
+                      {event.location && (
+                        <p style={eventStyles.cardLocation}>📍 {event.location}</p>
+                      )}
+                      <Link to="/events" style={eventStyles.learnMore}>Learn More &rsaquo;</Link>
+                    </div>
                   </div>
-                </button>
-                
-                {/* Mobile Language Switcher */}
-                <button className="w-full sm:hidden mt-2 py-2 px-3 rounded-lg bg-primary/10 hover:bg-primary/20 text-sm font-bold text-text-main dark:text-white transition-colors">
-                  EN | አማ
-                </button>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
-
-      <main className="flex-grow" id="home">
-        {/* --- Hero Section --- */}
-        <section className="w-full bg-white dark:bg-background-dark">
-          <div className="w-full px-4 md:px-10 py-6 md:py-10">
-            <div
-              className="relative overflow-hidden rounded-2xl min-h-[500px] md:min-h-[600px] flex flex-col items-center justify-center text-center p-8 md:p-16 gap-8 bg-cover bg-center shadow-xl"
-              style={{ backgroundImage: `linear-gradient(rgba(17, 30, 33, 0.5) 0%, rgba(17, 30, 33, 0.7) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuB3T9CfnmZFfXyWfhjoQShuvSBI9_u7gJkTMIM2MF2Qbr268LX1ETxNyQyh3mFpacwwlvlO8wZQ17JDZ9GpRg26isrLyvUgzyJjFe2opGMw1Kxq_IHdQq6VmJFoK2vF_TsF4vUm9FMaRF7vVyyFukhoq-h08HN3zVZaF12qRcYz6dL2ujdenVXctDjnPwvk6F_4_oCLbCyUbCTwj2Ufyw3_SfhSWwtLgEeqin5qkwenRgY4myNSO2qSb3xNekevCEBTyRORy1IdBsQ')` }}
-            >
-              <div className="max-w-[950px] flex flex-col gap-6 z-10">
-                <h1 className="text-white text-3xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight font-display">
-                  Welcome to Kerabu Full Gospel Believers Church
-                </h1>
-                <p className="text-white/95 text-xl md:text-3xl lg:text-4xl font-normal font-display">
-                  እንኳን ወደ ከራቡ ሙሉ ወንጌል አማኞች ቤተክርስቲያን በደህና መጡ
-                </p>
-                <p className="text-gray-100 text-lg md:text-xl font-normal max-w-3xl mx-auto mt-2">
-                  A place of faith, hope, and community where everyone is welcome.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-4 justify-center z-10 mt-2">
-                <button className="flex min-w-[160px] items-center justify-center rounded-lg h-12 px-8 bg-primary hover:bg-primary-dark text-white font-bold text-base transition-all shadow-lg hover:shadow-xl hover:scale-105">
-                  Join Us This Sunday
-                </button>
-                <button className="flex min-w-[160px] items-center justify-center gap-2 rounded-lg h-12 px-8 bg-gray-800/80 hover:bg-gray-800 backdrop-blur-md border border-white/20 text-white font-bold text-base transition-all hover:scale-105">
-                  <PlayCircle size={20} />
-                  Watch Sermons
-                </button>
-              </div>
+                );
+              })}
             </div>
-          </div>
-        </section>
+          )}
+        </div>
+      </section>
 
-        {/* --- Scripture of the Day --- */}
-        <section className="w-full py-12 md:py-16 bg-gray-50 dark:bg-background-dark">
-          <div className="w-full px-4 md:px-10">
-            <div className="bg-white dark:bg-[#1a2c32] rounded-2xl p-8 md:p-14 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="h-px w-10 bg-primary/40"></span>
-                <p className="text-primary text-xs md:text-sm font-bold uppercase tracking-widest">Scripture of the Day | የዕለቱ ቃል</p>
-                <span className="h-px w-10 bg-primary/40"></span>
-              </div>
-              {verse ? (
-                <>
-                  <h2 className="text-text-main dark:text-gray-100 text-2xl md:text-4xl font-bold leading-relaxed mb-5 font-display max-w-[800px]">{verse.text}</h2>
-                  <h3 className="text-text-muted dark:text-gray-300 text-lg md:text-2xl font-normal leading-relaxed mb-7 font-display max-w-[800px]">{verse.amharic_text}</h3>
-                  <p className="text-xs md:text-sm font-bold text-text-muted dark:text-gray-400 bg-gray-100 dark:bg-background-dark px-5 py-2.5 rounded-full">
-                    {verse.reference} | {verse.amharic_ref}
-                  </p>
-                </>
-              ) : (
-                 <div className="h-40 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-                 </div>
-              )}
-            </div>
+      {/* ── Stay Connected ───────────────────────────────── */}
+      <section style={newsletterStyles.section}>
+        <div style={newsletterStyles.inner}>
+          <div style={newsletterStyles.text}>
+            <h2 style={newsletterStyles.heading}>Stay Connected with Kerabu</h2>
+            <p style={newsletterStyles.sub}>Get updates on services, events, and prayer requests.</p>
           </div>
-        </section>
-
-        {/* --- Upcoming Events --- */}
-        <section className="w-full py-12 md:py-16 bg-white dark:bg-background-dark" id="events">
-          <div className="w-full px-4 md:px-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4 pb-6 border-b border-[#e8eded] dark:border-gray-800">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-text-main dark:text-white text-3xl md:text-4xl font-bold tracking-tight">Upcoming Events</h2>
-                <p className="text-text-muted dark:text-gray-400 text-base md:text-lg">የቤተክርስቲያን መርሐ ግብሮች</p>
-              </div>
-              <a href="#events" className="text-primary font-bold hover:underline flex items-center gap-2 group text-base">
-                View All Events
-                <ArrowRight className="transition-transform group-hover:translate-x-1" size={18} />
-              </a>
-            </div>
-            {loading ? (
-              <div className="text-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                <p className="mt-4 text-text-muted dark:text-gray-400">Loading Events...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {announcements.map(announcement => (
-                  <AnnouncementCard key={announcement.id} announcement={announcement} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* --- Newsletter CTA --- */}
-        <section className="w-full bg-[#e6f7fb] dark:bg-[#0d1618] border-y border-primary/20 dark:border-gray-800">
-          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4 md:px-10 py-14 md:py-16">
-            <div className="flex flex-col gap-2 text-center md:text-left max-w-md">
-              <h3 className="text-2xl md:text-3xl font-bold text-text-main dark:text-white">Stay Connected with Kerabu</h3>
-              <p className="text-text-muted dark:text-gray-400 text-base">Get updates on services, events, and prayer requests.</p>
-            </div>
-            <form onSubmit={handleSubscribe} className="flex w-full max-w-lg gap-3">
-              <input 
-                className="flex-1 h-12 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a2c32] dark:text-white px-4 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none shadow-sm transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500" 
-                placeholder="Enter your email address" 
-                type="email" 
+          {subscribed ? (
+            <p style={newsletterStyles.thanks}>Thank you for subscribing! ✓</p>
+          ) : (
+            <form onSubmit={handleSubscribe} style={newsletterStyles.form}>
+              <input
+                type="email"
+                placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                style={newsletterStyles.input}
               />
-              <button 
-                type="submit"
-                className="h-12 px-8 rounded-lg bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-sm hover:shadow-md hover:scale-105"
-              >
-                Subscribe
-              </button>
+              <button type="submit" style={newsletterStyles.btn}>Subscribe</button>
             </form>
-          </div>
-        </section>
-      </main>
-
-      {/* --- Footer --- */}
-      <footer className="bg-gray-50 dark:bg-[#0d1618] pt-16 pb-8 border-t border-gray-200 dark:border-gray-800">
-        <div className="w-full px-4 md:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
-            {/* Brand Column */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2.5 text-text-main dark:text-white">
-                <Church className="text-primary" size={36} strokeWidth={2} />
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold leading-tight">Kerabu</span>
-                  <span className="text-lg font-bold leading-tight">Full Gospel</span>
-                </div>
-              </div>
-              <p className="text-sm text-text-muted dark:text-gray-400 leading-relaxed">
-                Proclaiming the gospel, serving the community, and building a family of believers.
-              </p>
-              <div className="flex gap-3 mt-2">
-                  <a href="#" className="p-2 rounded-lg hover:bg-primary/10 text-text-muted hover:text-primary transition-all">
-                    <Facebook size={20} />
-                  </a>
-                  <a href="#" className="p-2 rounded-lg hover:bg-primary/10 text-text-muted hover:text-primary transition-all">
-                    <Twitter size={20} />
-                  </a>
-                  <a href="#" className="p-2 rounded-lg hover:bg-primary/10 text-text-muted hover:text-primary transition-all">
-                    <Youtube size={20} />
-                  </a>
-                  <a href="#" className="p-2 rounded-lg hover:bg-primary/10 text-text-muted hover:text-primary transition-all">
-                    <Mail size={20} />
-                  </a>
-              </div>
-            </div>
-            {/* Quick Links */}
-            <div>
-              <h4 className="font-bold mb-5 text-text-main dark:text-white text-base">Quick Links</h4>
-              <ul className="flex flex-col gap-2.5 text-sm text-text-muted dark:text-gray-400">
-                <li><a href="#about" className="hover:text-primary transition-colors hover:underline">About Us</a></li>
-                <li><a href="#beliefs" className="hover:text-primary transition-colors hover:underline">Our Beliefs</a></li>
-                <li><a href="#ministries" className="hover:text-primary transition-colors hover:underline">Ministries</a></li>
-                <li><a href="#give" className="hover:text-primary transition-colors hover:underline">Give Online</a></li>
-              </ul>
-            </div>
-            {/* Service Times */}
-            <div>
-              <h4 className="font-bold mb-5 text-text-main dark:text-white text-base">Service Times</h4>
-              <ul className="flex flex-col gap-3 text-sm text-text-muted dark:text-gray-400">
-                  <li className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-3">
-                      <span>Sunday Worship</span>
-                      <span className="font-semibold text-text-main dark:text-gray-200">10:00 AM</span>
-                  </li>
-                  <li className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-3">
-                      <span>Wednesday Prayer</span>
-                      <span className="font-semibold text-text-main dark:text-gray-200">6:00 PM</span>
-                  </li>
-                  <li className="flex justify-between items-center">
-                      <span>Friday Youth</span>
-                      <span className="font-semibold text-text-main dark:text-gray-200">5:00 PM</span>
-                  </li>
-              </ul>
-            </div>
-            {/* Visit Us */}
-            <div>
-                <h4 className="font-bold mb-5 text-text-main dark:text-white text-base">Visit Us</h4>
-                <div className="h-32 w-full rounded-xl bg-gray-200 dark:bg-gray-800 overflow-hidden relative cursor-pointer group shadow-sm hover:shadow-md transition-shadow">
-                    <img 
-                      alt="Map Location" 
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIpRj2umDRPLKsYL80hBhhpY9tLLDZ_8sfE1CBErNZYMNZYy32LCTVsN9_rCvfeZ4mu45Enwz5H2oBA_oz51a3MSw75HglqC083Xdfbygj_elNP599C1T__jgl5mM8O6uesZTw1xHAKpzucdLaq6MlzOtSqGVU2c-BQV6zmMPizjNtMk3foYj8DaMOEinyKfdrNnMy6dOY8M7JjcKlkLXFrzGCgOX7ceJLE9B8gLGlqKgTsXanmmQNuroFB4nazddv08VdGLZsZO8" 
-                      className="w-full h-full object-cover opacity-90" 
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
-                        <span className="bg-white text-text-main text-xs font-bold px-4 py-2 rounded-lg shadow-md group-hover:scale-105 transition-transform">
-                          Get Directions
-                        </span>
-                    </div>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-text-muted dark:text-gray-400 mt-4">
-                    <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="font-medium">Addis Ababa, Ethiopia</span>
-                      <span>Kerabu Full Gospel Church</span>
-                    </div>
-                </div>
-            </div>
-          </div>
-          <div className="mt-14 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-text-muted dark:text-gray-500">
-              <p>© 2024 Kerabu Full Gospel Believers Church. All rights reserved.</p>
-              <div className="flex gap-6">
-                  <a href="#privacy" className="hover:text-primary transition-colors hover:underline">Privacy Policy</a>
-                  <a href="#terms" className="hover:text-primary transition-colors hover:underline">Terms of Service</a>
-              </div>
-          </div>
+          )}
         </div>
-      </footer>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────── */}
+      <Footer />
     </div>
   );
+}
+
+/* ─── Styles ──────────────────────────────────────────────── */
+
+const heroStyles = {
+  section: {
+    position: 'relative',
+    minHeight: '520px',
+    display: 'flex',
+    alignItems: 'center',
+    backgroundImage: `url('/hero.jpg')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center top',
+    color: '#fff',
+  },
+  overlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(to bottom, rgba(10,20,50,0.72) 0%, rgba(10,20,50,0.65) 100%)',
+  },
+  content: {
+    position: 'relative',
+    zIndex: 1,
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '5rem 2rem',
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+    fontWeight: '800',
+    lineHeight: 1.25,
+    margin: '0 0 0.75rem',
+    color: '#ffffff',
+  },
+  amharic: {
+    fontSize: '1.1rem',
+    color: '#cbd5e1',
+    margin: '0 0 0.75rem',
+    fontStyle: 'italic',
+  },
+  subtitle: {
+    fontSize: '1.05rem',
+    color: '#cbd5e1',
+    margin: '0 0 2rem',
+  },
+  buttons: {
+    display: 'flex',
+    gap: '1rem',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  primaryBtn: {
+    background: '#0ea5e9',
+    color: '#fff',
+    textDecoration: 'none',
+    padding: '0.75rem 1.75rem',
+    borderRadius: '6px',
+    fontWeight: '700',
+    fontSize: '0.95rem',
+  },
+  secondaryBtn: {
+    background: 'rgba(255,255,255,0.12)',
+    border: '1.5px solid rgba(255,255,255,0.5)',
+    color: '#fff',
+    textDecoration: 'none',
+    padding: '0.75rem 1.75rem',
+    borderRadius: '6px',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    display: 'flex',
+    alignItems: 'center',
+  },
 };
 
-export default Home;
+const scriptureStyles = {
+  section: {
+    background: '#f1f5f9',
+    padding: '4rem 2rem',
+  },
+  card: {
+    background: '#ffffff',
+    maxWidth: '700px',
+    margin: '0 auto',
+    borderRadius: '12px',
+    padding: '2.5rem 3rem',
+    boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+    textAlign: 'center',
+  },
+  label: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+    marginBottom: '1.25rem',
+  },
+  dot: {
+    width: '28px',
+    height: '3px',
+    background: '#0ea5e9',
+    borderRadius: '2px',
+    display: 'inline-block',
+  },
+  labelText: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    letterSpacing: '0.1em',
+    color: '#0ea5e9',
+    textTransform: 'uppercase',
+  },
+  quoteIcon: {
+    fontSize: '4rem',
+    color: '#e2e8f0',
+    lineHeight: 0.8,
+    marginBottom: '0.5rem',
+    fontFamily: 'Georgia, serif',
+  },
+  quote: {
+    fontSize: '1.35rem',
+    fontWeight: '600',
+    color: '#1e293b',
+    lineHeight: 1.5,
+    margin: '0 0 0.75rem',
+    fontStyle: 'normal',
+    fontFamily: 'Georgia, serif',
+  },
+  amharic: {
+    fontSize: '1rem',
+    color: '#475569',
+    margin: '0 0 1rem',
+    fontStyle: 'italic',
+  },
+  reference: {
+    fontSize: '0.9rem',
+    color: '#94a3b8',
+    margin: 0,
+    fontWeight: '500',
+  },
+};
 
+const eventStyles = {
+  section: {
+    background: '#ffffff',
+    padding: '4rem 2rem',
+  },
+  inner: {
+    maxWidth: '1100px',
+    margin: '0 auto',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: '2rem',
+  },
+  heading: {
+    fontSize: '1.75rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    margin: '0 0 0.25rem',
+  },
+  subheading: {
+    color: '#64748b',
+    margin: 0,
+    fontSize: '0.95rem',
+  },
+  viewAll: {
+    color: '#0ea5e9',
+    textDecoration: 'none',
+    fontWeight: '600',
+    fontSize: '0.9rem',
+    whiteSpace: 'nowrap',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '1.5rem',
+  },
+  card: {
+    background: '#ffffff',
+    borderRadius: '10px',
+    overflow: 'hidden',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.09)',
+    border: '1px solid #f1f5f9',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  },
+  cardImg: {
+    height: '175px',
+    position: 'relative',
+  },
+  dateBadge: {
+    position: 'absolute',
+    top: '12px',
+    left: '12px',
+    background: 'rgba(255,255,255,0.95)',
+    borderRadius: '6px',
+    padding: '6px 10px',
+    textAlign: 'center',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+  },
+  badgeMonth: {
+    display: 'block',
+    fontSize: '0.65rem',
+    fontWeight: '800',
+    color: '#0ea5e9',
+    letterSpacing: '0.08em',
+  },
+  badgeDay: {
+    display: 'block',
+    fontSize: '1.4rem',
+    fontWeight: '800',
+    color: '#0ea5e9',
+    lineHeight: 1.1,
+  },
+  cardBody: {
+    padding: '1.25rem',
+  },
+  cardTime: {
+    fontSize: '0.8rem',
+    color: '#0ea5e9',
+    fontWeight: '600',
+    margin: '0 0 0.4rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+  cardTitle: {
+    fontSize: '1.05rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    margin: '0 0 0.5rem',
+  },
+  cardDesc: {
+    fontSize: '0.88rem',
+    color: '#475569',
+    margin: '0 0 0.5rem',
+    lineHeight: 1.5,
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+  cardLocation: {
+    fontSize: '0.82rem',
+    color: '#94a3b8',
+    margin: '0 0 0.75rem',
+  },
+  learnMore: {
+    color: '#0ea5e9',
+    textDecoration: 'none',
+    fontSize: '0.88rem',
+    fontWeight: '600',
+  },
+};
+
+const newsletterStyles = {
+  section: {
+    background: '#1e3a5f',
+    padding: '3.5rem 2rem',
+  },
+  inner: {
+    maxWidth: '900px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '2rem',
+    flexWrap: 'wrap',
+  },
+  text: {
+    flex: 1,
+  },
+  heading: {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    margin: '0 0 0.4rem',
+  },
+  sub: {
+    color: '#94a3b8',
+    margin: 0,
+    fontSize: '0.95rem',
+  },
+  form: {
+    display: 'flex',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+  },
+  input: {
+    padding: '0.65rem 1rem',
+    border: '1px solid #334155',
+    borderRadius: '6px',
+    fontSize: '0.95rem',
+    background: '#ffffff',
+    color: '#0f172a',
+    outline: 'none',
+    width: '240px',
+  },
+  btn: {
+    background: '#0ea5e9',
+    color: '#fff',
+    border: 'none',
+    padding: '0.65rem 1.5rem',
+    borderRadius: '6px',
+    fontWeight: '700',
+    fontSize: '0.95rem',
+    cursor: 'pointer',
+  },
+  thanks: {
+    color: '#4ade80',
+    fontWeight: '600',
+    fontSize: '1rem',
+  },
+};
