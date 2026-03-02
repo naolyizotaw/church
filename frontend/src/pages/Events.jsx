@@ -78,6 +78,7 @@ const FALLBACK_EVENTS = [
 ];
 
 const eventsPageCSS = `
+/* ═══ ENTRY ANIMATIONS ═══ */
 @keyframes eventsHeroFadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -86,30 +87,90 @@ const eventsPageCSS = `
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes eventsBadgePop {
-  0% { transform: scale(0.7); opacity: 0; }
-  60% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-}
 @keyframes eventsCalendarFade {
   from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
 }
-@keyframes eventsCategoryPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.3); }
-  50% { box-shadow: 0 0 0 6px rgba(14,165,233,0); }
+@keyframes eventsBorderSweep {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
-@keyframes eventsTagFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
+
+/* ═══ FLOATING CROSSES + ORBS (main section background) ═══ */
+@keyframes eventsFloatCross {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; }
+  8% { opacity: 1; }
+  75% { opacity: 0.7; }
+  100% { transform: translateY(-600px) rotate(25deg) scale(0.4); opacity: 0; }
+}
+@keyframes eventsFloatOrb {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  12% { opacity: 0.5; }
+  80% { opacity: 0.35; }
+  100% { transform: translateY(-550px) scale(0.15); opacity: 0; }
+}
+@keyframes eventsDoveFloat {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 0.5; }
+  50% { transform: translateY(-300px) translateX(40px) scale(0.85); opacity: 0.4; }
+  100% { transform: translateY(-600px) translateX(-20px) scale(0.3); opacity: 0; }
+}
+.events-bg-elements {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;
+}
+.events-float-cross {
+  position: absolute; bottom: -40px;
+  color: #0ea5e9;
+  font-size: 1.4rem;
+  animation: eventsFloatCross linear infinite;
+  user-select: none;
+  opacity: 0;
+  text-shadow: 0 0 8px rgba(14,165,233,0.25);
+}
+.events-float-orb {
+  position: absolute; bottom: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14,165,233,0.35), rgba(56,189,248,0.1), transparent);
+  animation: eventsFloatOrb linear infinite;
+  opacity: 0;
+}
+.events-float-dove {
+  position: absolute; bottom: -30px;
+  font-size: 1.1rem;
+  animation: eventsDoveFloat linear infinite;
+  user-select: none;
+  opacity: 0;
+  filter: grayscale(0.3);
+}
+
+/* ═══ HERO PARTICLES ═══ */
+@keyframes eventsHeroParticle {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-180px) scale(0.2); opacity: 0; }
+}
+.events-hero-particles {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;
+}
+.events-hero-particle {
+  position: absolute; bottom: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(14,165,233,0.5), transparent);
+  animation: eventsHeroParticle linear infinite;
 }
 
 .events-hero-content {
   animation: eventsHeroFadeIn 0.8s ease forwards;
 }
+
+/* ═══ CARD ENTRY ═══ */
+@keyframes eventsCardEntry {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .events-card-anim {
   opacity: 0;
-  animation: eventsCardSlideUp 0.6s ease forwards;
+  animation: eventsCardEntry 0.6s ease forwards;
 }
 .events-card-anim:nth-child(1) { animation-delay: 0.1s; }
 .events-card-anim:nth-child(2) { animation-delay: 0.2s; }
@@ -120,31 +181,159 @@ const eventsPageCSS = `
   animation: eventsCalendarFade 0.6s ease forwards;
 }
 
-.events-card-hover {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+/* ═══ CARD AMBIENT GLOW (always-on, subtle breathing) ═══ */
+@keyframes eventsCardBreathe {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    border-color: #e8ecf1;
+  }
+  50% {
+    box-shadow: 0 6px 28px rgba(14,165,233,0.1), 0 0 8px rgba(14,165,233,0.06);
+    border-color: #bae6fd;
+  }
 }
-.events-card-hover:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+.events-card-inner {
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease, border-color 0.4s ease;
+  animation: eventsCardBreathe 5s ease-in-out infinite;
 }
 
+/* ═══ CARD HOVER: FULL GLOW ═══ */
+.events-card-wrap:hover .events-card-inner {
+  transform: translateY(-8px);
+  box-shadow:
+    0 20px 50px rgba(14,165,233,0.18),
+    0 8px 20px rgba(0,0,0,0.06),
+    0 0 20px rgba(14,165,233,0.08);
+  border-color: #7dd3fc;
+  animation: none;
+}
+
+/* ═══ IMAGE ZOOM + CINEMATIC OVERLAY ═══ */
+.events-card-img {
+  transition: transform 0.5s ease, filter 0.5s ease;
+}
+.events-card-wrap:hover .events-card-img {
+  transform: scale(1.06);
+  filter: brightness(1.05);
+}
+.events-card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.events-card-wrap:hover .events-card-overlay {
+  opacity: 1;
+}
+
+/* ═══ BADGE + CATEGORY PILL ═══ */
+.events-badge-wrap {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+}
+.events-card-wrap:hover .events-badge-wrap {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+}
+.events-cat-pill {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.events-card-wrap:hover .events-cat-pill {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+/* ═══ TOP ACCENT SWEEP ═══ */
+.events-card-top-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #0ea5e9, #38bdf8, #7dd3fc, #0ea5e9, transparent);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+.events-card-wrap:hover .events-card-top-accent {
+  opacity: 1;
+  animation: eventsBorderSweep 1.8s linear infinite;
+}
+
+/* ═══ BORDER GLOW RING (hover only) ═══ */
+.events-card-inner::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 17px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, transparent 30%, #0ea5e9 50%, #38bdf8 60%, transparent 80%);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+.events-card-wrap:hover .events-card-inner::before {
+  opacity: 1;
+  animation: eventsBorderSweep 2.5s linear infinite;
+}
+
+/* ═══ CTA BUTTON GLOW + SHIMMER ═══ */
+@keyframes eventsCtaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
+}
 .events-cta-btn {
-  transition: background 0.2s ease, transform 0.15s ease;
+  position: relative; overflow: hidden;
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+.events-cta-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  pointer-events: none;
+}
+.events-card-wrap:hover .events-cta-btn {
+  animation: eventsCtaPulse 2s ease-in-out infinite;
 }
 .events-cta-btn:hover {
   background: #0284c7 !important;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(14,165,233,0.4);
+  animation: none !important;
+}
+.events-cta-btn:hover::after {
+  left: 120%;
+  transition: left 0.6s ease;
 }
 
+/* ═══ META ICON GLOW ═══ */
+.events-meta-icon {
+  transition: transform 0.25s ease, filter 0.25s ease;
+  display: flex;
+}
+.events-card-wrap:hover .events-meta-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 4px rgba(14,165,233,0.4));
+}
+
+/* ═══ FILTER PILLS ═══ */
 .events-filter-btn {
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   cursor: pointer;
 }
 .events-filter-btn:hover {
   border-color: #0ea5e9 !important;
   color: #0ea5e9 !important;
+  box-shadow: 0 0 10px rgba(14,165,233,0.15);
 }
 
+/* ═══ TABS ═══ */
 .events-tab-btn {
   transition: all 0.2s ease;
   cursor: pointer;
@@ -153,26 +342,177 @@ const eventsPageCSS = `
   color: #0f172a !important;
 }
 
-.events-cat-tag {
-  animation: eventsTagFloat 3s ease-in-out infinite;
+/* ═══ CALENDAR ═══ */
+@keyframes eventsTodayPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(14,165,233,0); }
+}
+.events-cal-today {
+  animation: eventsTodayPulse 2.5s ease-in-out infinite;
+}
+@keyframes eventsCalGlow {
+  0%, 100% {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-color: #f1f5f9;
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(14,165,233,0.08), 0 0 6px rgba(14,165,233,0.04);
+    border-color: #e0f2fe;
+  }
+}
+.events-calendar-wrap {
+  animation: eventsCalGlow 6s ease-in-out infinite;
+  transition: box-shadow 0.3s ease;
+}
+.events-calendar-wrap:hover {
+  box-shadow: 0 6px 24px rgba(14,165,233,0.12);
+  animation: none;
 }
 
 .events-nav-arrow {
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
 .events-nav-arrow:hover {
   background: #0ea5e9 !important;
   color: #fff !important;
+  transform: scale(1.1);
 }
 
 .events-cal-day {
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
 .events-cal-day:hover {
   background: #e0f2fe;
   border-radius: 50%;
+  transform: scale(1.12);
+}
+
+/* ═══ WEEKLY GATHERINGS GLOW ═══ */
+@keyframes eventsGatherGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0); border-color: #d1eef5; }
+  50% { box-shadow: 0 0 16px 2px rgba(14,165,233,0.1); border-color: #7dd3fc; }
+}
+.events-gather-wrap {
+  animation: eventsGatherGlow 5s ease-in-out 1s infinite;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.events-gather-wrap:hover {
+  box-shadow: 0 6px 24px rgba(14,165,233,0.15);
+  transform: translateY(-3px);
+  animation: none;
+}
+
+/* ═══ NEWSLETTER INPUT GLOW ═══ */
+.events-email-input {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.events-email-input:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+}
+
+/* ═══ STAY CONNECTED CTA ═══ */
+@keyframes eventsStayFloat {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 0.12; }
+  85% { opacity: 0.08; }
+  100% { transform: translateY(-160px) rotate(20deg); opacity: 0; }
+}
+@keyframes eventsStaySparkle {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  15% { opacity: 0.7; }
+  85% { opacity: 0.5; }
+  100% { transform: translateY(-80px) scale(0); opacity: 0; }
+}
+@keyframes eventsStayRays {
+  0%, 100% { opacity: 0.04; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.1; transform: scale(1.06) rotate(2deg); }
+}
+.events-stay-shapes {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.events-stay-shape {
+  position: absolute; bottom: -20px;
+  color: #0ea5e9; font-size: 1.5rem;
+  animation: eventsStayFloat linear infinite;
+  pointer-events: none; user-select: none;
+}
+.events-stay-sparkles {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.events-stay-sparkle {
+  position: absolute; bottom: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(14,165,233,0.55), transparent);
+  animation: eventsStaySparkle linear infinite;
+}
+.events-stay-rays {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(14,165,233,0.07) 0%, transparent 70%);
+  animation: eventsStayRays 6s ease-in-out infinite;
+}
+
+/* ═══ SUBSCRIBE BUTTON ═══ */
+@keyframes eventsSubPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.45), 0 0 20px rgba(14,165,233,0.15); }
+  50% { box-shadow: 0 0 0 8px rgba(14,165,233,0), 0 0 30px rgba(14,165,233,0.25); }
+}
+@keyframes eventsSubShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes eventsSubGlow {
+  0%, 100% { opacity: 0.5; filter: blur(12px); }
+  50% { opacity: 1; filter: blur(18px); }
+}
+.events-sub-btn {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  animation: eventsSubPulse 2.8s ease-in-out infinite;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%) !important;
+  background-size: 200% auto;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  overflow: hidden;
+  z-index: 1;
+}
+.events-sub-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: eventsSubShimmer 3.5s ease-in-out infinite;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+}
+.events-sub-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9, #0284c7);
+  border-radius: inherit;
+  z-index: -2;
+  opacity: 0;
+  filter: blur(14px);
+  transition: opacity 0.35s ease;
+  animation: eventsSubGlow 3s ease-in-out infinite;
+}
+.events-sub-btn:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%) !important;
+  background-size: 200% auto;
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(14,165,233,0.4), 0 0 40px rgba(14,165,233,0.15);
+  animation: none;
+}
+.events-sub-btn:hover::after {
+  opacity: 0.7;
+}
+.events-sub-btn:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(14,165,233,0.3);
 }
 `;
 
@@ -206,7 +546,7 @@ function CalendarWidget({ currentDate, eventDays = [15] }) {
   const isEventDay = (day) => eventDays.includes(day);
 
   return (
-    <div style={calStyles.wrapper}>
+    <div className="events-calendar-wrap" style={calStyles.wrapper}>
       <div style={calStyles.header}>
         <button className="events-nav-arrow" onClick={prevMonth} style={calStyles.arrow}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -228,7 +568,7 @@ function CalendarWidget({ currentDate, eventDays = [15] }) {
           return (
             <span
               key={i}
-              className={day ? 'events-cal-day' : ''}
+              className={`${day ? 'events-cal-day' : ''} ${today_ ? 'events-cal-today' : ''}`}
               style={{
                 ...calStyles.day,
                 ...(day === null ? { visibility: 'hidden' } : {}),
@@ -247,7 +587,7 @@ function CalendarWidget({ currentDate, eventDays = [15] }) {
 
 function WeeklyGatherings() {
   return (
-    <div style={gatherStyles.wrapper}>
+    <div className="events-gather-wrap" style={gatherStyles.wrapper}>
       <h4 style={gatherStyles.heading}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
           <rect x="3" y="4" width="18" height="18" rx="2" stroke="#0ea5e9" strokeWidth="2" fill="none"/>
@@ -271,6 +611,56 @@ function WeeklyGatherings() {
     </div>
   );
 }
+
+const HERO_PARTICLES = Array.from({ length: 14 }, () => ({
+  left: `${Math.random() * 100}%`,
+  width: `${3 + Math.random() * 5}px`,
+  delay: `${Math.random() * 7}s`,
+  duration: `${5 + Math.random() * 6}s`,
+  bottom: `${Math.random() * 15}%`,
+}));
+
+const BG_CROSSES = [
+  { left: '5%',  delay: '0s',   duration: '14s' },
+  { left: '15%', delay: '3s',   duration: '16s' },
+  { left: '28%', delay: '7s',   duration: '13s' },
+  { left: '42%', delay: '2s',   duration: '17s' },
+  { left: '55%', delay: '9s',   duration: '15s' },
+  { left: '68%', delay: '4s',   duration: '14s' },
+  { left: '80%', delay: '11s',  duration: '16s' },
+  { left: '92%', delay: '6s',   duration: '13s' },
+  { left: '35%', delay: '13s',  duration: '18s' },
+  { left: '72%', delay: '1s',   duration: '15s' },
+];
+
+const BG_ORBS = Array.from({ length: 12 }, () => ({
+  left: `${Math.random() * 100}%`,
+  width: `${4 + Math.random() * 8}px`,
+  delay: `${Math.random() * 12}s`,
+  duration: `${10 + Math.random() * 8}s`,
+}));
+
+const BG_DOVES = [
+  { left: '20%', delay: '5s',  duration: '20s' },
+  { left: '60%', delay: '12s', duration: '22s' },
+  { left: '85%', delay: '0s',  duration: '18s' },
+];
+
+const STAY_SHAPES = [
+  { symbol: '✝', left: '8%',  delay: '0s',  duration: '9s' },
+  { symbol: '🕊', left: '22%', delay: '2s',  duration: '11s' },
+  { symbol: '✝', left: '42%', delay: '4s',  duration: '8s' },
+  { symbol: '🕊', left: '60%', delay: '1s',  duration: '10s' },
+  { symbol: '✝', left: '78%', delay: '3s',  duration: '9.5s' },
+  { symbol: '🕊', left: '92%', delay: '5s',  duration: '12s' },
+];
+
+const STAY_SPARKLES = Array.from({ length: 14 }, () => ({
+  left: `${Math.random() * 100}%`,
+  delay: `${Math.random() * 6}s`,
+  duration: `${3 + Math.random() * 4}s`,
+  size: `${2 + Math.random() * 3}px`,
+}));
 
 const ClockIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="#0ea5e9" style={{ flexShrink: 0 }}>
@@ -299,35 +689,39 @@ function EventCard({ event, index }) {
     : `https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=400&fit=crop`;
 
   return (
-    <div className="events-card-anim events-card-hover" style={cardStyles.card}>
-      <div style={cardStyles.imageWrap}>
-        <img src={imgSrc} alt={event.title} style={cardStyles.image} />
-        <div style={cardStyles.dateBadge}>
-          <span style={cardStyles.badgeMonth}>{month}</span>
-          <span style={cardStyles.badgeDay}>{day}</span>
-        </div>
-        <span className="events-cat-tag" style={{ ...cardStyles.categoryTag, background: catColor }}>
-          {catLabel}
-        </span>
-      </div>
-      <div style={cardStyles.body}>
-        <h3 style={cardStyles.title}>{event.title}</h3>
-        <p style={cardStyles.desc}>{event.description}</p>
-        <div style={cardStyles.metaRow}>
-          <ClockIcon />
-          <span style={cardStyles.metaText}>
-            {timeStr}{endTime ? ` - ${endTime}` : ''}
+    <div className="events-card-anim events-card-wrap">
+      <div className="events-card-inner" style={cardStyles.card}>
+        <div className="events-card-top-accent" />
+        <div style={cardStyles.imageWrap}>
+          <img className="events-card-img" src={imgSrc} alt={event.title} style={cardStyles.image} />
+          <div className="events-card-overlay" />
+          <div className="events-badge-wrap" style={cardStyles.dateBadge}>
+            <span style={cardStyles.badgeMonth}>{month}</span>
+            <span style={cardStyles.badgeDay}>{day}</span>
+          </div>
+          <span className="events-cat-pill" style={{ ...cardStyles.categoryTag, background: catColor }}>
+            {catLabel}
           </span>
         </div>
-        {event.location && (
+        <div style={cardStyles.body}>
+          <h3 style={cardStyles.title}>{event.title}</h3>
+          <p style={cardStyles.desc}>{event.description}</p>
           <div style={cardStyles.metaRow}>
-            <LocationIcon />
-            <span style={cardStyles.metaText}>{event.location}</span>
+            <span className="events-meta-icon"><ClockIcon /></span>
+            <span style={cardStyles.metaText}>
+              {timeStr}{endTime ? ` - ${endTime}` : ''}
+            </span>
           </div>
-        )}
-        <button className="events-cta-btn" style={cardStyles.ctaBtn}>
-          {ctaLabel} &nbsp;&rarr;
-        </button>
+          {event.location && (
+            <div style={cardStyles.metaRow}>
+              <span className="events-meta-icon"><LocationIcon /></span>
+              <span style={cardStyles.metaText}>{event.location}</span>
+            </div>
+          )}
+          <button className="events-cta-btn" style={cardStyles.ctaBtn}>
+            {ctaLabel} &nbsp;&rarr;
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -387,6 +781,19 @@ export default function Events() {
       {/* ── Hero ─────────────────────────────────────────── */}
       <section style={heroStyles.section}>
         <div style={heroStyles.overlay} />
+        <div className="events-hero-particles">
+          {HERO_PARTICLES.map((p, i) => (
+            <div
+              key={i}
+              className="events-hero-particle"
+              style={{
+                left: p.left, bottom: p.bottom,
+                width: p.width, height: p.width,
+                animationDelay: p.delay, animationDuration: p.duration,
+              }}
+            />
+          ))}
+        </div>
         <div className="events-hero-content" style={heroStyles.content}>
           <h1 style={heroStyles.title}>
             Church Events / የቤተክርስቲያን<br />ፕሮግራሞች
@@ -445,6 +852,36 @@ export default function Events() {
 
       {/* ── Main Content: Calendar + Events Grid ────────── */}
       <section style={mainStyles.section}>
+        <div className="events-bg-elements">
+          {BG_CROSSES.map((c, i) => (
+            <span
+              key={`cross-${i}`}
+              className="events-float-cross"
+              style={{ left: c.left, animationDelay: c.delay, animationDuration: c.duration }}
+            >
+              ✝
+            </span>
+          ))}
+          {BG_ORBS.map((o, i) => (
+            <div
+              key={`orb-${i}`}
+              className="events-float-orb"
+              style={{
+                left: o.left, width: o.width, height: o.width,
+                animationDelay: o.delay, animationDuration: o.duration,
+              }}
+            />
+          ))}
+          {BG_DOVES.map((d, i) => (
+            <span
+              key={`dove-${i}`}
+              className="events-float-dove"
+              style={{ left: d.left, animationDelay: d.delay, animationDuration: d.duration }}
+            >
+              🕊
+            </span>
+          ))}
+        </div>
         <div style={mainStyles.inner}>
 
           {/* Left Sidebar: Calendar + Weekly Gatherings */}
@@ -476,29 +913,59 @@ export default function Events() {
 
       {/* ── Stay Connected ───────────────────────────────── */}
       <section style={newsletterStyles.section}>
-        <div style={newsletterStyles.inner}>
-          <div style={newsletterStyles.textCol}>
-            <h2 style={newsletterStyles.heading}>Stay Connected</h2>
-            <p style={newsletterStyles.sub}>
-              Get the latest updates on events and church news.
-            </p>
+        <div style={newsletterStyles.wrapper}>
+          <div className="events-stay-rays" />
+          <div className="events-stay-shapes">
+            {STAY_SHAPES.map((s, i) => (
+              <span
+                key={i}
+                className="events-stay-shape"
+                style={{ left: s.left, animationDelay: s.delay, animationDuration: s.duration }}
+              >
+                {s.symbol}
+              </span>
+            ))}
           </div>
-          <div style={newsletterStyles.formCol}>
-            {subscribed ? (
-              <p style={newsletterStyles.thanks}>Thank you for subscribing!</p>
-            ) : (
-              <form onSubmit={handleSubscribe} style={newsletterStyles.form}>
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  style={newsletterStyles.input}
-                />
-                <button type="submit" style={newsletterStyles.btn}>Subscribe</button>
-              </form>
-            )}
+          <div className="events-stay-sparkles">
+            {STAY_SPARKLES.map((s, i) => (
+              <span
+                key={i}
+                className="events-stay-sparkle"
+                style={{
+                  left: s.left, width: s.size, height: s.size,
+                  animationDelay: s.delay, animationDuration: s.duration,
+                }}
+              />
+            ))}
+          </div>
+          <div style={newsletterStyles.inner}>
+            <div style={newsletterStyles.textCol}>
+              <h2 style={newsletterStyles.heading}>Stay Connected</h2>
+              <p style={newsletterStyles.sub}>
+                Get the latest updates on events and church news.
+              </p>
+              <p style={newsletterStyles.subAm}>
+                ስለ ዝግጅቶች እና የቤተክርስቲያን ዜናዎች ያግኙ።
+              </p>
+            </div>
+            <div style={newsletterStyles.formCol}>
+              {subscribed ? (
+                <p style={newsletterStyles.thanks}>Thank you for subscribing!</p>
+              ) : (
+                <form onSubmit={handleSubscribe} style={newsletterStyles.form}>
+                  <input
+                    type="email"
+                    className="events-email-input"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    style={newsletterStyles.input}
+                  />
+                  <button type="submit" className="events-sub-btn" style={newsletterStyles.btn}>Subscribe</button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -627,10 +1094,16 @@ const filterStyles = {
 /* ─── Main Layout Styles ──────────────────────────────────── */
 const mainStyles = {
   section: {
+    position: 'relative',
     background: '#f8f8f8',
+    backgroundImage: 'radial-gradient(circle, #e2e8f0 0.8px, transparent 0.8px)',
+    backgroundSize: '24px 24px',
     padding: '2.5rem 2rem 4rem',
+    overflow: 'hidden',
   },
   inner: {
+    position: 'relative',
+    zIndex: 1,
     maxWidth: '1200px',
     margin: '0 auto',
     display: 'flex',
@@ -776,15 +1249,16 @@ const gatherStyles = {
 /* ─── Event Card Styles ────────────────────────────────────── */
 const cardStyles = {
   card: {
+    position: 'relative',
     background: '#ffffff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
-    border: '1px solid #f1f5f9',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+    border: '1px solid #e8ecf1',
   },
   imageWrap: {
     position: 'relative',
-    height: '200px',
+    height: '210px',
     overflow: 'hidden',
   },
   image: {
@@ -795,57 +1269,61 @@ const cardStyles = {
   },
   dateBadge: {
     position: 'absolute',
-    top: '12px',
-    left: '12px',
-    background: 'rgba(255,255,255,0.95)',
-    borderRadius: '8px',
-    padding: '6px 10px',
+    top: '14px',
+    left: '14px',
+    background: '#ffffff',
+    borderRadius: '10px',
+    padding: '7px 12px',
     textAlign: 'center',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-    minWidth: '44px',
+    boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+    minWidth: '48px',
+    zIndex: 2,
   },
   badgeMonth: {
     display: 'block',
     fontSize: '0.6rem',
     fontWeight: '800',
     color: '#ef4444',
-    letterSpacing: '0.08em',
+    letterSpacing: '0.1em',
     textTransform: 'uppercase',
+    lineHeight: 1.3,
   },
   badgeDay: {
     display: 'block',
-    fontSize: '1.35rem',
+    fontSize: '1.5rem',
     fontWeight: '800',
     color: '#0f172a',
     lineHeight: 1.1,
   },
   categoryTag: {
     position: 'absolute',
-    top: '12px',
-    right: '12px',
+    top: '14px',
+    right: '14px',
     color: '#ffffff',
-    fontSize: '0.7rem',
+    fontSize: '0.68rem',
     fontWeight: '700',
-    padding: '3px 10px',
-    borderRadius: '12px',
-    letterSpacing: '0.03em',
+    padding: '4px 12px',
+    borderRadius: '14px',
+    letterSpacing: '0.04em',
     textTransform: 'capitalize',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    zIndex: 2,
   },
   body: {
-    padding: '1.25rem',
+    padding: '1.35rem 1.4rem 1.25rem',
   },
   title: {
-    fontSize: '1.05rem',
+    fontSize: '1.08rem',
     fontWeight: '700',
     color: '#0f172a',
-    margin: '0 0 0.5rem',
-    lineHeight: 1.3,
+    margin: '0 0 0.55rem',
+    lineHeight: 1.35,
   },
   desc: {
-    fontSize: '0.85rem',
+    fontSize: '0.86rem',
     color: '#64748b',
-    margin: '0 0 0.85rem',
-    lineHeight: 1.55,
+    margin: '0 0 1rem',
+    lineHeight: 1.6,
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
@@ -854,59 +1332,79 @@ const cardStyles = {
   metaRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.4rem',
+    gap: '0.55rem',
+    marginBottom: '0.45rem',
   },
   metaText: {
-    fontSize: '0.82rem',
-    color: '#64748b',
+    fontSize: '0.84rem',
+    color: '#475569',
     fontWeight: '500',
   },
   ctaBtn: {
     width: '100%',
-    padding: '0.65rem 1rem',
+    padding: '0.72rem 1rem',
     background: '#0ea5e9',
     color: '#ffffff',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '0.88rem',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '0.75rem',
+    marginTop: '0.85rem',
     outline: 'none',
     textAlign: 'center',
+    letterSpacing: '0.02em',
   },
 };
 
 /* ─── Newsletter / Stay Connected Styles ───────────────────── */
 const newsletterStyles = {
   section: {
+    padding: '3.5rem 1.5rem 4rem',
+    width: '100%',
     background: '#ffffff',
-    padding: '3.5rem 2rem',
-    borderTop: '1px solid #e2e8f0',
+  },
+  wrapper: {
+    position: 'relative',
+    width: '100%',
+    maxWidth: '1600px',
+    margin: '0 auto',
+    padding: '3rem 2.5rem',
+    background: 'linear-gradient(135deg, #bae6fd 0%, #e0f2fe 40%, #f0f9ff 100%)',
+    borderRadius: '16px',
+    overflow: 'hidden',
   },
   inner: {
-    maxWidth: '1000px',
-    margin: '0 auto',
+    position: 'relative',
+    zIndex: 1,
+    width: '100%',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: '2rem',
     flexWrap: 'wrap',
   },
   textCol: {
     flex: 1,
+    minWidth: '240px',
   },
   heading: {
-    fontSize: '1.5rem',
+    fontSize: '1.55rem',
     fontWeight: '700',
     color: '#0f172a',
-    margin: '0 0 0.35rem',
+    margin: '0 0 0.45rem',
   },
   sub: {
-    fontSize: '0.92rem',
+    fontSize: '0.95rem',
+    color: '#475569',
+    margin: '0 0 0.2rem',
+    lineHeight: 1.5,
+  },
+  subAm: {
+    fontSize: '0.88rem',
     color: '#64748b',
     margin: 0,
+    fontStyle: 'italic',
     lineHeight: 1.5,
   },
   formCol: {
@@ -918,30 +1416,38 @@ const newsletterStyles = {
     gap: '0.5rem',
   },
   input: {
-    padding: '0.65rem 1rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
+    padding: '0.78rem 1.2rem',
+    border: '1.5px solid #cbd5e1',
+    borderRadius: '10px',
     fontSize: '0.9rem',
-    background: '#f8fafc',
+    background: '#ffffff',
     color: '#0f172a',
     outline: 'none',
-    width: '260px',
+    width: '280px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
   },
   btn: {
-    background: '#ef4444',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%)',
     color: '#fff',
     border: 'none',
-    padding: '0.65rem 1.5rem',
-    borderRadius: '6px',
+    padding: '0.78rem 2rem',
+    borderRadius: '10px',
     fontWeight: '700',
-    fontSize: '0.9rem',
+    fontSize: '0.88rem',
     cursor: 'pointer',
-    transition: 'background 0.15s ease',
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+    boxShadow: '0 4px 15px rgba(14,165,233,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
   },
   thanks: {
-    color: '#10b981',
-    fontWeight: '600',
-    fontSize: '1rem',
+    color: '#0ea5e9',
+    fontWeight: '700',
+    fontSize: '1.05rem',
     margin: 0,
+    background: '#ffffff',
+    padding: '0.6rem 1.5rem',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
   },
 };
