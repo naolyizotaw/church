@@ -43,16 +43,14 @@ export const getContactById = async (req, res) => {
  */
 export const submitContact = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, phone, subject, message } = req.body;
 
-    // Validation
     if (!name || !email || !message) {
       return res.status(400).json({
         message: "Please provide name, email, and message",
       });
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Please provide a valid email" });
@@ -61,6 +59,7 @@ export const submitContact = async (req, res) => {
     const contact = await Contact.create({
       name,
       email,
+      phone,
       subject,
       message,
     });

@@ -20,14 +20,36 @@ const sermonSchema = new mongoose.Schema(
       type: Date,
       required: [true, "Sermon date is required"],
     },
+    series: {
+      type: String,
+      trim: true,
+    },
+    topic: {
+      type: String,
+      trim: true,
+    },
+    thumbnailUrl: {
+      type: String,
+      trim: true,
+    },
+    videoUrl: {
+      type: String,
+      trim: true,
+    },
+    duration: {
+      type: String,
+      trim: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
     fileUrl: {
       type: String,
-      required: [true, "File URL is required"],
     },
     fileType: {
       type: String,
       enum: ["audio", "video"],
-      required: [true, "File type is required"],
     },
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,

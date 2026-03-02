@@ -2,6 +2,8 @@ import express from "express";
 import {
   getSermons,
   getSermonById,
+  getFeaturedSermon,
+  getSermonFilters,
   createSermon,
   updateSermon,
   deleteSermon,
@@ -12,11 +14,11 @@ import { upload } from "../config/multerConfig.js";
 
 const router = express.Router();
 
-// Public routes
 router.get("/", getSermons);
+router.get("/featured", getFeaturedSermon);
+router.get("/filters", getSermonFilters);
 router.get("/:id", getSermonById);
 
-// Admin only routes
 router.post("/", protect, admin, upload.single("file"), createSermon);
 router.put("/:id", protect, admin, updateSermon);
 router.delete("/:id", protect, admin, deleteSermon);

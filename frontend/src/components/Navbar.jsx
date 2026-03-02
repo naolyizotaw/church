@@ -27,8 +27,11 @@ export default function Navbar() {
           <Link to="/about" style={linkStyle('/about')}>About</Link>
           <Link to="/services" style={linkStyle('/services')}>Services</Link>
           <Link to="/events" style={linkStyle('/events')}>Events</Link>
+          <Link to="/sermons" style={linkStyle('/sermons')}>Sermons</Link>
           <Link to="/contact" style={linkStyle('/contact')}>Contact</Link>
-          <Link to="/give" style={styles.giveBtn}>Give</Link>
+          <Link to="/give" style={linkStyle('/give')}>Give</Link>
+          <Link to="/contact" style={styles.joinBtn}>Join Us</Link>
+          <button style={styles.langBtn} onClick={() => {}}>EN | አማ</button>
         </div>
       </div>
     </nav>
@@ -74,7 +77,7 @@ const styles = {
     gap: '1.75rem',
     alignItems: 'center',
   },
-  giveBtn: {
+  joinBtn: {
     background: '#0ea5e9',
     color: '#ffffff',
     textDecoration: 'none',
@@ -83,5 +86,16 @@ const styles = {
     fontSize: '0.9rem',
     fontWeight: '600',
     transition: 'background 0.15s',
+  },
+  langBtn: {
+    background: 'none',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    padding: '0.4rem 0.75rem',
+    fontSize: '0.82rem',
+    fontWeight: '500',
+    color: '#374151',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   },
 };

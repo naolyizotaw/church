@@ -7,19 +7,87 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * @desc    Get all sermons
+ * @desc    Get all sermons (supports filtering by series, speaker, topic, search)
  * @route   GET /api/sermons
  * @access  Public
  */
 export const getSermons = async (req, res) => {
   try {
-    const sermons = await Sermon.find()
-      .populate("uploadedBy", "name email")
-      .sort({ date: -1 }); // Sort by date descending (newest first)
+    const { series, speaker, topic, search, page = 1, limit = 6 } = req.query;
+    const filter = {};
 
-    res.json(sermons);
+    if (series) filter.series = series;
+    if (speaker) filter.speaker = speaker;
+    if (topic) filter.topic = topic;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { topic: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const total = await Sermon.countDocuments(filter);
+
+    const sermons = await Sermon.find(filter)
+      .populate("uploadedBy", "name email")
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.json({
+      sermons,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+    });
   } catch (error) {
     console.error("Get sermons error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+/**
+ * @desc    Get featured sermon
+ * @route   GET /api/sermons/featured
+ * @access  Public
+ */
+export const getFeaturedSermon = async (req, res) => {
+  try {
+    let sermon = await Sermon.findOne({ isFeatured: true }).populate("uploadedBy", "name email");
+    if (!sermon) {
+      sermon = await Sermon.findOne().sort({ date: -1 }).populate("uploadedBy", "name email");
+    }
+    if (!sermon) {
+      return res.status(404).json({ message: "No sermons found" });
+    }
+    res.json(sermon);
+  } catch (error) {
+    console.error("Get featured sermon error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+/**
+ * @desc    Get filter options (distinct series, speakers, topics)
+ * @route   GET /api/sermons/filters
+ * @access  Public
+ */
+export const getSermonFilters = async (req, res) => {
+  try {
+    const [seriesList, speakers, topics] = await Promise.all([
+      Sermon.distinct("series"),
+      Sermon.distinct("speaker"),
+      Sermon.distinct("topic"),
+    ]);
+    res.json({
+      series: seriesList.filter(Boolean),
+      speakers: speakers.filter(Boolean),
+      topics: topics.filter(Boolean),
+    });
+  } catch (error) {
+    console.error("Get sermon filters error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -54,35 +122,21 @@ export const getSermonById = async (req, res) => {
  */
 export const createSermon = async (req, res) => {
   try {
-    const { title, description, speaker, date, fileType } = req.body;
+    const { title, description, speaker, date, fileType, series, topic, thumbnailUrl, videoUrl, duration, isFeatured } = req.body;
 
-    // Validation
-    if (!title || !speaker || !date || !fileType) {
-      // If validation fails and file was uploaded, delete it
+    if (!title || !speaker || !date) {
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
       return res.status(400).json({
-        message: "Please provide title, speaker, date, and fileType",
+        message: "Please provide title, speaker, and date",
       });
     }
 
-    // Check if file was uploaded
-    if (!req.file) {
-      return res.status(400).json({ message: "Please upload a sermon file" });
+    let fileUrl = null;
+    if (req.file) {
+      fileUrl = `/uploads/${req.file.filename}`;
     }
-
-    // Validate fileType
-    if (!["audio", "video"].includes(fileType)) {
-      // Delete uploaded file if fileType is invalid
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({
-        message: "File type must be either 'audio' or 'video'",
-      });
-    }
-
-    // Create file URL path (relative to server)
-    const fileUrl = `/uploads/${req.file.filename}`;
 
     const sermon = await Sermon.create({
       title,
@@ -91,17 +145,21 @@ export const createSermon = async (req, res) => {
       date,
       fileUrl,
       fileType,
+      series,
+      topic,
+      thumbnailUrl,
+      videoUrl,
+      duration,
+      isFeatured: isFeatured === "true" || isFeatured === true,
       uploadedBy: req.user._id,
     });
 
-    // Populate uploadedBy before sending response
     await sermon.populate("uploadedBy", "name email");
 
     res.status(201).json(sermon);
   } catch (error) {
     console.error("Create sermon error:", error);
 
-    // If error occurs and file was uploaded, delete it
     if (req.file) {
       fs.unlinkSync(req.file.path);
     }
@@ -111,13 +169,13 @@ export const createSermon = async (req, res) => {
 };
 
 /**
- * @desc    Update sermon (without file change)
+ * @desc    Update sermon
  * @route   PUT /api/sermons/:id
  * @access  Admin only
  */
 export const updateSermon = async (req, res) => {
   try {
-    const { title, description, speaker, date } = req.body;
+    const { title, description, speaker, date, series, topic, thumbnailUrl, videoUrl, duration, isFeatured } = req.body;
 
     const sermon = await Sermon.findById(req.params.id);
 
@@ -125,11 +183,16 @@ export const updateSermon = async (req, res) => {
       return res.status(404).json({ message: "Sermon not found" });
     }
 
-    // Update fields (fileUrl and fileType cannot be changed via update)
     sermon.title = title || sermon.title;
-    sermon.description = description || sermon.description;
+    sermon.description = description !== undefined ? description : sermon.description;
     sermon.speaker = speaker || sermon.speaker;
     sermon.date = date || sermon.date;
+    sermon.series = series !== undefined ? series : sermon.series;
+    sermon.topic = topic !== undefined ? topic : sermon.topic;
+    sermon.thumbnailUrl = thumbnailUrl !== undefined ? thumbnailUrl : sermon.thumbnailUrl;
+    sermon.videoUrl = videoUrl !== undefined ? videoUrl : sermon.videoUrl;
+    sermon.duration = duration !== undefined ? duration : sermon.duration;
+    if (isFeatured !== undefined) sermon.isFeatured = isFeatured === "true" || isFeatured === true;
 
     const updatedSermon = await sermon.save();
     await updatedSermon.populate("uploadedBy", "name email");
@@ -154,16 +217,15 @@ export const deleteSermon = async (req, res) => {
       return res.status(404).json({ message: "Sermon not found" });
     }
 
-    // Delete file from filesystem
-    try {
-      const filePath = path.join(__dirname, "../../", sermon.fileUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log(`Deleted file: ${filePath}`);
+    if (sermon.fileUrl) {
+      try {
+        const filePath = path.join(__dirname, "../../", sermon.fileUrl);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (fileError) {
+        console.error("Error deleting file:", fileError);
       }
-    } catch (fileError) {
-      console.error("Error deleting file:", fileError);
-      // Continue with database deletion even if file deletion fails
     }
 
     await sermon.deleteOne();
