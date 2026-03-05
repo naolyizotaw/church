@@ -1,7 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import Footer from '../components/Footer';
+
+function useScrollReveal(threshold = 0.15) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); obs.unobserve(el); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return ref;
+}
 
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
@@ -10,6 +25,7 @@ const EVENT_GRADIENTS = [
   'linear-gradient(135deg, #10b981 0%, #0ea5e9 100%)',
   'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
 ];
+
 
 const PlayIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 6 }}>
@@ -23,6 +39,11 @@ export default function Home() {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+
+  const heroRef = useScrollReveal(0.1);
+  const scriptureRef = useScrollReveal(0.2);
+  const eventsRef = useScrollReveal(0.1);
+  const newsletterRef = useScrollReveal(0.2);
 
   useEffect(() => {
     api.get('/events')
@@ -40,21 +61,22 @@ export default function Home() {
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section style={heroStyles.section}>
+      <section ref={heroRef} className="reveal-hero" style={heroStyles.section}>
         <div style={heroStyles.overlay} />
+        <div className="hero-glow-sweep" />
         <div style={heroStyles.content}>
-          <h1 style={heroStyles.title}>
+          <h1 className="hero-title" style={heroStyles.title}>
             Welcome to Kerabu Full Gospel<br />Believers Church
           </h1>
-          <p style={heroStyles.amharic}>
+          <p className="hero-amharic" style={heroStyles.amharic}>
             እንኳን ወደ ከራቡ ሙሉ ወንጌል አማኞች ቤተክርስቲያን በደህና መጡ
           </p>
-          <p style={heroStyles.subtitle}>
+          <p className="hero-sub" style={heroStyles.subtitle}>
             A place of faith, hope, and community where everyone is welcome.
           </p>
-          <div style={heroStyles.buttons}>
-            <Link to="/events" style={heroStyles.primaryBtn}>Join Us This Sunday</Link>
-            <Link to="/sermons" style={heroStyles.secondaryBtn}>
+          <div className="hero-buttons" style={heroStyles.buttons}>
+            <Link className="hero-btn-primary" to="/events" style={heroStyles.primaryBtn}>Join Us This Sunday</Link>
+            <Link className="hero-btn-secondary" to="/sermons" style={heroStyles.secondaryBtn}>
               <PlayIcon />
               Watch Sermons
             </Link>
@@ -63,28 +85,42 @@ export default function Home() {
       </section>
 
       {/* ── Scripture of the Day ─────────────────────────── */}
-      <section style={scriptureStyles.section}>
-        <div style={scriptureStyles.card}>
+      <section ref={scriptureRef} className="reveal-scripture" style={scriptureStyles.section}>
+        <div className="scripture-glow" />
+        <div className="scripture-sparkles">
+          <span /><span /><span /><span />
+          <span /><span /><span /><span />
+        </div>
+        <div className="scripture-card-glass" style={scriptureStyles.card}>
           <div style={scriptureStyles.label}>
-            <span style={scriptureStyles.dot} />
+            <span className="scripture-dot-anim" style={scriptureStyles.dot} />
             <span style={scriptureStyles.labelText}>SCRIPTURE OF THE DAY &nbsp;|&nbsp; የዕለቱ ቃል</span>
-            <span style={scriptureStyles.dot} />
+            <span className="scripture-dot-anim" style={scriptureStyles.dot} />
           </div>
           <div style={scriptureStyles.quoteIcon}>&ldquo;</div>
           <blockquote style={scriptureStyles.quote}>
             "Jesus Christ is the same yesterday and today and forever."
           </blockquote>
+          <div style={scriptureStyles.divider} />
           <p style={scriptureStyles.amharic}>
             "ኢየሱስ ክርስቶስ ትናንትና ዛሬ እንዲሁም ለዘላለም አንድ ነው::"
           </p>
-          <p style={scriptureStyles.reference}>Hebrews 13:8 &nbsp;|&nbsp; ዕብራውያን 13:8</p>
+          <p style={scriptureStyles.reference}>
+            <span style={scriptureStyles.refBadge}>Hebrews 13:8 &nbsp;|&nbsp; ዕብራውያን 13:8</span>
+          </p>
         </div>
       </section>
 
       {/* ── Upcoming Events ──────────────────────────────── */}
-      <section style={eventStyles.section}>
+      <section ref={eventsRef} className="reveal-events" style={eventStyles.section}>
+        <div className="home-light-rays" />
+        <div className="home-sparkles">
+          <span /><span /><span /><span /><span />
+          <span /><span /><span /><span /><span />
+          <span /><span /><span /><span /><span />
+        </div>
         <div style={eventStyles.inner}>
-          <div style={eventStyles.header}>
+          <div className="events-header-anim" style={eventStyles.header}>
             <div>
               <h2 style={eventStyles.heading}>Upcoming Events</h2>
               <p style={eventStyles.subheading}>የቅርብ ጊዜ መርሃ ግብሮች</p>
@@ -103,22 +139,53 @@ export default function Home() {
                 const month = MONTH_ABBR[d.getMonth()];
                 const day = d.getDate();
                 const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                const endRaw = event.endDate ? new Date(event.endDate) : null;
+                const isMultiDay = endRaw && endRaw.toDateString() !== d.toDateString();
+                const sameDay = endRaw && !isMultiDay;
+                const endTimeStr = sameDay ? endRaw.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+                const timeDisplay = isMultiDay
+                  ? `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endRaw.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                  : `${timeStr}${endTimeStr ? ` – ${endTimeStr}` : ''}`;
+                const imgSrc = event.posterUrl || null;
                 return (
-                  <div key={event._id} style={eventStyles.card}>
-                    <div style={{ ...eventStyles.cardImg, background: EVENT_GRADIENTS[i % 3] }}>
-                      <div style={eventStyles.dateBadge}>
-                        <span style={eventStyles.badgeMonth}>{month}</span>
-                        <span style={eventStyles.badgeDay}>{day}</span>
+                  <div key={event._id} className="events-card-anim events-card-wrap">
+                    <div className="events-card-inner" style={eventStyles.card}>
+                      <div className="events-card-top-accent" />
+                      <div style={eventStyles.cardImg}>
+                        {imgSrc ? (
+                          <img className="events-card-img" src={imgSrc} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        ) : (
+                          <div className="events-card-img" style={{ width: '100%', height: '100%', background: EVENT_GRADIENTS[i % 3] }} />
+                        )}
+                        <div className="events-card-overlay" />
+                        <div className="events-badge-wrap" style={eventStyles.dateBadge}>
+                          <span style={eventStyles.badgeMonth}>{month}</span>
+                          <span style={eventStyles.badgeDay}>{isMultiDay ? `${day}–${endRaw.getDate()}` : day}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div style={eventStyles.cardBody}>
-                      <p style={eventStyles.cardTime}>{timeStr}</p>
-                      <h3 style={eventStyles.cardTitle}>{event.title}</h3>
-                      <p style={eventStyles.cardDesc}>{event.description}</p>
-                      {event.location && (
-                        <p style={eventStyles.cardLocation}>📍 {event.location}</p>
-                      )}
-                      <Link to="/events" style={eventStyles.learnMore}>Learn More &rsaquo;</Link>
+                      <div style={eventStyles.cardBody}>
+                        <div style={eventStyles.metaRow}>
+                          <span className="events-meta-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0ea5e9" style={{ flexShrink: 0 }}>
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+                            </svg>
+                          </span>
+                          <span style={eventStyles.metaText}>{timeDisplay}</span>
+                        </div>
+                        <h3 style={eventStyles.cardTitle}>{event.title}</h3>
+                        <p style={eventStyles.cardDesc}>{event.description}</p>
+                        {event.location && (
+                          <div style={eventStyles.metaRow}>
+                            <span className="events-meta-icon">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="#0ea5e9" style={{ flexShrink: 0 }}>
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                            </span>
+                            <span style={eventStyles.metaText}>{event.location}</span>
+                          </div>
+                        )}
+                        <Link to="/events" style={eventStyles.learnMore}>Learn More &rsaquo;</Link>
+                      </div>
                     </div>
                   </div>
                 );
@@ -129,7 +196,7 @@ export default function Home() {
       </section>
 
       {/* ── Stay Connected ───────────────────────────────── */}
-      <section style={newsletterStyles.section}>
+      <section ref={newsletterRef} className="reveal-newsletter" style={newsletterStyles.section}>
         <div style={newsletterStyles.inner}>
           <div style={newsletterStyles.text}>
             <h2 style={newsletterStyles.heading}>Stay Connected with Kerabu</h2>
@@ -210,41 +277,56 @@ const heroStyles = {
     flexWrap: 'wrap',
   },
   primaryBtn: {
-    background: '#0ea5e9',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
     color: '#fff',
     textDecoration: 'none',
-    padding: '0.75rem 1.75rem',
-    borderRadius: '6px',
+    padding: '0.8rem 2rem',
+    borderRadius: '8px',
     fontWeight: '700',
     fontSize: '0.95rem',
+    position: 'relative',
+    overflow: 'hidden',
+    zIndex: 0,
+    letterSpacing: '0.02em',
   },
   secondaryBtn: {
-    background: 'rgba(255,255,255,0.12)',
-    border: '1.5px solid rgba(255,255,255,0.5)',
+    background: 'rgba(255,255,255,0.1)',
+    border: '1.5px solid rgba(255,255,255,0.45)',
     color: '#fff',
     textDecoration: 'none',
-    padding: '0.75rem 1.75rem',
-    borderRadius: '6px',
+    padding: '0.8rem 2rem',
+    borderRadius: '8px',
     fontWeight: '600',
     fontSize: '0.95rem',
     display: 'flex',
     alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    letterSpacing: '0.02em',
   },
 };
 
 const scriptureStyles = {
   section: {
-    background: '#f1f5f9',
+    background: 'linear-gradient(180deg, #f1f5f9 0%, #fef9ef 70%, #fffbeb 100%)',
     padding: '4rem 2rem',
+    position: 'relative',
+    overflow: 'hidden',
   },
   card: {
-    background: '#ffffff',
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(254,249,239,0.75) 30%, rgba(240,249,255,0.8) 60%, rgba(255,255,255,0.85) 100%)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     maxWidth: '700px',
     margin: '0 auto',
-    borderRadius: '12px',
+    borderRadius: '18px',
     padding: '2.5rem 3rem',
-    boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+    border: '1.5px solid rgba(14,165,233,0.2)',
+    boxShadow: '0 4px 30px rgba(14,165,233,0.08), 0 0 40px rgba(14,165,233,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
     textAlign: 'center',
+    position: 'relative',
+    zIndex: 1,
+    cursor: 'default',
   },
   label: {
     display: 'flex',
@@ -254,55 +336,80 @@ const scriptureStyles = {
     marginBottom: '1.25rem',
   },
   dot: {
-    width: '28px',
+    width: '32px',
     height: '3px',
-    background: '#0ea5e9',
+    background: 'linear-gradient(90deg, #0ea5e9, #f59e0b)',
     borderRadius: '2px',
     display: 'inline-block',
+    animation: 'scriptureDotPulse 3s ease-in-out infinite',
   },
   labelText: {
-    fontSize: '0.75rem',
+    fontSize: '0.72rem',
     fontWeight: '700',
-    letterSpacing: '0.1em',
-    color: '#0ea5e9',
+    letterSpacing: '0.12em',
+    background: 'linear-gradient(90deg, #0ea5e9, #0284c7)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     textTransform: 'uppercase',
   },
   quoteIcon: {
-    fontSize: '4rem',
-    color: '#e2e8f0',
+    fontSize: '4.5rem',
     lineHeight: 0.8,
     marginBottom: '0.5rem',
     fontFamily: 'Georgia, serif',
+    animation: 'scriptureQuoteGlow 5s ease-in-out infinite',
   },
   quote: {
-    fontSize: '1.35rem',
+    fontSize: '1.4rem',
     fontWeight: '600',
     color: '#1e293b',
-    lineHeight: 1.5,
+    lineHeight: 1.6,
     margin: '0 0 0.75rem',
     fontStyle: 'normal',
     fontFamily: 'Georgia, serif',
+    letterSpacing: '0.01em',
+  },
+  divider: {
+    width: '60px',
+    height: '2px',
+    background: 'linear-gradient(90deg, transparent, #f59e0b, transparent)',
+    margin: '0.75rem auto',
+    borderRadius: '1px',
   },
   amharic: {
-    fontSize: '1rem',
+    fontSize: '1.05rem',
     color: '#475569',
-    margin: '0 0 1rem',
+    margin: '0 0 1.25rem',
     fontStyle: 'italic',
+    lineHeight: 1.6,
   },
   reference: {
-    fontSize: '0.9rem',
-    color: '#94a3b8',
     margin: 0,
-    fontWeight: '500',
+    textAlign: 'center',
+  },
+  refBadge: {
+    display: 'inline-block',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: '#0369a1',
+    background: 'rgba(14,165,233,0.08)',
+    border: '1px solid rgba(14,165,233,0.15)',
+    borderRadius: '20px',
+    padding: '0.3rem 1rem',
+    letterSpacing: '0.03em',
   },
 };
 
 const eventStyles = {
   section: {
-    background: '#ffffff',
+    position: 'relative',
+    overflow: 'hidden',
+    background: 'linear-gradient(180deg, #fffbeb 0%, #fff7ed 30%, #ffffff 100%)',
     padding: '4rem 2rem',
   },
   inner: {
+    position: 'relative',
+    zIndex: 1,
     maxWidth: '1100px',
     margin: '0 auto',
   },
@@ -336,72 +443,76 @@ const eventStyles = {
     gap: '1.5rem',
   },
   card: {
+    position: 'relative',
     background: '#ffffff',
-    borderRadius: '10px',
+    borderRadius: '16px',
     overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.09)',
-    border: '1px solid #f1f5f9',
-    transition: 'transform 0.2s, box-shadow 0.2s',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+    border: '1px solid #e8ecf1',
   },
   cardImg: {
-    height: '175px',
     position: 'relative',
+    height: '200px',
+    overflow: 'hidden',
   },
   dateBadge: {
     position: 'absolute',
-    top: '12px',
-    left: '12px',
-    background: 'rgba(255,255,255,0.95)',
-    borderRadius: '6px',
-    padding: '6px 10px',
+    top: '14px',
+    left: '14px',
+    background: '#ffffff',
+    borderRadius: '10px',
+    padding: '7px 12px',
     textAlign: 'center',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+    boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+    minWidth: '48px',
+    zIndex: 2,
   },
   badgeMonth: {
     display: 'block',
-    fontSize: '0.65rem',
+    fontSize: '0.6rem',
     fontWeight: '800',
-    color: '#0ea5e9',
-    letterSpacing: '0.08em',
+    color: '#ef4444',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    lineHeight: 1.3,
   },
   badgeDay: {
     display: 'block',
-    fontSize: '1.4rem',
+    fontSize: '1.5rem',
     fontWeight: '800',
-    color: '#0ea5e9',
+    color: '#0f172a',
     lineHeight: 1.1,
   },
   cardBody: {
-    padding: '1.25rem',
+    padding: '1.35rem 1.4rem 1.25rem',
   },
-  cardTime: {
-    fontSize: '0.8rem',
-    color: '#0ea5e9',
-    fontWeight: '600',
-    margin: '0 0 0.4rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+  metaRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.55rem',
+    marginBottom: '0.45rem',
+  },
+  metaText: {
+    fontSize: '0.84rem',
+    color: '#475569',
+    fontWeight: '500',
   },
   cardTitle: {
-    fontSize: '1.05rem',
+    fontSize: '1.08rem',
     fontWeight: '700',
     color: '#0f172a',
-    margin: '0 0 0.5rem',
+    margin: '0 0 0.55rem',
+    lineHeight: 1.35,
   },
   cardDesc: {
-    fontSize: '0.88rem',
-    color: '#475569',
-    margin: '0 0 0.5rem',
-    lineHeight: 1.5,
+    fontSize: '0.86rem',
+    color: '#64748b',
+    margin: '0 0 1rem',
+    lineHeight: 1.6,
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
-  },
-  cardLocation: {
-    fontSize: '0.82rem',
-    color: '#94a3b8',
-    margin: '0 0 0.75rem',
   },
   learnMore: {
     color: '#0ea5e9',

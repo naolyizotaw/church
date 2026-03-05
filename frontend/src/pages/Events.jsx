@@ -11,6 +11,9 @@ const CATEGORIES = [
   { key: 'worship', label: 'Worship / አምልኮ' },
   { key: 'youth', label: 'Youth / ወጣቶች' },
   { key: 'outreach', label: 'Outreach / ተደራሽ' },
+  { key: 'prayer', label: 'Prayer / ጸሎት' },
+  { key: 'conference', label: 'Conference' },
+  { key: 'charity', label: 'Charity' },
 ];
 
 const CATEGORY_COLORS = {
@@ -18,6 +21,8 @@ const CATEGORY_COLORS = {
   youth: '#8b5cf6',
   outreach: '#10b981',
   prayer: '#f59e0b',
+  conference: '#6366f1',
+  charity: '#ec4899',
 };
 
 const WEEKLY_GATHERINGS = [
@@ -310,6 +315,143 @@ const eventsPageCSS = `
 .events-cta-btn:hover::after {
   left: 120%;
   transition: left 0.6s ease;
+}
+
+/* ═══ ACTION ICON BUTTONS (Calendar & Share) ═══ */
+@keyframes eventsIconBreathe {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 0 0 0 rgba(14,165,233,0); border-color: #e2e8f0; }
+  50% { box-shadow: 0 2px 12px rgba(14,165,233,0.1), 0 0 0 3px rgba(14,165,233,0.06); border-color: #bae6fd; }
+}
+@keyframes eventsIconShimmer {
+  0% { left: -120%; }
+  100% { left: 120%; }
+}
+@keyframes eventsIconRipple {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(14,165,233,0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(14,165,233,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(14,165,233,0); }
+}
+
+.events-action-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  animation: eventsIconBreathe 4s ease-in-out infinite;
+}
+
+.events-action-icon::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -120%;
+  width: 70%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(14,165,233,0.15), transparent);
+  pointer-events: none;
+  transition: none;
+}
+
+.events-card-wrap:hover .events-action-icon {
+  animation: none;
+  border-color: #7dd3fc;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  box-shadow: 0 4px 16px rgba(14,165,233,0.12), 0 0 8px rgba(14,165,233,0.06);
+  color: #0284c7;
+}
+
+.events-card-wrap:hover .events-action-icon::before {
+  animation: eventsIconShimmer 1.8s ease-in-out infinite;
+}
+
+.events-action-icon:hover {
+  transform: translateY(-3px) scale(1.12) !important;
+  animation: eventsIconRipple 0.6s ease !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 8px 25px rgba(14,165,233,0.3), 0 0 15px rgba(14,165,233,0.15) !important;
+}
+
+.events-cal-icon:hover {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+  color: #fff !important;
+}
+.events-cal-icon:hover svg { stroke: #fff; }
+
+.events-share-icon:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+}
+.events-share-icon:hover svg { stroke: #fff; }
+
+.events-action-icon:active {
+  transform: translateY(-1px) scale(0.95) !important;
+  box-shadow: 0 2px 8px rgba(14,165,233,0.2) !important;
+}
+
+.events-card-wrap:hover .events-cal-icon {
+  transition-delay: 0.05s;
+}
+.events-card-wrap:hover .events-share-icon {
+  transition-delay: 0.1s;
+}
+
+/* ═══ MODAL ACTION BUTTONS (Calendar & Share in detail modal) ═══ */
+@keyframes eventsModalBtnGlow {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  50% { box-shadow: 0 4px 18px rgba(14,165,233,0.12); }
+}
+.events-modal-action {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  animation: eventsModalBtnGlow 3s ease-in-out infinite;
+}
+.events-modal-action::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -120%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  pointer-events: none;
+}
+.events-modal-action:hover {
+  transform: translateY(-3px);
+  animation: none;
+}
+.events-modal-action:hover::after {
+  left: 150%;
+  transition: left 0.6s ease;
+}
+.events-modal-cal:hover {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;
+  color: #fff !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 8px 25px rgba(14,165,233,0.35), 0 0 12px rgba(14,165,233,0.1) !important;
+}
+.events-modal-cal:hover svg { stroke: #fff; }
+.events-modal-share:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 8px 25px rgba(245,158,11,0.35), 0 0 12px rgba(245,158,11,0.1) !important;
+}
+.events-modal-share:hover svg { stroke: #fff; }
+.events-modal-action:active {
+  transform: translateY(-1px) scale(0.97) !important;
+}
+
+/* ═══ DETAIL MODAL ═══ */
+.events-detail-modal {
+  animation: eventsCardEntry 0.3s ease forwards;
 }
 
 /* ═══ META ICON GLOW ═══ */
@@ -674,30 +816,172 @@ const LocationIcon = () => (
   </svg>
 );
 
-function EventCard({ event, index }) {
+function generateICS(event) {
+  const d = new Date(event.date);
+  const pad = (n) => String(n).padStart(2, '0');
+  const toICS = (dt) => `${dt.getUTCFullYear()}${pad(dt.getUTCMonth()+1)}${pad(dt.getUTCDate())}T${pad(dt.getUTCHours())}${pad(dt.getUTCMinutes())}00Z`;
+  const endDate = event.endDate ? new Date(event.endDate) : new Date(d.getTime() + 2 * 60 * 60 * 1000);
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Church//Events//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${toICS(d)}`,
+    `DTEND:${toICS(endDate)}`,
+    `SUMMARY:${(event.title || '').replace(/,/g, '\\,')}`,
+    `DESCRIPTION:${(event.description || '').replace(/\n/g, '\\n').replace(/,/g, '\\,')}`,
+    `LOCATION:${(event.location || '').replace(/,/g, '\\,')}`,
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${(event.title || 'event').replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleShare(event) {
+  const text = `${event.title}\n${new Date(event.date).toLocaleDateString()}${event.location ? `\n${event.location}` : ''}`;
+  if (navigator.share) {
+    navigator.share({ title: event.title, text, url: window.location.href }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(`${event.title} - ${new Date(event.date).toLocaleDateString()}${event.location ? ` @ ${event.location}` : ''}\n${window.location.href}`);
+    alert('Event link copied to clipboard!');
+  }
+}
+
+function EventDetailModal({ event, onClose }) {
+  const [regForm, setRegForm] = useState({ name: '', email: '', phone: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [regStatus, setRegStatus] = useState(null);
+
+  if (!event) return null;
+
+  const d = new Date(event.date);
+  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const endRaw = event.endDate ? new Date(event.endDate) : null;
+  const isMultiDay = endRaw && endRaw.toDateString() !== d.toDateString();
+  const sameDay = endRaw && !isMultiDay;
+  const modalEndTimeStr = sameDay ? endRaw.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+  const endDateStr = isMultiDay ? endRaw.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '';
+  const category = event.category || 'worship';
+  const catColor = CATEGORY_COLORS[category] || '#0ea5e9';
+  const rawImg = event.posterUrl || event.image;
+  const imgSrc = rawImg || 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=400&fit=crop';
+
+  const handleRegSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await api.post('/registrations', { eventId: event._id, name: regForm.name, email: regForm.email, phone: regForm.phone });
+      setRegStatus('success');
+    } catch (err) {
+      setRegStatus(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={modalStyles.overlay} onClick={onClose}>
+      <div style={modalStyles.modal} onClick={e => e.stopPropagation()}>
+        <button style={modalStyles.closeBtn} onClick={onClose}>&times;</button>
+        <img src={imgSrc} alt={event.title} style={modalStyles.poster} />
+        <div style={modalStyles.body}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+            <span style={{ ...modalStyles.catPill, background: catColor }}>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            {event.requiresRegistration && <span style={modalStyles.regPill}>Registration Required</span>}
+          </div>
+          <h2 style={modalStyles.title}>{event.title}</h2>
+          <p style={modalStyles.desc}>{event.description}</p>
+          <div style={modalStyles.metaSection}>
+            <div style={modalStyles.metaItem}>
+              <ClockIcon />
+              <span>{isMultiDay ? `${dateStr} – ${endDateStr}` : `${dateStr} at ${timeStr}${modalEndTimeStr ? ` – ${modalEndTimeStr}` : ''}`}</span>
+            </div>
+            {event.location && (
+              <div style={modalStyles.metaItem}>
+                <LocationIcon />
+                <span>{event.location}</span>
+              </div>
+            )}
+          </div>
+          <div style={modalStyles.actionRow}>
+            <button className="events-modal-action events-modal-cal" style={modalStyles.calBtn} onClick={() => generateICS(event)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              Add to Calendar
+            </button>
+            <button className="events-modal-action events-modal-share" style={modalStyles.shareBtn} onClick={() => handleShare(event)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+              Share
+            </button>
+          </div>
+
+          {event.requiresRegistration && (
+            <div style={modalStyles.regSection}>
+              <h3 style={modalStyles.regTitle}>Register for this Event</h3>
+              {regStatus === 'success' ? (
+                <div style={modalStyles.successMsg}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>You have been registered successfully!</span>
+                </div>
+              ) : (
+                <form onSubmit={handleRegSubmit} style={modalStyles.regForm}>
+                  {typeof regStatus === 'string' && regStatus !== 'success' && (
+                    <div style={modalStyles.errorMsg}>{regStatus}</div>
+                  )}
+                  <input style={modalStyles.regInput} placeholder="Full Name *" required value={regForm.name} onChange={e => setRegForm({ ...regForm, name: e.target.value })} />
+                  <input style={modalStyles.regInput} type="tel" placeholder="Phone Number *" required value={regForm.phone} onChange={e => setRegForm({ ...regForm, phone: e.target.value })} />
+                  <input style={modalStyles.regInput} type="email" placeholder="Email Address (optional)" value={regForm.email} onChange={e => setRegForm({ ...regForm, email: e.target.value })} />
+                  <button type="submit" style={modalStyles.regSubmitBtn} disabled={submitting}>
+                    {submitting ? 'Registering...' : 'Register Now'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventCard({ event, index, onViewDetails }) {
   const d = new Date(event.date);
   const month = MONTH_ABBR[d.getMonth()];
   const day = d.getDate();
   const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  const endTime = event.endTime || '';
+  const endRaw = event.endDate ? new Date(event.endDate) : null;
+  const isMultiDay = endRaw && endRaw.toDateString() !== d.toDateString();
+  const sameDay = endRaw && !isMultiDay;
+  const endTimeStr = sameDay ? endRaw.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
   const category = event.category || 'worship';
   const catColor = CATEGORY_COLORS[category] || '#0ea5e9';
   const catLabel = category.charAt(0).toUpperCase() + category.slice(1);
-  const ctaLabel = event.ctaLabel || 'Register / ተመዝገቡ';
-  const imgSrc = event.image
-    ? (event.image.startsWith('http') ? event.image : `/uploads/${event.image}`)
+  const rawImg = event.posterUrl || event.image;
+  const imgSrc = rawImg
+    ? (rawImg.startsWith('http') ? rawImg : rawImg)
     : `https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=400&fit=crop`;
+
+  const handleCardClick = (e) => {
+    if (e.target.closest('button')) return;
+    onViewDetails(event);
+  };
 
   return (
     <div className="events-card-anim events-card-wrap">
-      <div className="events-card-inner" style={cardStyles.card}>
+      <div className="events-card-inner" style={{ ...cardStyles.card, cursor: 'pointer' }} onClick={handleCardClick}>
         <div className="events-card-top-accent" />
         <div style={cardStyles.imageWrap}>
           <img className="events-card-img" src={imgSrc} alt={event.title} style={cardStyles.image} />
           <div className="events-card-overlay" />
           <div className="events-badge-wrap" style={cardStyles.dateBadge}>
             <span style={cardStyles.badgeMonth}>{month}</span>
-            <span style={cardStyles.badgeDay}>{day}</span>
+            <span style={cardStyles.badgeDay}>{isMultiDay ? `${day}–${endRaw.getDate()}` : day}</span>
+            {isMultiDay && MONTH_ABBR[endRaw.getMonth()] !== month && (
+              <span style={{ ...cardStyles.badgeMonth, fontSize: 9, marginTop: -2 }}>{MONTH_ABBR[endRaw.getMonth()]}</span>
+            )}
           </div>
           <span className="events-cat-pill" style={{ ...cardStyles.categoryTag, background: catColor }}>
             {catLabel}
@@ -709,7 +993,9 @@ function EventCard({ event, index }) {
           <div style={cardStyles.metaRow}>
             <span className="events-meta-icon"><ClockIcon /></span>
             <span style={cardStyles.metaText}>
-              {timeStr}{endTime ? ` - ${endTime}` : ''}
+              {isMultiDay
+                ? `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endRaw.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                : `${timeStr}${endTimeStr ? ` – ${endTimeStr}` : ''}`}
             </span>
           </div>
           {event.location && (
@@ -718,9 +1004,19 @@ function EventCard({ event, index }) {
               <span style={cardStyles.metaText}>{event.location}</span>
             </div>
           )}
-          <button className="events-cta-btn" style={cardStyles.ctaBtn}>
-            {ctaLabel} &nbsp;&rarr;
-          </button>
+          <div style={cardStyles.btnRow}>
+            {event.requiresRegistration && (
+              <button className="events-cta-btn" style={cardStyles.registerBtn} onClick={() => onViewDetails(event)}>
+                Register
+              </button>
+            )}
+            <button className="events-action-icon events-cal-icon" onClick={(e) => { e.stopPropagation(); generateICS(event); }} title="Add to Calendar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </button>
+            <button className="events-action-icon events-share-icon" onClick={(e) => { e.stopPropagation(); handleShare(event); }} title="Share Event">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -734,6 +1030,7 @@ export default function Events() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [detailEvent, setDetailEvent] = useState(null);
   const styleRef = useRef(null);
 
   useEffect(() => {
@@ -747,7 +1044,7 @@ export default function Events() {
         if (res.data && res.data.length > 0) {
           setEvents(res.data.map((e, i) => ({
             ...e,
-            category: e.category || ['worship', 'youth', 'outreach', 'prayer'][i % 4],
+            category: e.category || 'worship',
             ctaLabel: e.ctaLabel || FALLBACK_EVENTS[i % FALLBACK_EVENTS.length]?.ctaLabel,
             endTime: e.endTime || FALLBACK_EVENTS[i % FALLBACK_EVENTS.length]?.endTime,
           })));
@@ -903,7 +1200,7 @@ export default function Events() {
             ) : (
               <div style={mainStyles.eventsGrid}>
                 {filteredEvents.map((event, i) => (
-                  <EventCard key={event._id} event={event} index={i} />
+                  <EventCard key={event._id} event={event} index={i} onViewDetails={setDetailEvent} />
                 ))}
               </div>
             )}
@@ -969,6 +1266,8 @@ export default function Events() {
           </div>
         </div>
       </section>
+
+      {detailEvent && <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} />}
 
       <Footer />
     </div>
@@ -1340,20 +1639,221 @@ const cardStyles = {
     color: '#475569',
     fontWeight: '500',
   },
-  ctaBtn: {
-    width: '100%',
-    padding: '0.72rem 1rem',
+  btnRow: {
+    display: 'flex',
+    gap: '0.5rem',
+    marginTop: '0.85rem',
+    alignItems: 'center',
+  },
+  registerBtn: {
+    flex: 1,
+    padding: '0.65rem 1rem',
     background: '#0ea5e9',
     color: '#ffffff',
     border: 'none',
     borderRadius: '10px',
-    fontSize: '0.9rem',
+    fontSize: '0.85rem',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '0.85rem',
     outline: 'none',
     textAlign: 'center',
     letterSpacing: '0.02em',
+  },
+};
+
+/* ─── Event Detail Modal Styles ────────────────────────────── */
+const modalStyles = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(15,23,42,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 300,
+    padding: '1rem',
+  },
+  modal: {
+    position: 'relative',
+    background: '#ffffff',
+    borderRadius: '18px',
+    width: '100%',
+    maxWidth: '560px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    boxShadow: '0 25px 60px rgba(0,0,0,0.2)',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: '14px',
+    right: '14px',
+    width: '34px',
+    height: '34px',
+    borderRadius: '50%',
+    border: 'none',
+    background: 'rgba(0,0,0,0.5)',
+    color: '#fff',
+    fontSize: '1.3rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    lineHeight: 1,
+  },
+  poster: {
+    width: '100%',
+    height: '260px',
+    objectFit: 'cover',
+    display: 'block',
+    borderRadius: '18px 18px 0 0',
+  },
+  body: {
+    padding: '1.5rem 1.75rem 1.75rem',
+  },
+  catPill: {
+    display: 'inline-block',
+    padding: '4px 12px',
+    borderRadius: '14px',
+    color: '#fff',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    textTransform: 'capitalize',
+    letterSpacing: '0.03em',
+  },
+  regPill: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    borderRadius: '14px',
+    background: '#fef3c7',
+    color: '#92400e',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    letterSpacing: '0.03em',
+  },
+  title: {
+    fontSize: '1.35rem',
+    fontWeight: '800',
+    color: '#0f172a',
+    margin: '0 0 0.75rem',
+    lineHeight: 1.3,
+  },
+  desc: {
+    fontSize: '0.92rem',
+    color: '#475569',
+    margin: '0 0 1.25rem',
+    lineHeight: 1.7,
+  },
+  metaSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    marginBottom: '1.25rem',
+    padding: '0.85rem 1rem',
+    background: '#f8fafc',
+    borderRadius: '10px',
+    border: '1px solid #f1f5f9',
+  },
+  metaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    fontSize: '0.88rem',
+    color: '#334155',
+    fontWeight: '500',
+  },
+  actionRow: {
+    display: 'flex',
+    gap: '0.6rem',
+    marginBottom: '1rem',
+  },
+  calBtn: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    padding: '0.7rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    color: '#334155',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    outline: 'none',
+  },
+  shareBtn: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    padding: '0.7rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    color: '#334155',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    outline: 'none',
+  },
+  regSection: {
+    borderTop: '1px solid #f1f5f9',
+    paddingTop: '1.25rem',
+  },
+  regTitle: {
+    fontSize: '1rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    margin: '0 0 0.85rem',
+  },
+  regForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.65rem',
+  },
+  regInput: {
+    padding: '0.7rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid #e2e8f0',
+    fontSize: '0.9rem',
+    color: '#0f172a',
+    outline: 'none',
+    background: '#f8fafc',
+  },
+  regSubmitBtn: {
+    padding: '0.75rem 1rem',
+    borderRadius: '10px',
+    border: 'none',
+    background: '#0ea5e9',
+    color: '#fff',
+    fontSize: '0.92rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    marginTop: '0.25rem',
+  },
+  successMsg: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    padding: '1rem 1.25rem',
+    background: '#f0fdf4',
+    borderRadius: '10px',
+    border: '1px solid #bbf7d0',
+    color: '#15803d',
+    fontSize: '0.92rem',
+    fontWeight: '600',
+  },
+  errorMsg: {
+    padding: '0.6rem 1rem',
+    background: '#fef2f2',
+    borderRadius: '8px',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    fontSize: '0.85rem',
+    fontWeight: '500',
   },
 };
 
