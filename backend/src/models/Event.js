@@ -19,6 +19,9 @@ const eventSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    posterUrl: {
+      type: String,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -684,8 +684,9 @@ function EventCard({ event, index }) {
   const catColor = CATEGORY_COLORS[category] || '#0ea5e9';
   const catLabel = category.charAt(0).toUpperCase() + category.slice(1);
   const ctaLabel = event.ctaLabel || 'Register / ተመዝገቡ';
-  const imgSrc = event.image
-    ? (event.image.startsWith('http') ? event.image : `/uploads/${event.image}`)
+  const rawImg = event.posterUrl || event.image;
+  const imgSrc = rawImg
+    ? (rawImg.startsWith('http') ? rawImg : rawImg)
     : `https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=400&fit=crop`;
 
   return (

@@ -14,6 +14,12 @@ import AdminLayout from './admin/components/AdminLayout';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import AdminLogin from './admin/pages/AdminLogin';
+import AdminSermons from './admin/pages/AdminSermons';
+import AdminEvents from './admin/pages/AdminEvents';
+import AdminPages from './admin/pages/AdminPages';
+import AdminContacts from './admin/pages/AdminContacts';
+import AdminDonations from './admin/pages/AdminDonations';
+import AdminSettings from './admin/pages/AdminSettings';
 
 function PublicLayout() {
   return (
@@ -39,6 +45,12 @@ export default function App() {
           }
         >
           <Route index element={<AdminDashboard />} />
+          <Route path="sermons" element={<AdminSermons />} />
+          <Route path="events" element={<AdminEvents />} />
+          <Route path="pages" element={<AdminPages />} />
+          <Route path="contacts" element={<AdminContacts />} />
+          <Route path="donations" element={<AdminDonations />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
 
         {/* Public routes */}

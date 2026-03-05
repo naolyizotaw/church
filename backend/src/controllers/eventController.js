@@ -1,4 +1,10 @@
 import Event from "../models/Event.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * @desc    Get all events
@@ -50,11 +56,16 @@ export const createEvent = async (req, res) => {
   try {
     const { title, description, date, location } = req.body;
 
-    // Validation
     if (!title || !description || !date) {
+      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({
         message: "Please provide title, description, and date",
       });
+    }
+
+    let posterUrl = null;
+    if (req.file) {
+      posterUrl = `/uploads/${req.file.filename}`;
     }
 
     const event = await Event.create({
@@ -62,15 +73,16 @@ export const createEvent = async (req, res) => {
       description,
       date,
       location,
+      posterUrl,
       createdBy: req.user._id,
     });
 
-    // Populate createdBy before sending response
     await event.populate("createdBy", "name email");
 
     res.status(201).json(event);
   } catch (error) {
     console.error("Create event error:", error);
+    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -87,15 +99,23 @@ export const updateEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
+      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Update fields
     event.title = title || event.title;
     event.description = description || event.description;
     event.date = date || event.date;
-    if (location !== undefined) {
-      event.location = location;
+    if (location !== undefined) event.location = location;
+
+    if (req.file) {
+      if (event.posterUrl) {
+        try {
+          const oldPath = path.join(__dirname, "../../", event.posterUrl);
+          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        } catch (e) { console.error("Error deleting old poster:", e); }
+      }
+      event.posterUrl = `/uploads/${req.file.filename}`;
     }
 
     const updatedEvent = await event.save();
@@ -104,6 +124,7 @@ export const updateEvent = async (req, res) => {
     res.json(updatedEvent);
   } catch (error) {
     console.error("Update event error:", error);
+    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -119,6 +140,13 @@ export const deleteEvent = async (req, res) => {
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
+    }
+
+    if (event.posterUrl) {
+      try {
+        const filePath = path.join(__dirname, "../../", event.posterUrl);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (e) { console.error("Error deleting poster:", e); }
     }
 
     await event.deleteOne();
