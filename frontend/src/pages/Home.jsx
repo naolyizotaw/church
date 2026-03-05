@@ -1,7 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import Footer from '../components/Footer';
+
+function useScrollReveal(threshold = 0.15) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); obs.unobserve(el); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return ref;
+}
 
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
@@ -25,6 +40,11 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
+  const heroRef = useScrollReveal(0.1);
+  const scriptureRef = useScrollReveal(0.2);
+  const eventsRef = useScrollReveal(0.1);
+  const newsletterRef = useScrollReveal(0.2);
+
   useEffect(() => {
     api.get('/events')
       .then((res) => setEvents(res.data.slice(0, 3)))
@@ -41,21 +61,22 @@ export default function Home() {
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section style={heroStyles.section}>
+      <section ref={heroRef} className="reveal-hero" style={heroStyles.section}>
         <div style={heroStyles.overlay} />
+        <div className="hero-glow-sweep" />
         <div style={heroStyles.content}>
-          <h1 style={heroStyles.title}>
+          <h1 className="hero-title" style={heroStyles.title}>
             Welcome to Kerabu Full Gospel<br />Believers Church
           </h1>
-          <p style={heroStyles.amharic}>
+          <p className="hero-amharic" style={heroStyles.amharic}>
             እንኳን ወደ ከራቡ ሙሉ ወንጌል አማኞች ቤተክርስቲያን በደህና መጡ
           </p>
-          <p style={heroStyles.subtitle}>
+          <p className="hero-sub" style={heroStyles.subtitle}>
             A place of faith, hope, and community where everyone is welcome.
           </p>
-          <div style={heroStyles.buttons}>
-            <Link to="/events" style={heroStyles.primaryBtn}>Join Us This Sunday</Link>
-            <Link to="/sermons" style={heroStyles.secondaryBtn}>
+          <div className="hero-buttons" style={heroStyles.buttons}>
+            <Link className="hero-btn-primary" to="/events" style={heroStyles.primaryBtn}>Join Us This Sunday</Link>
+            <Link className="hero-btn-secondary" to="/sermons" style={heroStyles.secondaryBtn}>
               <PlayIcon />
               Watch Sermons
             </Link>
@@ -64,26 +85,34 @@ export default function Home() {
       </section>
 
       {/* ── Scripture of the Day ─────────────────────────── */}
-      <section style={scriptureStyles.section}>
-        <div style={scriptureStyles.card}>
+      <section ref={scriptureRef} className="reveal-scripture" style={scriptureStyles.section}>
+        <div className="scripture-glow" />
+        <div className="scripture-sparkles">
+          <span /><span /><span /><span />
+          <span /><span /><span /><span />
+        </div>
+        <div className="scripture-card-glass" style={scriptureStyles.card}>
           <div style={scriptureStyles.label}>
-            <span style={scriptureStyles.dot} />
+            <span className="scripture-dot-anim" style={scriptureStyles.dot} />
             <span style={scriptureStyles.labelText}>SCRIPTURE OF THE DAY &nbsp;|&nbsp; የዕለቱ ቃል</span>
-            <span style={scriptureStyles.dot} />
+            <span className="scripture-dot-anim" style={scriptureStyles.dot} />
           </div>
           <div style={scriptureStyles.quoteIcon}>&ldquo;</div>
           <blockquote style={scriptureStyles.quote}>
             "Jesus Christ is the same yesterday and today and forever."
           </blockquote>
+          <div style={scriptureStyles.divider} />
           <p style={scriptureStyles.amharic}>
             "ኢየሱስ ክርስቶስ ትናንትና ዛሬ እንዲሁም ለዘላለም አንድ ነው::"
           </p>
-          <p style={scriptureStyles.reference}>Hebrews 13:8 &nbsp;|&nbsp; ዕብራውያን 13:8</p>
+          <p style={scriptureStyles.reference}>
+            <span style={scriptureStyles.refBadge}>Hebrews 13:8 &nbsp;|&nbsp; ዕብራውያን 13:8</span>
+          </p>
         </div>
       </section>
 
       {/* ── Upcoming Events ──────────────────────────────── */}
-      <section style={eventStyles.section}>
+      <section ref={eventsRef} className="reveal-events" style={eventStyles.section}>
         <div className="home-light-rays" />
         <div className="home-sparkles">
           <span /><span /><span /><span /><span />
@@ -91,7 +120,7 @@ export default function Home() {
           <span /><span /><span /><span /><span />
         </div>
         <div style={eventStyles.inner}>
-          <div style={eventStyles.header}>
+          <div className="events-header-anim" style={eventStyles.header}>
             <div>
               <h2 style={eventStyles.heading}>Upcoming Events</h2>
               <p style={eventStyles.subheading}>የቅርብ ጊዜ መርሃ ግብሮች</p>
@@ -167,7 +196,7 @@ export default function Home() {
       </section>
 
       {/* ── Stay Connected ───────────────────────────────── */}
-      <section style={newsletterStyles.section}>
+      <section ref={newsletterRef} className="reveal-newsletter" style={newsletterStyles.section}>
         <div style={newsletterStyles.inner}>
           <div style={newsletterStyles.text}>
             <h2 style={newsletterStyles.heading}>Stay Connected with Kerabu</h2>
@@ -248,41 +277,56 @@ const heroStyles = {
     flexWrap: 'wrap',
   },
   primaryBtn: {
-    background: '#0ea5e9',
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
     color: '#fff',
     textDecoration: 'none',
-    padding: '0.75rem 1.75rem',
-    borderRadius: '6px',
+    padding: '0.8rem 2rem',
+    borderRadius: '8px',
     fontWeight: '700',
     fontSize: '0.95rem',
+    position: 'relative',
+    overflow: 'hidden',
+    zIndex: 0,
+    letterSpacing: '0.02em',
   },
   secondaryBtn: {
-    background: 'rgba(255,255,255,0.12)',
-    border: '1.5px solid rgba(255,255,255,0.5)',
+    background: 'rgba(255,255,255,0.1)',
+    border: '1.5px solid rgba(255,255,255,0.45)',
     color: '#fff',
     textDecoration: 'none',
-    padding: '0.75rem 1.75rem',
-    borderRadius: '6px',
+    padding: '0.8rem 2rem',
+    borderRadius: '8px',
     fontWeight: '600',
     fontSize: '0.95rem',
     display: 'flex',
     alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    letterSpacing: '0.02em',
   },
 };
 
 const scriptureStyles = {
   section: {
-    background: '#f1f5f9',
+    background: 'linear-gradient(180deg, #f1f5f9 0%, #fef9ef 70%, #fffbeb 100%)',
     padding: '4rem 2rem',
+    position: 'relative',
+    overflow: 'hidden',
   },
   card: {
-    background: '#ffffff',
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(254,249,239,0.75) 30%, rgba(240,249,255,0.8) 60%, rgba(255,255,255,0.85) 100%)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     maxWidth: '700px',
     margin: '0 auto',
-    borderRadius: '12px',
+    borderRadius: '18px',
     padding: '2.5rem 3rem',
-    boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+    border: '1.5px solid rgba(14,165,233,0.2)',
+    boxShadow: '0 4px 30px rgba(14,165,233,0.08), 0 0 40px rgba(14,165,233,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
     textAlign: 'center',
+    position: 'relative',
+    zIndex: 1,
+    cursor: 'default',
   },
   label: {
     display: 'flex',
@@ -292,46 +336,67 @@ const scriptureStyles = {
     marginBottom: '1.25rem',
   },
   dot: {
-    width: '28px',
+    width: '32px',
     height: '3px',
-    background: '#0ea5e9',
+    background: 'linear-gradient(90deg, #0ea5e9, #f59e0b)',
     borderRadius: '2px',
     display: 'inline-block',
+    animation: 'scriptureDotPulse 3s ease-in-out infinite',
   },
   labelText: {
-    fontSize: '0.75rem',
+    fontSize: '0.72rem',
     fontWeight: '700',
-    letterSpacing: '0.1em',
-    color: '#0ea5e9',
+    letterSpacing: '0.12em',
+    background: 'linear-gradient(90deg, #0ea5e9, #0284c7)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     textTransform: 'uppercase',
   },
   quoteIcon: {
-    fontSize: '4rem',
-    color: '#e2e8f0',
+    fontSize: '4.5rem',
     lineHeight: 0.8,
     marginBottom: '0.5rem',
     fontFamily: 'Georgia, serif',
+    animation: 'scriptureQuoteGlow 5s ease-in-out infinite',
   },
   quote: {
-    fontSize: '1.35rem',
+    fontSize: '1.4rem',
     fontWeight: '600',
     color: '#1e293b',
-    lineHeight: 1.5,
+    lineHeight: 1.6,
     margin: '0 0 0.75rem',
     fontStyle: 'normal',
     fontFamily: 'Georgia, serif',
+    letterSpacing: '0.01em',
+  },
+  divider: {
+    width: '60px',
+    height: '2px',
+    background: 'linear-gradient(90deg, transparent, #f59e0b, transparent)',
+    margin: '0.75rem auto',
+    borderRadius: '1px',
   },
   amharic: {
-    fontSize: '1rem',
+    fontSize: '1.05rem',
     color: '#475569',
-    margin: '0 0 1rem',
+    margin: '0 0 1.25rem',
     fontStyle: 'italic',
+    lineHeight: 1.6,
   },
   reference: {
-    fontSize: '0.9rem',
-    color: '#94a3b8',
     margin: 0,
-    fontWeight: '500',
+    textAlign: 'center',
+  },
+  refBadge: {
+    display: 'inline-block',
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: '#0369a1',
+    background: 'rgba(14,165,233,0.08)',
+    border: '1px solid rgba(14,165,233,0.15)',
+    borderRadius: '20px',
+    padding: '0.3rem 1rem',
+    letterSpacing: '0.03em',
   },
 };
 
