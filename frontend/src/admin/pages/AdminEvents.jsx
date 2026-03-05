@@ -1,7 +1,25 @@
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 
-const emptyForm = { title: '', description: '', date: '', time: '', location: '', isRecurring: false, recurrencePattern: 'weekly', recurrenceEnd: '' };
+const emptyForm = { title: '', description: '', date: '', time: '', endDate: '', endTime: '', location: '', category: 'worship', isRecurring: false, recurrencePattern: 'weekly', recurrenceEnd: '', requiresRegistration: false };
+
+const CATEGORY_OPTIONS = [
+  { value: 'worship', label: 'Worship / አምልኮ' },
+  { value: 'youth', label: 'Youth / ወጣቶች' },
+  { value: 'outreach', label: 'Outreach / ተደራሽ' },
+  { value: 'prayer', label: 'Prayer / ጸሎት' },
+  { value: 'conference', label: 'Conference' },
+  { value: 'charity', label: 'Charity' },
+];
+
+const CATEGORY_COLORS = {
+  worship: '#0ea5e9',
+  youth: '#8b5cf6',
+  outreach: '#10b981',
+  prayer: '#f59e0b',
+  conference: '#6366f1',
+  charity: '#ec4899',
+};
 
 const RECURRENCE_OPTIONS = [
   { value: 'weekly', label: 'Every Week' },
@@ -20,6 +38,10 @@ export default function AdminEvents() {
   const [posterPreview, setPosterPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [regEvent, setRegEvent] = useState(null);
+  const [registrations, setRegistrations] = useState([]);
+  const [loadingRegs, setLoadingRegs] = useState(false);
 
   const fetchEvents = async () => {
     try { const { data } = await api.get('/events?admin=true'); setEvents(Array.isArray(data) ? data : []); }
@@ -34,11 +56,17 @@ export default function AdminEvents() {
   };
   const openEdit = (ev) => {
     setEditing(ev._id);
-    const evDate = ev.date ? new Date(ev.date) : null;
-    const dateStr = evDate ? evDate.toISOString().slice(0, 10) : '';
-    const timeStr = evDate ? evDate.toTimeString().slice(0, 5) : '';
-    const recEnd = ev.recurrenceEnd ? new Date(ev.recurrenceEnd).toISOString().slice(0, 10) : '';
-    setForm({ title: ev.title || '', description: ev.description || '', date: dateStr, time: timeStr, location: ev.location || '', isRecurring: !!ev.isRecurring, recurrencePattern: ev.recurrencePattern || 'weekly', recurrenceEnd: recEnd });
+    const parseDT = (iso) => {
+      if (!iso) return { d: '', t: '' };
+      const dt = new Date(iso);
+      const y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), dd = String(dt.getDate()).padStart(2,'0');
+      const hh = String(dt.getHours()).padStart(2,'0'), mm = String(dt.getMinutes()).padStart(2,'0');
+      return { d: `${y}-${m}-${dd}`, t: `${hh}:${mm}` };
+    };
+    const start = parseDT(ev.date);
+    const end = parseDT(ev.endDate);
+    const recEnd = ev.recurrenceEnd ? parseDT(ev.recurrenceEnd).d : '';
+    setForm({ title: ev.title || '', description: ev.description || '', date: start.d, time: start.t, endDate: end.d, endTime: end.t, location: ev.location || '', category: ev.category || 'worship', isRecurring: !!ev.isRecurring, recurrencePattern: ev.recurrencePattern || 'weekly', recurrenceEnd: recEnd, requiresRegistration: !!ev.requiresRegistration });
     setPoster(null);
     setPosterPreview(ev.posterUrl || null);
     setShowModal(true);
@@ -59,9 +87,20 @@ export default function AdminEvents() {
       const fd = new FormData();
       fd.append('title', form.title);
       fd.append('description', form.description);
-      const combined = form.time ? `${form.date}T${form.time}` : form.date;
-      fd.append('date', combined);
+      const toISO = (d, t) => {
+        if (!d) return '';
+        const dt = t ? new Date(`${d}T${t}`) : new Date(`${d}T00:00`);
+        return dt.toISOString();
+      };
+      fd.append('date', toISO(form.date, form.time));
+      if (form.endDate || form.endTime) {
+        fd.append('endDate', toISO(form.endDate || form.date, form.endTime));
+      } else {
+        fd.append('endDate', '');
+      }
       fd.append('location', form.location);
+      fd.append('category', form.category);
+      fd.append('requiresRegistration', form.requiresRegistration);
       fd.append('isRecurring', form.isRecurring);
       if (form.isRecurring) {
         fd.append('recurrencePattern', form.recurrencePattern);
@@ -71,8 +110,10 @@ export default function AdminEvents() {
 
       if (editing) {
         await api.put(`/events/${editing}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        showToast('Event updated successfully!');
       } else {
         await api.post('/events', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        showToast('Event created successfully!');
       }
       setShowModal(false);
       fetchEvents();
@@ -81,8 +122,30 @@ export default function AdminEvents() {
   };
 
   const handleDelete = async () => {
-    try { await api.delete(`/events/${deleteId}`); setDeleteId(null); fetchEvents(); }
+    try { await api.delete(`/events/${deleteId}`); setDeleteId(null); fetchEvents(); showToast('Event deleted successfully!'); }
     catch { alert('Error deleting event'); }
+  };
+
+  const openRegistrations = async (ev) => {
+    setRegEvent(ev);
+    setLoadingRegs(true);
+    try {
+      const { data } = await api.get(`/registrations/${ev._id}`);
+      setRegistrations(Array.isArray(data) ? data : []);
+    } catch { setRegistrations([]); }
+    finally { setLoadingRegs(false); }
+  };
+
+  const deleteRegistration = async (id) => {
+    try {
+      await api.delete(`/registrations/${id}`);
+      setRegistrations(prev => prev.filter(r => r._id !== id));
+    } catch { alert('Error deleting registration'); }
+  };
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
   };
 
   const filtered = events.filter(ev =>
@@ -94,6 +157,13 @@ export default function AdminEvents() {
 
   return (
     <div>
+      {toast && (
+        <div style={st.toast}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <span>{toast}</span>
+          <button onClick={() => setToast(null)} style={st.toastClose}>&times;</button>
+        </div>
+      )}
       <div style={st.header}>
         <div>
           <h1 style={st.title}>Events</h1>
@@ -118,6 +188,7 @@ export default function AdminEvents() {
                 <th style={st.th}>Title</th>
                 <th style={st.th}>Date</th>
                 <th style={st.th}>Location</th>
+                <th style={st.th}>Category</th>
                 <th style={st.th}>Status</th>
                 <th style={{ ...st.th, textAlign: 'right' }}>Actions</th>
               </tr>
@@ -140,10 +211,15 @@ export default function AdminEvents() {
                   </td>
                   <td style={st.td}><span style={{ fontWeight: 600, color: '#0f172a' }}>{ev.title}</span></td>
                   <td style={st.td}>
-                    <div>{new Date(ev.date).toLocaleDateString('en', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>{new Date(ev.date).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}</div>
+                    <div>{new Date(ev.date).toLocaleDateString('en', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}{ev.endDate ? ` – ${new Date(ev.endDate).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}` : ''}</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>{new Date(ev.date).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}{ev.endDate ? ` – ${new Date(ev.endDate).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
                   </td>
                   <td style={st.td}>{ev.location || '—'}</td>
+                  <td style={st.td}>
+                    <span style={{ ...st.catBadge, background: CATEGORY_COLORS[ev.category] || '#94a3b8' }}>
+                      {(ev.category || 'worship').charAt(0).toUpperCase() + (ev.category || 'worship').slice(1)}
+                    </span>
+                  </td>
                   <td style={st.td}>
                     <span style={{ ...st.badge, background: isPast(ev.date) ? '#f1f5f9' : '#dcfce7', color: isPast(ev.date) ? '#64748b' : '#16a34a' }}>
                       {isPast(ev.date) ? 'PAST' : 'UPCOMING'}
@@ -153,8 +229,14 @@ export default function AdminEvents() {
                         ↻ {ev.recurrencePattern}
                       </span>
                     )}
+                    {ev.requiresRegistration && (
+                      <span style={st.regBadge}>REG</span>
+                    )}
                   </td>
                   <td style={{ ...st.td, textAlign: 'right' }}>
+                    {ev.requiresRegistration && (
+                      <button style={st.regsBtn} onClick={() => openRegistrations(ev)}>Registrations</button>
+                    )}
                     <button style={st.editBtn} onClick={() => openEdit(ev)}>Edit</button>
                     <button style={st.deleteBtn} onClick={() => setDeleteId(ev._id)}>Delete</button>
                   </td>
@@ -178,18 +260,38 @@ export default function AdminEvents() {
                 <label style={st.label}>Description *</label>
                 <textarea style={{ ...st.input, height: 100, resize: 'vertical' }} required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
               </div>
-              <div style={st.row3}>
+              <div style={st.row2}>
                 <div style={st.field}>
-                  <label style={st.label}>Date *</label>
+                  <label style={st.label}>Start Date *</label>
                   <input style={st.input} type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
                 </div>
                 <div style={st.field}>
-                  <label style={st.label}>Time</label>
+                  <label style={st.label}>Start Time</label>
                   <input style={st.input} type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
                 </div>
+              </div>
+              <div style={st.row2}>
+                <div style={st.field}>
+                  <label style={st.label}>End Date</label>
+                  <input style={st.input} type="date" value={form.endDate} min={form.date} onChange={e => setForm({ ...form, endDate: e.target.value })} />
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>End Time</label>
+                  <input style={st.input} type="time" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} />
+                </div>
+              </div>
+              <div style={st.row2}>
                 <div style={st.field}>
                   <label style={st.label}>Location</label>
                   <input style={st.input} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>Category</label>
+                  <select style={st.input} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                    {CATEGORY_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -233,6 +335,22 @@ export default function AdminEvents() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Registration */}
+              <div style={st.recurrenceWrap}>
+                <label style={{ ...st.label, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.requiresRegistration}
+                    onChange={e => setForm({ ...form, requiresRegistration: e.target.checked })}
+                    style={st.checkbox}
+                  />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><path d="M20 8v6M23 11h-6" />
+                  </svg>
+                  Requires Registration
+                </label>
               </div>
 
               {/* Poster Upload */}
@@ -281,6 +399,48 @@ export default function AdminEvents() {
           </div>
         </div>
       )}
+
+      {regEvent && (
+        <div style={st.overlay} onClick={() => setRegEvent(null)}>
+          <div style={st.regModal} onClick={e => e.stopPropagation()}>
+            <h2 style={st.modalTitle}>Registrations — {regEvent.title}</h2>
+            {loadingRegs ? <p style={st.empty}>Loading...</p> : registrations.length === 0 ? (
+              <p style={st.empty}>No registrations yet</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 12px' }}>{registrations.length} registration{registrations.length !== 1 ? 's' : ''}</p>
+                <table style={st.table}>
+                  <thead>
+                    <tr>
+                      <th style={st.th}>Name</th>
+                      <th style={st.th}>Email</th>
+                      <th style={st.th}>Phone</th>
+                      <th style={st.th}>Date</th>
+                      <th style={{ ...st.th, textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registrations.map(r => (
+                      <tr key={r._id} style={st.tr}>
+                        <td style={st.td}><span style={{ fontWeight: 600, color: '#0f172a' }}>{r.name}</span></td>
+                        <td style={st.td}>{r.email}</td>
+                        <td style={st.td}>{r.phone || '—'}</td>
+                        <td style={st.td}>{new Date(r.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                        <td style={{ ...st.td, textAlign: 'right' }}>
+                          <button style={st.deleteBtn} onClick={() => deleteRegistration(r._id)}>Remove</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+            <div style={{ ...st.modalActions, marginTop: 16 }}>
+              <button style={st.cancelBtn} onClick={() => setRegEvent(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -293,14 +453,15 @@ const st = {
   toolbar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   searchInput: { padding: '9px 14px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, width: 280, outline: 'none', background: '#fff' },
   count: { fontSize: 13, color: '#94a3b8' },
-  card: { background: '#fff', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' },
-  table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '12px 16px', fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' },
+  card: { background: '#fff', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflowX: 'auto' },
+  table: { width: '100%', borderCollapse: 'collapse', minWidth: 780 },
+  th: { textAlign: 'left', padding: '12px 14px', fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #f1f5f9', background: '#fafbfc', whiteSpace: 'nowrap' },
   tr: { borderBottom: '1px solid #f8fafc' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#334155', verticalAlign: 'middle' },
+  td: { padding: '12px 14px', fontSize: 14, color: '#334155', verticalAlign: 'middle', whiteSpace: 'nowrap' },
   posterThumb: { width: 48, height: 48, borderRadius: 6, objectFit: 'cover', display: 'block' },
   noPoster: { width: 48, height: 48, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   badge: { padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700, letterSpacing: '0.03em' },
+  catBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '0.03em' },
   editBtn: { background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#334155', cursor: 'pointer', marginRight: 6 },
   deleteBtn: { background: 'none', border: '1px solid #fecaca', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#ef4444', cursor: 'pointer' },
   empty: { padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 14 },
@@ -331,4 +492,9 @@ const st = {
   recurrenceOptions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 10 },
   checkbox: { width: 16, height: 16, accentColor: '#0ea5e9', cursor: 'pointer' },
   recurBadge: { display: 'inline-block', marginLeft: 6, padding: '2px 7px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: '#e0f2fe', color: '#0284c7', letterSpacing: '0.03em', textTransform: 'capitalize' },
+  regBadge: { display: 'inline-block', marginLeft: 6, padding: '2px 7px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.03em' },
+  regsBtn: { background: 'none', border: '1px solid #fde68a', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#92400e', cursor: 'pointer', marginRight: 6 },
+  regModal: { background: '#fff', borderRadius: 14, padding: 28, width: '100%', maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' },
+  toast: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', marginBottom: 16, borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', fontSize: 14, fontWeight: 600, animation: 'fadeInDown 0.3s ease' },
+  toastClose: { marginLeft: 'auto', background: 'none', border: 'none', fontSize: 18, color: '#15803d', cursor: 'pointer', padding: '0 4px', lineHeight: 1 },
 };

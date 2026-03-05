@@ -6,14 +6,12 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function generateOccurrences(event, rangeEnd) {
-  if (!event.isRecurring || !event.recurrencePattern) return [event];
+function getNextOccurrence(event) {
+  if (!event.isRecurring || !event.recurrencePattern) return event;
 
-  const occurrences = [];
-  const base = new Date(event.date);
-  const end = event.recurrenceEnd ? new Date(event.recurrenceEnd) : rangeEnd;
   const now = new Date();
-  let cursor = new Date(base);
+  const end = event.recurrenceEnd ? new Date(event.recurrenceEnd) : null;
+  let cursor = new Date(event.date);
 
   const advance = {
     weekly: (d) => d.setDate(d.getDate() + 7),
@@ -22,21 +20,25 @@ function generateOccurrences(event, rangeEnd) {
   };
 
   const step = advance[event.recurrencePattern];
-  if (!step) return [event];
+  if (!step) return event;
 
-  const MAX = 52;
+  const MAX = 200;
   let count = 0;
-  while (cursor <= end && count < MAX) {
-    const obj = event.toObject ? event.toObject() : { ...event };
-    obj.date = new Date(cursor);
-    obj._isOccurrence = true;
-    obj._parentId = event._id;
-    occurrences.push(obj);
+  while (cursor < now && count < MAX) {
+    if (end && cursor > end) return null;
     step(cursor);
     count++;
   }
 
-  return occurrences;
+  if (end && cursor > end) return null;
+
+  const obj = event.toObject ? event.toObject() : { ...event };
+  const shift = cursor.getTime() - new Date(event.date).getTime();
+  obj.date = new Date(cursor);
+  if (event.endDate) {
+    obj.endDate = new Date(new Date(event.endDate).getTime() + shift);
+  }
+  return obj;
 }
 
 /**
@@ -55,20 +57,18 @@ export const getEvents = async (req, res) => {
       return res.json(events);
     }
 
-    const rangeEnd = new Date();
-    rangeEnd.setMonth(rangeEnd.getMonth() + 3);
-
-    const expanded = [];
+    const result = [];
     for (const ev of events) {
       if (ev.isRecurring) {
-        expanded.push(...generateOccurrences(ev, rangeEnd));
+        const next = getNextOccurrence(ev);
+        if (next) result.push(next);
       } else {
-        expanded.push(ev);
+        result.push(ev);
       }
     }
 
-    expanded.sort((a, b) => new Date(a.date) - new Date(b.date));
-    res.json(expanded);
+    result.sort((a, b) => new Date(a.date) - new Date(b.date));
+    res.json(result);
   } catch (error) {
     console.error("Get events error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -105,7 +105,7 @@ export const getEventById = async (req, res) => {
  */
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location, isRecurring, recurrencePattern, recurrenceEnd } = req.body;
+    const { title, description, date, endDate, location, category, isRecurring, recurrencePattern, recurrenceEnd, requiresRegistration } = req.body;
 
     if (!title || !description || !date) {
       if (req.file) fs.unlinkSync(req.file.path);
@@ -119,15 +119,19 @@ export const createEvent = async (req, res) => {
       posterUrl = `/uploads/${req.file.filename}`;
     }
 
+    const recurring = isRecurring === "true" || isRecurring === true;
     const event = await Event.create({
       title,
       description,
       date,
+      endDate: endDate || null,
       location,
+      category: category || "worship",
       posterUrl,
-      isRecurring: isRecurring === "true" || isRecurring === true,
-      recurrencePattern: isRecurring === "true" || isRecurring === true ? recurrencePattern : null,
-      recurrenceEnd: isRecurring === "true" || isRecurring === true ? recurrenceEnd || null : null,
+      isRecurring: recurring,
+      recurrencePattern: recurring ? recurrencePattern : null,
+      recurrenceEnd: recurring ? recurrenceEnd || null : null,
+      requiresRegistration: requiresRegistration === "true" || requiresRegistration === true,
       createdBy: req.user._id,
     });
 
@@ -148,7 +152,7 @@ export const createEvent = async (req, res) => {
  */
 export const updateEvent = async (req, res) => {
   try {
-    const { title, description, date, location, isRecurring, recurrencePattern, recurrenceEnd } = req.body;
+    const { title, description, date, endDate, location, category, isRecurring, recurrencePattern, recurrenceEnd, requiresRegistration } = req.body;
 
     const event = await Event.findById(req.params.id);
 
@@ -160,12 +164,18 @@ export const updateEvent = async (req, res) => {
     event.title = title || event.title;
     event.description = description || event.description;
     event.date = date || event.date;
+    if (endDate !== undefined) event.endDate = endDate || null;
     if (location !== undefined) event.location = location;
+    if (category) event.category = category;
 
     const recurring = isRecurring === "true" || isRecurring === true;
     event.isRecurring = recurring;
     event.recurrencePattern = recurring ? recurrencePattern || event.recurrencePattern : null;
     event.recurrenceEnd = recurring ? recurrenceEnd || event.recurrenceEnd : null;
+
+    if (requiresRegistration !== undefined) {
+      event.requiresRegistration = requiresRegistration === "true" || requiresRegistration === true;
+    }
 
     if (req.file) {
       if (event.posterUrl) {

@@ -15,9 +15,18 @@ const eventSchema = new mongoose.Schema(
       type: Date,
       required: [true, "Event date is required"],
     },
+    endDate: {
+      type: Date,
+      default: null,
+    },
     location: {
       type: String,
       trim: true,
+    },
+    category: {
+      type: String,
+      enum: ["worship", "youth", "outreach", "prayer", "conference", "charity"],
+      default: "worship",
     },
     posterUrl: {
       type: String,
@@ -34,6 +43,10 @@ const eventSchema = new mongoose.Schema(
     recurrenceEnd: {
       type: Date,
       default: null,
+    },
+    requiresRegistration: {
+      type: Boolean,
+      default: false,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

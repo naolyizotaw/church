@@ -11,6 +11,7 @@ const EVENT_GRADIENTS = [
   'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
 ];
 
+
 const PlayIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 6 }}>
     <circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.25)" />
@@ -103,22 +104,53 @@ export default function Home() {
                 const month = MONTH_ABBR[d.getMonth()];
                 const day = d.getDate();
                 const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                const endRaw = event.endDate ? new Date(event.endDate) : null;
+                const isMultiDay = endRaw && endRaw.toDateString() !== d.toDateString();
+                const sameDay = endRaw && !isMultiDay;
+                const endTimeStr = sameDay ? endRaw.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+                const timeDisplay = isMultiDay
+                  ? `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endRaw.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                  : `${timeStr}${endTimeStr ? ` – ${endTimeStr}` : ''}`;
+                const imgSrc = event.posterUrl || null;
                 return (
-                  <div key={event._id} style={eventStyles.card}>
-                    <div style={{ ...eventStyles.cardImg, background: EVENT_GRADIENTS[i % 3] }}>
-                      <div style={eventStyles.dateBadge}>
-                        <span style={eventStyles.badgeMonth}>{month}</span>
-                        <span style={eventStyles.badgeDay}>{day}</span>
+                  <div key={event._id} className="events-card-anim events-card-wrap">
+                    <div className="events-card-inner" style={eventStyles.card}>
+                      <div className="events-card-top-accent" />
+                      <div style={eventStyles.cardImg}>
+                        {imgSrc ? (
+                          <img className="events-card-img" src={imgSrc} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        ) : (
+                          <div className="events-card-img" style={{ width: '100%', height: '100%', background: EVENT_GRADIENTS[i % 3] }} />
+                        )}
+                        <div className="events-card-overlay" />
+                        <div className="events-badge-wrap" style={eventStyles.dateBadge}>
+                          <span style={eventStyles.badgeMonth}>{month}</span>
+                          <span style={eventStyles.badgeDay}>{isMultiDay ? `${day}–${endRaw.getDate()}` : day}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div style={eventStyles.cardBody}>
-                      <p style={eventStyles.cardTime}>{timeStr}</p>
-                      <h3 style={eventStyles.cardTitle}>{event.title}</h3>
-                      <p style={eventStyles.cardDesc}>{event.description}</p>
-                      {event.location && (
-                        <p style={eventStyles.cardLocation}>📍 {event.location}</p>
-                      )}
-                      <Link to="/events" style={eventStyles.learnMore}>Learn More &rsaquo;</Link>
+                      <div style={eventStyles.cardBody}>
+                        <div style={eventStyles.metaRow}>
+                          <span className="events-meta-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0ea5e9" style={{ flexShrink: 0 }}>
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+                            </svg>
+                          </span>
+                          <span style={eventStyles.metaText}>{timeDisplay}</span>
+                        </div>
+                        <h3 style={eventStyles.cardTitle}>{event.title}</h3>
+                        <p style={eventStyles.cardDesc}>{event.description}</p>
+                        {event.location && (
+                          <div style={eventStyles.metaRow}>
+                            <span className="events-meta-icon">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="#0ea5e9" style={{ flexShrink: 0 }}>
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                            </span>
+                            <span style={eventStyles.metaText}>{event.location}</span>
+                          </div>
+                        )}
+                        <Link to="/events" style={eventStyles.learnMore}>Learn More &rsaquo;</Link>
+                      </div>
                     </div>
                   </div>
                 );
@@ -336,72 +368,76 @@ const eventStyles = {
     gap: '1.5rem',
   },
   card: {
+    position: 'relative',
     background: '#ffffff',
-    borderRadius: '10px',
+    borderRadius: '16px',
     overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.09)',
-    border: '1px solid #f1f5f9',
-    transition: 'transform 0.2s, box-shadow 0.2s',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+    border: '1px solid #e8ecf1',
   },
   cardImg: {
-    height: '175px',
     position: 'relative',
+    height: '200px',
+    overflow: 'hidden',
   },
   dateBadge: {
     position: 'absolute',
-    top: '12px',
-    left: '12px',
-    background: 'rgba(255,255,255,0.95)',
-    borderRadius: '6px',
-    padding: '6px 10px',
+    top: '14px',
+    left: '14px',
+    background: '#ffffff',
+    borderRadius: '10px',
+    padding: '7px 12px',
     textAlign: 'center',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+    boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+    minWidth: '48px',
+    zIndex: 2,
   },
   badgeMonth: {
     display: 'block',
-    fontSize: '0.65rem',
+    fontSize: '0.6rem',
     fontWeight: '800',
-    color: '#0ea5e9',
-    letterSpacing: '0.08em',
+    color: '#ef4444',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    lineHeight: 1.3,
   },
   badgeDay: {
     display: 'block',
-    fontSize: '1.4rem',
+    fontSize: '1.5rem',
     fontWeight: '800',
-    color: '#0ea5e9',
+    color: '#0f172a',
     lineHeight: 1.1,
   },
   cardBody: {
-    padding: '1.25rem',
+    padding: '1.35rem 1.4rem 1.25rem',
   },
-  cardTime: {
-    fontSize: '0.8rem',
-    color: '#0ea5e9',
-    fontWeight: '600',
-    margin: '0 0 0.4rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+  metaRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.55rem',
+    marginBottom: '0.45rem',
+  },
+  metaText: {
+    fontSize: '0.84rem',
+    color: '#475569',
+    fontWeight: '500',
   },
   cardTitle: {
-    fontSize: '1.05rem',
+    fontSize: '1.08rem',
     fontWeight: '700',
     color: '#0f172a',
-    margin: '0 0 0.5rem',
+    margin: '0 0 0.55rem',
+    lineHeight: 1.35,
   },
   cardDesc: {
-    fontSize: '0.88rem',
-    color: '#475569',
-    margin: '0 0 0.5rem',
-    lineHeight: 1.5,
+    fontSize: '0.86rem',
+    color: '#64748b',
+    margin: '0 0 1rem',
+    lineHeight: 1.6,
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
-  },
-  cardLocation: {
-    fontSize: '0.82rem',
-    color: '#94a3b8',
-    margin: '0 0 0.75rem',
   },
   learnMore: {
     color: '#0ea5e9',
