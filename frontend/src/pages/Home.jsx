@@ -84,6 +84,12 @@ export default function Home() {
 
       {/* ── Upcoming Events ──────────────────────────────── */}
       <section style={eventStyles.section}>
+        <div className="home-light-rays" />
+        <div className="home-sparkles">
+          <span /><span /><span /><span /><span />
+          <span /><span /><span /><span /><span />
+          <span /><span /><span /><span /><span />
+        </div>
         <div style={eventStyles.inner}>
           <div style={eventStyles.header}>
             <div>
@@ -331,10 +337,14 @@ const scriptureStyles = {
 
 const eventStyles = {
   section: {
-    background: '#ffffff',
+    position: 'relative',
+    overflow: 'hidden',
+    background: 'linear-gradient(180deg, #fffbeb 0%, #fff7ed 30%, #ffffff 100%)',
     padding: '4rem 2rem',
   },
   inner: {
+    position: 'relative',
+    zIndex: 1,
     maxWidth: '1100px',
     margin: '0 auto',
   },

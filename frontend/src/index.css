@@ -253,3 +253,119 @@ button {
   transform: scale(1.15);
   filter: drop-shadow(0 0 4px rgba(14,165,233,0.4));
 }
+
+/* ═══ DIVINE LIGHT RAYS — Upcoming Events Background ═══ */
+@keyframes homeLightRotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes homeSparkleFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-120px) scale(1); }
+}
+@keyframes homeSparkleGlow {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(245,158,11,0.3); }
+  50% { box-shadow: 0 0 10px 3px rgba(245,158,11,0.5); }
+}
+
+.home-light-rays {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: 140%;
+  height: 140%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(245,158,11,0.07) 8deg,
+    transparent 16deg,
+    transparent 30deg,
+    rgba(217,119,6,0.05) 38deg,
+    transparent 46deg,
+    transparent 60deg,
+    rgba(245,158,11,0.06) 68deg,
+    transparent 76deg,
+    transparent 90deg,
+    rgba(251,191,36,0.07) 98deg,
+    transparent 106deg,
+    transparent 120deg,
+    rgba(245,158,11,0.05) 128deg,
+    transparent 136deg,
+    transparent 150deg,
+    rgba(217,119,6,0.06) 158deg,
+    transparent 166deg,
+    transparent 180deg,
+    rgba(245,158,11,0.07) 188deg,
+    transparent 196deg,
+    transparent 210deg,
+    rgba(251,191,36,0.05) 218deg,
+    transparent 226deg,
+    transparent 240deg,
+    rgba(245,158,11,0.06) 248deg,
+    transparent 256deg,
+    transparent 270deg,
+    rgba(217,119,6,0.07) 278deg,
+    transparent 286deg,
+    transparent 300deg,
+    rgba(245,158,11,0.05) 308deg,
+    transparent 316deg,
+    transparent 330deg,
+    rgba(251,191,36,0.06) 338deg,
+    transparent 346deg,
+    transparent 360deg
+  );
+  animation: homeLightRotate 60s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-light-rays::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(245,158,11,0.08) 0%,
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
+.home-sparkles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.home-sparkles span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fbbf24, #f59e0b);
+  opacity: 0;
+  animation:
+    homeSparkleFloat 6s ease-in-out infinite,
+    homeSparkleGlow 3s ease-in-out infinite;
+}
+
+.home-sparkles span:nth-child(1)  { left: 5%;  bottom: 10%; animation-delay: 0s; animation-duration: 5.5s, 2.8s; }
+.home-sparkles span:nth-child(2)  { left: 12%; bottom: 5%;  animation-delay: 0.8s; animation-duration: 6.2s, 3.1s; }
+.home-sparkles span:nth-child(3)  { left: 20%; bottom: 15%; animation-delay: 1.5s; animation-duration: 5.8s, 2.6s; }
+.home-sparkles span:nth-child(4)  { left: 28%; bottom: 8%;  animation-delay: 2.2s; animation-duration: 6.5s, 3.3s; }
+.home-sparkles span:nth-child(5)  { left: 35%; bottom: 20%; animation-delay: 0.4s; animation-duration: 5.3s, 2.9s; }
+.home-sparkles span:nth-child(6)  { left: 42%; bottom: 12%; animation-delay: 3.0s; animation-duration: 6.0s, 3.0s; }
+.home-sparkles span:nth-child(7)  { left: 50%; bottom: 6%;  animation-delay: 1.8s; animation-duration: 5.7s, 2.7s; }
+.home-sparkles span:nth-child(8)  { left: 58%; bottom: 18%; animation-delay: 0.6s; animation-duration: 6.3s, 3.2s; }
+.home-sparkles span:nth-child(9)  { left: 65%; bottom: 10%; animation-delay: 2.5s; animation-duration: 5.4s, 2.5s; }
+.home-sparkles span:nth-child(10) { left: 72%; bottom: 14%; animation-delay: 1.2s; animation-duration: 6.1s, 3.4s; }
+.home-sparkles span:nth-child(11) { left: 78%; bottom: 7%;  animation-delay: 3.5s; animation-duration: 5.9s, 2.8s; }
+.home-sparkles span:nth-child(12) { left: 85%; bottom: 16%; animation-delay: 0.3s; animation-duration: 6.4s, 3.1s; }
+.home-sparkles span:nth-child(13) { left: 90%; bottom: 11%; animation-delay: 2.0s; animation-duration: 5.6s, 2.6s; }
+.home-sparkles span:nth-child(14) { left: 95%; bottom: 5%;  animation-delay: 1.0s; animation-duration: 6.6s, 3.3s; }
+.home-sparkles span:nth-child(15) { left: 8%;  bottom: 22%; animation-delay: 2.8s; animation-duration: 5.2s, 2.9s; }
