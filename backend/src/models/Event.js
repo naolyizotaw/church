@@ -22,6 +22,19 @@ const eventSchema = new mongoose.Schema(
     posterUrl: {
       type: String,
     },
+    isRecurring: {
+      type: Boolean,
+      default: false,
+    },
+    recurrencePattern: {
+      type: String,
+      enum: ["weekly", "biweekly", "monthly"],
+      default: null,
+    },
+    recurrenceEnd: {
+      type: Date,
+      default: null,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

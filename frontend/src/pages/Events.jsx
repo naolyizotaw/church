@@ -719,6 +719,15 @@ function EventCard({ event, index }) {
               <span style={cardStyles.metaText}>{event.location}</span>
             </div>
           )}
+          {event.isRecurring && (
+            <div style={cardStyles.recurTag}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              <span>Recurring {event.recurrencePattern}</span>
+            </div>
+          )}
           <button className="events-cta-btn" style={cardStyles.ctaBtn}>
             {ctaLabel} &nbsp;&rarr;
           </button>
@@ -1340,6 +1349,20 @@ const cardStyles = {
     fontSize: '0.84rem',
     color: '#475569',
     fontWeight: '500',
+  },
+  recurTag: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.35rem 0.7rem',
+    background: '#e0f2fe',
+    borderRadius: '6px',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    color: '#0284c7',
+    marginTop: '0.5rem',
+    textTransform: 'capitalize',
+    width: 'fit-content',
   },
   ctaBtn: {
     width: '100%',

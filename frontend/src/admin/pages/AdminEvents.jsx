@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 
-const emptyForm = { title: '', description: '', date: '', time: '', location: '' };
+const emptyForm = { title: '', description: '', date: '', time: '', location: '', isRecurring: false, recurrencePattern: 'weekly', recurrenceEnd: '' };
+
+const RECURRENCE_OPTIONS = [
+  { value: 'weekly', label: 'Every Week' },
+  { value: 'biweekly', label: 'Every 2 Weeks' },
+  { value: 'monthly', label: 'Every Month' },
+];
 
 export default function AdminEvents() {
   const [events, setEvents] = useState([]);
@@ -16,7 +22,7 @@ export default function AdminEvents() {
   const [deleteId, setDeleteId] = useState(null);
 
   const fetchEvents = async () => {
-    try { const { data } = await api.get('/events'); setEvents(Array.isArray(data) ? data : []); }
+    try { const { data } = await api.get('/events?admin=true'); setEvents(Array.isArray(data) ? data : []); }
     catch { setEvents([]); }
     finally { setLoading(false); }
   };
@@ -31,7 +37,8 @@ export default function AdminEvents() {
     const evDate = ev.date ? new Date(ev.date) : null;
     const dateStr = evDate ? evDate.toISOString().slice(0, 10) : '';
     const timeStr = evDate ? evDate.toTimeString().slice(0, 5) : '';
-    setForm({ title: ev.title || '', description: ev.description || '', date: dateStr, time: timeStr, location: ev.location || '' });
+    const recEnd = ev.recurrenceEnd ? new Date(ev.recurrenceEnd).toISOString().slice(0, 10) : '';
+    setForm({ title: ev.title || '', description: ev.description || '', date: dateStr, time: timeStr, location: ev.location || '', isRecurring: !!ev.isRecurring, recurrencePattern: ev.recurrencePattern || 'weekly', recurrenceEnd: recEnd });
     setPoster(null);
     setPosterPreview(ev.posterUrl || null);
     setShowModal(true);
@@ -55,6 +62,11 @@ export default function AdminEvents() {
       const combined = form.time ? `${form.date}T${form.time}` : form.date;
       fd.append('date', combined);
       fd.append('location', form.location);
+      fd.append('isRecurring', form.isRecurring);
+      if (form.isRecurring) {
+        fd.append('recurrencePattern', form.recurrencePattern);
+        if (form.recurrenceEnd) fd.append('recurrenceEnd', form.recurrenceEnd);
+      }
       if (poster) fd.append('poster', poster);
 
       if (editing) {
@@ -136,6 +148,11 @@ export default function AdminEvents() {
                     <span style={{ ...st.badge, background: isPast(ev.date) ? '#f1f5f9' : '#dcfce7', color: isPast(ev.date) ? '#64748b' : '#16a34a' }}>
                       {isPast(ev.date) ? 'PAST' : 'UPCOMING'}
                     </span>
+                    {ev.isRecurring && (
+                      <span style={st.recurBadge}>
+                        ↻ {ev.recurrencePattern}
+                      </span>
+                    )}
                   </td>
                   <td style={{ ...st.td, textAlign: 'right' }}>
                     <button style={st.editBtn} onClick={() => openEdit(ev)}>Edit</button>
@@ -174,6 +191,48 @@ export default function AdminEvents() {
                   <label style={st.label}>Location</label>
                   <input style={st.input} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
                 </div>
+              </div>
+
+              {/* Recurrence */}
+              <div style={st.recurrenceWrap}>
+                <label style={{ ...st.label, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.isRecurring}
+                    onChange={e => setForm({ ...form, isRecurring: e.target.checked })}
+                    style={st.checkbox}
+                  />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
+                  Recurring Event
+                </label>
+                {form.isRecurring && (
+                  <div style={st.recurrenceOptions}>
+                    <div style={st.field}>
+                      <label style={st.label}>Repeats</label>
+                      <select
+                        style={st.input}
+                        value={form.recurrencePattern}
+                        onChange={e => setForm({ ...form, recurrencePattern: e.target.value })}
+                      >
+                        {RECURRENCE_OPTIONS.map(o => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={st.field}>
+                      <label style={st.label}>Repeat Until (optional)</label>
+                      <input
+                        style={st.input}
+                        type="date"
+                        value={form.recurrenceEnd}
+                        onChange={e => setForm({ ...form, recurrenceEnd: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Poster Upload */}
@@ -268,4 +327,8 @@ const st = {
   confirmTitle: { fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 8px' },
   confirmText: { fontSize: 14, color: '#64748b', margin: '0 0 20px', lineHeight: 1.5 },
   deleteBtnFull: { padding: '9px 18px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  recurrenceWrap: { background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '12px 14px' },
+  recurrenceOptions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 10 },
+  checkbox: { width: 16, height: 16, accentColor: '#0ea5e9', cursor: 'pointer' },
+  recurBadge: { display: 'inline-block', marginLeft: 6, padding: '2px 7px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: '#e0f2fe', color: '#0284c7', letterSpacing: '0.03em', textTransform: 'capitalize' },
 };

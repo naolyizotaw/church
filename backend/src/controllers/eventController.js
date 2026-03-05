@@ -6,6 +6,39 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function generateOccurrences(event, rangeEnd) {
+  if (!event.isRecurring || !event.recurrencePattern) return [event];
+
+  const occurrences = [];
+  const base = new Date(event.date);
+  const end = event.recurrenceEnd ? new Date(event.recurrenceEnd) : rangeEnd;
+  const now = new Date();
+  let cursor = new Date(base);
+
+  const advance = {
+    weekly: (d) => d.setDate(d.getDate() + 7),
+    biweekly: (d) => d.setDate(d.getDate() + 14),
+    monthly: (d) => d.setMonth(d.getMonth() + 1),
+  };
+
+  const step = advance[event.recurrencePattern];
+  if (!step) return [event];
+
+  const MAX = 52;
+  let count = 0;
+  while (cursor <= end && count < MAX) {
+    const obj = event.toObject ? event.toObject() : { ...event };
+    obj.date = new Date(cursor);
+    obj._isOccurrence = true;
+    obj._parentId = event._id;
+    occurrences.push(obj);
+    step(cursor);
+    count++;
+  }
+
+  return occurrences;
+}
+
 /**
  * @desc    Get all events
  * @route   GET /api/events
@@ -15,9 +48,27 @@ export const getEvents = async (req, res) => {
   try {
     const events = await Event.find()
       .populate("createdBy", "name email")
-      .sort({ date: 1 }); // Sort by date ascending (upcoming events first)
+      .sort({ date: 1 });
 
-    res.json(events);
+    const admin = req.query.admin === "true";
+    if (admin) {
+      return res.json(events);
+    }
+
+    const rangeEnd = new Date();
+    rangeEnd.setMonth(rangeEnd.getMonth() + 3);
+
+    const expanded = [];
+    for (const ev of events) {
+      if (ev.isRecurring) {
+        expanded.push(...generateOccurrences(ev, rangeEnd));
+      } else {
+        expanded.push(ev);
+      }
+    }
+
+    expanded.sort((a, b) => new Date(a.date) - new Date(b.date));
+    res.json(expanded);
   } catch (error) {
     console.error("Get events error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -54,7 +105,7 @@ export const getEventById = async (req, res) => {
  */
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location } = req.body;
+    const { title, description, date, location, isRecurring, recurrencePattern, recurrenceEnd } = req.body;
 
     if (!title || !description || !date) {
       if (req.file) fs.unlinkSync(req.file.path);
@@ -74,6 +125,9 @@ export const createEvent = async (req, res) => {
       date,
       location,
       posterUrl,
+      isRecurring: isRecurring === "true" || isRecurring === true,
+      recurrencePattern: isRecurring === "true" || isRecurring === true ? recurrencePattern : null,
+      recurrenceEnd: isRecurring === "true" || isRecurring === true ? recurrenceEnd || null : null,
       createdBy: req.user._id,
     });
 
@@ -94,7 +148,7 @@ export const createEvent = async (req, res) => {
  */
 export const updateEvent = async (req, res) => {
   try {
-    const { title, description, date, location } = req.body;
+    const { title, description, date, location, isRecurring, recurrencePattern, recurrenceEnd } = req.body;
 
     const event = await Event.findById(req.params.id);
 
@@ -107,6 +161,11 @@ export const updateEvent = async (req, res) => {
     event.description = description || event.description;
     event.date = date || event.date;
     if (location !== undefined) event.location = location;
+
+    const recurring = isRecurring === "true" || isRecurring === true;
+    event.isRecurring = recurring;
+    event.recurrencePattern = recurring ? recurrencePattern || event.recurrencePattern : null;
+    event.recurrenceEnd = recurring ? recurrenceEnd || event.recurrenceEnd : null;
 
     if (req.file) {
       if (event.posterUrl) {
