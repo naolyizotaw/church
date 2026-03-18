@@ -15,6 +15,7 @@ import contactRoutes from "./routes/contactRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
 import programRoutes from "./routes/programRoutes.js";
 import registrationRoutes from "./routes/registrationRoutes.js";
+import leaderRoutes from "./routes/leaderRoutes.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use("/api/contacts", contactRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/programs", programRoutes);
 app.use("/api/registrations", registrationRoutes);
+app.use("/api/leaders", leaderRoutes);
 
 
 

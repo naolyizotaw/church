@@ -39,10 +39,12 @@ export const register = async (req, res) => {
 
     if (user) {
       res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
         token: generateToken(user._id),
       });
     } else {
@@ -73,10 +75,12 @@ export const login = async (req, res) => {
 
     if (user && (await user.comparePassword(password))) {
       res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
         token: generateToken(user._id),
       });
     } else {
@@ -96,7 +100,7 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
-    res.json(user);
+    res.json({ user });
   } catch (error) {
     console.error("Get me error:", error);
     res.status(500).json({ message: "Server error", error: error.message });

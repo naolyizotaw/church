@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import Footer from '../components/Footer';
 
 const journeyAnimCSS = `
@@ -543,7 +544,7 @@ const journeyAnimCSS = `
 }
 `;
 
-function useScrollObserver(selector) {
+function useScrollObserver(selector, deps = []) {
   const ref = useRef(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -563,7 +564,7 @@ function useScrollObserver(selector) {
       observer.observe(item);
     });
     return () => observer.disconnect();
-  }, [selector]);
+  }, [selector, ...deps]);
   return ref;
 }
 
@@ -613,15 +614,13 @@ const LeaderPhoto = ({ src, fallbackSrc, alt, style, className }) => {
   );
 };
 
-// Replace /leaders/xxx.jpg with your own photos. Add images to frontend/public/leaders/
-const leaders = [
-  { name: 'Pastor Daniel Ababe', role: 'Senior Pastor', roleAm: 'ዋና ፓስተር', initials: 'DA', color: '#0ea5e9', image: '/leaders/pastor-daniel.jpg' },
-  { name: 'Sorah Kebede', role: 'Worship Leader', roleAm: 'የአምልኮ መሪ', initials: 'SK', color: '#10b981', image: '/leaders/sorah-kebede.jpg' },
-  { name: 'Markos Tesfaye', role: 'Youth Pastor', roleAm: 'የወጣቶች ፓስተር', initials: 'MT', color: '#f59e0b', image: '/leaders/markos-tesfaye.jpg' },
-  { name: 'Hanna Alemayahu', role: "Women's Ministry", roleAm: 'የሴቶች አገልግሎት', initials: 'HA', color: '#8b5cf6', image: '/leaders/hanna-alemayahu.jpg' },
+const FALLBACK_LEADERS = [
+  { name: 'Pastor Daniel Ababe', role: 'Senior Pastor', roleAm: 'ዋና ፓስተር', photoUrl: '/leaders/pastor-daniel.jpg', facebook: '', twitter: '', linkedin: '' },
+  { name: 'Sorah Kebede', role: 'Worship Leader', roleAm: 'የአምልኮ መሪ', photoUrl: '/leaders/sorah-kebede.jpg', facebook: '', twitter: '', linkedin: '' },
+  { name: 'Markos Tesfaye', role: 'Youth Pastor', roleAm: 'የወጣቶች ፓስተር', photoUrl: '/leaders/markos-tesfaye.jpg', facebook: '', twitter: '', linkedin: '' },
+  { name: 'Hanna Alemayahu', role: "Women's Ministry", roleAm: 'የሴቶች አገልግሎት', photoUrl: '/leaders/hanna-alemayahu.jpg', facebook: '', twitter: '', linkedin: '' },
 ];
 
-// Placeholder images (used until you add your own to public/leaders/)
 const PLACEHOLDER_IMAGES = [
   'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=260&h=260&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=260&h=260&fit=crop&crop=face',
@@ -758,7 +757,21 @@ function JourneySection() {
 }
 
 function LeadersSection() {
-  const gridRef = useScrollObserver('.leader-card-wrap');
+  const [leaders, setLeaders] = useState(FALLBACK_LEADERS);
+  const gridRef = useScrollObserver('.leader-card-wrap', [leaders]);
+
+  useEffect(() => {
+    axios.get('/api/leaders')
+      .then(({ data }) => {
+        if (Array.isArray(data) && data.length > 0) setLeaders(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const gridCols = leaders.length <= 3
+    ? `repeat(${leaders.length}, 1fr)`
+    : leaderStyles.grid.gridTemplateColumns;
+
   return (
     <section style={leaderStyles.section}>
       <div style={leaderStyles.inner}>
@@ -766,43 +779,53 @@ function LeadersSection() {
         <p style={leaderStyles.subheading}>
           Dedicated servants committed to spreading the truth, love, and wisdom.
         </p>
-        <div style={leaderStyles.grid} ref={gridRef}>
-          {leaders.map((leader, i) => (
-            <div key={i} className="leader-card-wrap">
-              <div className="leader-card" style={leaderStyles.card}>
-                <div className="leader-accent-line" style={leaderStyles.accentLine} />
-                <div className="leader-photo-ring" style={leaderStyles.photoRing}>
-                  <LeaderPhoto
-                    src={leader.image}
-                    fallbackSrc={PLACEHOLDER_IMAGES[i]}
-                    alt={leader.name}
-                    style={leaderStyles.photo}
-                    className="leader-photo"
-                  />
-                </div>
-                <h4 className="leader-name" style={leaderStyles.name}>{leader.name}</h4>
-                <p className="leader-role" style={leaderStyles.role}>{leader.role}</p>
-                <p className="leader-role" style={leaderStyles.roleAm}>{leader.roleAm}</p>
-                <div style={leaderStyles.socials}>
-                  {[
-                    { Icon: FacebookIcon, label: 'Facebook' },
-                    { Icon: TwitterIcon, label: 'Twitter' },
-                    { Icon: LinkedInIcon, label: 'LinkedIn' },
-                  ].map(({ Icon, label }, si) => (
-                    <a
-                      key={label}
-                      href="#"
-                      className="leader-social leader-social-btn"
-                      style={{ ...leaderStyles.socialBtn, animationDelay: `${0.55 + si * 0.08}s` }}
-                      aria-label={label}
-                    >
-                      <Icon />
-                    </a>
-                  ))}
+        <div style={{ ...leaderStyles.grid, gridTemplateColumns: gridCols }} ref={gridRef}>
+          {leaders.map((leader, i) => {
+            const socials = [
+              { url: leader.facebook, Icon: FacebookIcon, label: 'Facebook' },
+              { url: leader.twitter, Icon: TwitterIcon, label: 'Twitter' },
+              { url: leader.linkedin, Icon: LinkedInIcon, label: 'LinkedIn' },
+            ].filter(s => s.url);
+
+            return (
+              <div key={leader._id || i} className="leader-card-wrap">
+                <div className="leader-card" style={leaderStyles.card}>
+                  <div className="leader-accent-line" style={leaderStyles.accentLine} />
+                  <div className="leader-photo-ring" style={leaderStyles.photoRing}>
+                    <LeaderPhoto
+                      src={leader.photoUrl || ''}
+                      fallbackSrc={PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]}
+                      alt={leader.name}
+                      style={leaderStyles.photo}
+                      className="leader-photo"
+                    />
+                  </div>
+                  <h4 className="leader-name" style={leaderStyles.name}>{leader.name}</h4>
+                  <p className="leader-role" style={leaderStyles.role}>{leader.role}</p>
+                  {leader.roleAm && <p className="leader-role" style={leaderStyles.roleAm}>{leader.roleAm}</p>}
+                  <div style={leaderStyles.socials}>
+                    {(socials.length > 0 ? socials : [
+                      { url: '#', Icon: FacebookIcon, label: 'Facebook' },
+                      { url: '#', Icon: TwitterIcon, label: 'Twitter' },
+                      { url: '#', Icon: LinkedInIcon, label: 'LinkedIn' },
+                    ]).map(({ url, Icon, label }, si) => (
+                      <a
+                        key={label}
+                        href={url || '#'}
+                        target={url && url !== '#' ? '_blank' : undefined}
+                        rel={url && url !== '#' ? 'noreferrer' : undefined}
+                        className="leader-social leader-social-btn"
+                        style={{ ...leaderStyles.socialBtn, animationDelay: `${0.55 + si * 0.08}s` }}
+                        aria-label={label}
+                      >
+                        <Icon />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
