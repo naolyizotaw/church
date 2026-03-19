@@ -6,6 +6,7 @@ import Ministries from './pages/Ministries';
 import Give from './pages/Give';
 import Events from './pages/Events';
 import Sermons from './pages/Sermons';
+import SermonDetail from './pages/SermonDetail';
 import Announcements from './pages/Announcements';
 import Contact from './pages/Contact';
 import Services from './pages/Services';
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/give" element={<Give />} />
           <Route path="/events" element={<Events />} />
           <Route path="/sermons" element={<Sermons />} />
+          <Route path="/sermons/:id" element={<SermonDetail />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/contact" element={<Contact />} />
         </Route>

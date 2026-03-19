@@ -1,4 +1,5 @@
 import Sermon from "../models/Sermon.js";
+import { extractVideoId } from "./youtubeController.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -32,7 +33,7 @@ export const getSermons = async (req, res) => {
 
     const sermons = await Sermon.find(filter)
       .populate("uploadedBy", "name email")
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -57,7 +58,7 @@ export const getFeaturedSermon = async (req, res) => {
   try {
     let sermon = await Sermon.findOne({ isFeatured: true }).populate("uploadedBy", "name email");
     if (!sermon) {
-      sermon = await Sermon.findOne().sort({ date: -1 }).populate("uploadedBy", "name email");
+      sermon = await Sermon.findOne().sort({ date: -1, createdAt: -1 }).populate("uploadedBy", "name email");
     }
     if (!sermon) {
       return res.status(404).json({ message: "No sermons found" });
@@ -138,6 +139,8 @@ export const createSermon = async (req, res) => {
       fileUrl = `/uploads/${req.file.filename}`;
     }
 
+    const youtubeVideoId = extractVideoId(videoUrl);
+
     const sermon = await Sermon.create({
       title,
       description,
@@ -149,6 +152,7 @@ export const createSermon = async (req, res) => {
       topic,
       thumbnailUrl,
       videoUrl,
+      youtubeVideoId,
       duration,
       isFeatured: isFeatured === "true" || isFeatured === true,
       uploadedBy: req.user._id,
@@ -191,6 +195,9 @@ export const updateSermon = async (req, res) => {
     sermon.topic = topic !== undefined ? topic : sermon.topic;
     sermon.thumbnailUrl = thumbnailUrl !== undefined ? thumbnailUrl : sermon.thumbnailUrl;
     sermon.videoUrl = videoUrl !== undefined ? videoUrl : sermon.videoUrl;
+    if (videoUrl !== undefined) {
+      sermon.youtubeVideoId = extractVideoId(videoUrl);
+    }
     sermon.duration = duration !== undefined ? duration : sermon.duration;
     if (isFeatured !== undefined) sermon.isFeatured = isFeatured === "true" || isFeatured === true;
 

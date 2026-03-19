@@ -7,6 +7,10 @@ const emptyForm = {
   isFeatured: false, fileType: 'video',
 };
 
+function isYoutubeUrl(url) {
+  return /(?:youtube\.com|youtu\.be)/.test(url || '');
+}
+
 export default function AdminSermons() {
   const [sermons, setSermons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +21,8 @@ export default function AdminSermons() {
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState('');
 
   const fetchSermons = async () => {
     try {
@@ -28,7 +34,7 @@ export default function AdminSermons() {
 
   useEffect(() => { fetchSermons(); }, []);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setFile(null); setShowModal(true); };
+  const openCreate = () => { setEditing(null); setForm(emptyForm); setFile(null); setFetchError(''); setShowModal(true); };
   const openEdit = (s) => {
     setEditing(s._id);
     setForm({
@@ -38,7 +44,33 @@ export default function AdminSermons() {
       duration: s.duration || '', isFeatured: s.isFeatured || false, fileType: s.fileType || 'video',
     });
     setFile(null);
+    setFetchError('');
     setShowModal(true);
+  };
+
+  const fetchYoutubeInfo = async (url) => {
+    if (!isYoutubeUrl(url)) return;
+    setFetching(true);
+    setFetchError('');
+    try {
+      const { data } = await api.get('/youtube/info', { params: { url } });
+      setForm(prev => ({
+        ...prev,
+        title: prev.title || data.title || '',
+        thumbnailUrl: data.thumbnailUrl || prev.thumbnailUrl,
+        speaker: prev.speaker || data.authorName || '',
+      }));
+    } catch {
+      setFetchError('Could not fetch video info. Check the URL.');
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleVideoUrlBlur = () => {
+    if (form.videoUrl && isYoutubeUrl(form.videoUrl)) {
+      fetchYoutubeInfo(form.videoUrl);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -118,7 +150,7 @@ export default function AdminSermons() {
                   </td>
                   <td style={st.td}>{s.speaker}</td>
                   <td style={st.td}>{new Date(s.date).toLocaleDateString()}</td>
-                  <td style={st.td}>{s.series || '—'}</td>
+                  <td style={st.td}>{s.series || '\u2014'}</td>
                   <td style={st.td}>
                     <span style={{ ...st.badge, background: s.isFeatured ? '#dcfce7' : '#f1f5f9', color: s.isFeatured ? '#16a34a' : '#64748b' }}>
                       {s.isFeatured ? 'FEATURED' : 'DRAFT'}
@@ -141,6 +173,42 @@ export default function AdminSermons() {
           <div style={st.modal} onClick={e => e.stopPropagation()}>
             <h2 style={st.modalTitle}>{editing ? 'Edit Sermon' : 'Add New Sermon'}</h2>
             <form onSubmit={handleSubmit} style={st.form}>
+
+              {/* YouTube URL — top of form for best workflow */}
+              <div style={st.field}>
+                <label style={st.label}>YouTube URL</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    style={{ ...st.input, flex: 1 }}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={form.videoUrl}
+                    onChange={e => setForm({ ...form, videoUrl: e.target.value })}
+                    onBlur={handleVideoUrlBlur}
+                  />
+                  <button
+                    type="button"
+                    style={st.fetchBtn}
+                    disabled={fetching || !form.videoUrl}
+                    onClick={() => fetchYoutubeInfo(form.videoUrl)}
+                  >
+                    {fetching ? 'Fetching...' : 'Fetch Info'}
+                  </button>
+                </div>
+                {fetchError && <span style={st.fetchError}>{fetchError}</span>}
+                {fetching && <span style={st.fetchHint}>Fetching video details from YouTube...</span>}
+              </div>
+
+              {/* Thumbnail preview */}
+              {form.thumbnailUrl && isYoutubeUrl(form.videoUrl) && (
+                <div style={st.previewRow}>
+                  <img src={form.thumbnailUrl} alt="Thumbnail preview" style={st.previewImg} />
+                  <div style={st.previewInfo}>
+                    <span style={st.previewLabel}>YouTube Thumbnail</span>
+                    <span style={st.previewHint}>Title and thumbnail were auto-filled. You can edit them below.</span>
+                  </div>
+                </div>
+              )}
+
               <div style={st.row2}>
                 <div style={st.field}>
                   <label style={st.label}>Title *</label>
@@ -175,20 +243,14 @@ export default function AdminSermons() {
                 <label style={st.label}>Description</label>
                 <textarea style={{ ...st.input, height: 80, resize: 'vertical' }} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
               </div>
-              <div style={st.row2}>
-                <div style={st.field}>
-                  <label style={st.label}>Video URL</label>
-                  <input style={st.input} value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })} />
-                </div>
-                <div style={st.field}>
-                  <label style={st.label}>Thumbnail URL</label>
-                  <input style={st.input} value={form.thumbnailUrl} onChange={e => setForm({ ...form, thumbnailUrl: e.target.value })} />
-                </div>
+              <div style={st.field}>
+                <label style={st.label}>Thumbnail URL</label>
+                <input style={st.input} value={form.thumbnailUrl} onChange={e => setForm({ ...form, thumbnailUrl: e.target.value })} />
               </div>
               {!editing && (
                 <div style={st.row2}>
                   <div style={st.field}>
-                    <label style={st.label}>Upload File</label>
+                    <label style={st.label}>Upload File (optional)</label>
                     <input type="file" accept="audio/*,video/*" onChange={e => setFile(e.target.files[0])} style={st.input} />
                   </div>
                   <div style={st.field}>
@@ -252,7 +314,7 @@ const st = {
   deleteBtn: { background: 'none', border: '1px solid #fecaca', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#ef4444', cursor: 'pointer' },
   empty: { padding: 40, textAlign: 'center', color: '#94a3b8', fontSize: 14 },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
-  modal: { background: '#fff', borderRadius: 14, padding: 28, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto' },
+  modal: { background: '#fff', borderRadius: 14, padding: 28, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto' },
   modalTitle: { fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 20px' },
   form: { display: 'flex', flexDirection: 'column', gap: 14 },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
@@ -267,4 +329,12 @@ const st = {
   confirmTitle: { fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 8px' },
   confirmText: { fontSize: 14, color: '#64748b', margin: '0 0 20px', lineHeight: 1.5 },
   deleteBtnFull: { padding: '9px 18px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  fetchBtn: { padding: '9px 16px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' },
+  fetchError: { fontSize: 12, color: '#ef4444', marginTop: 2 },
+  fetchHint: { fontSize: 12, color: '#0ea5e9', marginTop: 2 },
+  previewRow: { display: 'flex', gap: 14, alignItems: 'center', padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' },
+  previewImg: { width: 120, height: 68, objectFit: 'cover', borderRadius: 6, flexShrink: 0 },
+  previewInfo: { display: 'flex', flexDirection: 'column', gap: 4 },
+  previewLabel: { fontSize: 13, fontWeight: 600, color: '#0f172a' },
+  previewHint: { fontSize: 12, color: '#64748b', lineHeight: 1.4 },
 };
