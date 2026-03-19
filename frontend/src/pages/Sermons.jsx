@@ -8,19 +8,58 @@ const pageCSS = `
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes heroTextIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes mosaicDrift {
+  0% { transform: scale(1.05) translate(0, 0); }
+  50% { transform: scale(1.08) translate(-1.5%, -1%); }
+  100% { transform: scale(1.05) translate(0, 0); }
+}
+@keyframes thumbFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.sermon-hero-text > * {
+  opacity: 0;
+  animation: heroTextIn 0.6s ease forwards;
+}
+.sermon-hero-text > *:nth-child(1) { animation-delay: 0.1s; }
+.sermon-hero-text > *:nth-child(2) { animation-delay: 0.2s; }
+.sermon-hero-text > *:nth-child(3) { animation-delay: 0.3s; }
+.sermon-hero-text > *:nth-child(4) { animation-delay: 0.4s; }
+.sermon-hero-text > *:nth-child(5) { animation-delay: 0.5s; }
+
+.sermon-mosaic-grid {
+  animation: mosaicDrift 25s ease-in-out infinite;
+}
+
+.sermon-hero-thumb {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.sermon-hero-thumb:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 50px rgba(0,0,0,0.55) !important;
+}
+.sermon-hero-thumb:hover .sermon-thumb-play {
+  background: rgba(10,10,18,0.45) !important;
+}
+
 .sermon-card {
   animation: sermonFadeUp 0.5s ease forwards;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .sermon-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(26,26,46,0.14);
 }
 .sermon-card-img {
-  transition: transform 0.4s ease;
+  transition: transform 0.5s ease;
 }
 .sermon-card:hover .sermon-card-img {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 .sermon-card:hover .sermon-play-overlay {
   opacity: 1 !important;
@@ -30,26 +69,27 @@ const pageCSS = `
   cursor: pointer;
 }
 .sermon-filter-btn:hover {
-  border-color: #0ea5e9 !important;
-  color: #0ea5e9 !important;
+  border-color: #d4a017 !important;
+  color: #b8860b !important;
 }
 .sermon-search-input:focus {
   outline: none;
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+  border-color: #d4a017;
+  box-shadow: 0 0 0 3px rgba(212,160,23,0.12);
 }
 .sermon-watch-btn {
   transition: all 0.2s ease;
 }
 .sermon-watch-btn:hover {
-  background: #0284c7 !important;
+  background: #b8860b !important;
   transform: translateY(-1px);
 }
 .sermon-share-btn {
   transition: all 0.2s ease;
 }
 .sermon-share-btn:hover {
-  background: #374151 !important;
+  background: rgba(255,255,255,0.18) !important;
+  color: #fff !important;
   transform: translateY(-1px);
 }
 .sermon-load-more {
@@ -57,26 +97,26 @@ const pageCSS = `
   cursor: pointer;
 }
 .sermon-load-more:hover {
-  background: #0f172a !important;
+  background: #1e3a5f !important;
   color: #fff !important;
-  border-color: #0f172a !important;
+  border-color: #1e3a5f !important;
 }
 .sermon-icon-btn {
   transition: color 0.15s ease;
   cursor: pointer;
 }
 .sermon-icon-btn:hover {
-  color: #0ea5e9 !important;
+  color: #d4a017 !important;
 }
 
 .sermon-filter-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  background: #fffdf8;
+  border: 1px solid #e8e0d0;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(26,26,46,0.10);
   z-index: 50;
   min-width: 180px;
   padding: 6px 0;
@@ -86,13 +126,26 @@ const pageCSS = `
 .sermon-filter-dropdown-item {
   padding: 8px 16px;
   font-size: 0.88rem;
-  color: #374151;
+  color: #1a1a2e;
   cursor: pointer;
   transition: background 0.15s;
 }
 .sermon-filter-dropdown-item:hover {
-  background: #f1f5f9;
-  color: #0ea5e9;
+  background: #f5f0e8;
+  color: #b8860b;
+}
+
+@media (max-width: 1024px) {
+  .sermon-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .sermon-hero-inner { flex-direction: column !important; align-items: center !important; }
+  .sermon-hero-text { align-items: center !important; }
+  .sermon-hero-thumb { width: 100% !important; max-width: 480px; }
+  .sermon-hero-actions { justify-content: center !important; }
+  .sermon-mosaic-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 640px) {
+  .sermon-cards-grid { grid-template-columns: 1fr !important; }
+  .sermon-mosaic-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 `;
 
@@ -342,40 +395,72 @@ export default function Sermons() {
   const heroData = featured || fallbackFeatured;
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: '#fff', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: '#faf8f5', minHeight: '100vh' }}>
 
       {/* ── Hero / Featured Sermon ── */}
       <section style={heroStyles.section}>
-        <div style={heroStyles.imgWrap}>
-          <img
-            src={heroData.thumbnailUrl || '/hero.jpg'}
-            alt={heroData.title}
-            style={heroStyles.img}
-          />
-          <div style={heroStyles.overlay} />
+        {/* Mosaic background */}
+        <div style={heroStyles.mosaicWrap}>
+          <div className="sermon-mosaic-grid" style={heroStyles.mosaicGrid}>
+            {(() => {
+              const pool = sermons.length > 0 ? sermons : fallbackSermons;
+              const tiles = [];
+              for (let i = 0; i < 12; i++) {
+                const s = pool[i % pool.length];
+                tiles.push(
+                  <div key={i} style={heroStyles.mosaicTile}>
+                    <img src={s.thumbnailUrl || 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300&h=200&fit=crop'} alt="" style={heroStyles.mosaicImg} />
+                  </div>
+                );
+              }
+              return tiles;
+            })()}
+          </div>
+          <div style={heroStyles.mosaicOverlay} />
         </div>
-        <div style={heroStyles.content}>
-          <span style={heroStyles.tag}>{heroData.series || 'LATEST MESSAGE'}</span>
-          <h1 style={heroStyles.title}>{heroData.title}</h1>
-          <div style={heroStyles.meta}>
-            <span style={heroStyles.metaItem}>
-              <PersonIcon /> {heroData.speaker}
-            </span>
-            <span style={heroStyles.metaDot}>&bull;</span>
-            <span style={heroStyles.metaItem}>
-              <CalendarIcon /> {formatDate(heroData.date)}
-            </span>
+
+        {/* Content */}
+        <div className="sermon-hero-inner" style={heroStyles.inner}>
+          <div style={heroStyles.textCol}>
+            <span style={heroStyles.tag}>{heroData.series || 'LATEST MESSAGE'}</span>
+            <h1 style={heroStyles.title}>{heroData.title}</h1>
+            <div style={heroStyles.meta}>
+              <span style={heroStyles.metaItem}>
+                <PersonIcon /> {heroData.speaker}
+              </span>
+              <span style={heroStyles.metaDot}>&bull;</span>
+              <span style={heroStyles.metaItem}>
+                <CalendarIcon /> {formatDate(heroData.date)}
+              </span>
+            </div>
+            <div className="sermon-hero-actions" style={heroStyles.actions}>
+              <Link to={`/sermons/${heroData._id}?play=1`} className="sermon-watch-btn" style={{ ...heroStyles.watchBtn, textDecoration: 'none' }}>
+                <PlayIcon /> Watch Now
+              </Link>
+              <button className="sermon-share-btn" style={heroStyles.shareBtn} onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/sermons/${heroData._id}`);
+              }}>
+                <ShareIcon /> Share
+              </button>
+            </div>
           </div>
-          <div style={heroStyles.actions}>
-            <Link to={`/sermons/${heroData._id}?play=1`} className="sermon-watch-btn" style={{ ...heroStyles.watchBtn, textDecoration: 'none' }}>
-              <PlayIcon /> Watch Now
-            </Link>
-            <button className="sermon-share-btn" style={heroStyles.shareBtn} onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/sermons/${heroData._id}`);
-            }}>
-              <ShareIcon /> Share
-            </button>
-          </div>
+          <Link to={`/sermons/${heroData._id}?play=1`} className="sermon-hero-thumb" style={heroStyles.playerFrame}>
+            <div style={heroStyles.playerImgWrap}>
+              <img
+                src={heroData.thumbnailUrl || '/hero.jpg'}
+                alt={heroData.title}
+                style={heroStyles.playerImg}
+              />
+              <div className="sermon-thumb-play" style={heroStyles.playerPlayBtn}>
+                <div style={heroStyles.playerPlayCircle}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="9,5 19,12 9,19"/></svg>
+                </div>
+              </div>
+            </div>
+            <div style={heroStyles.playerBar}>
+              <div style={heroStyles.playerProgress} />
+            </div>
+          </Link>
         </div>
       </section>
 
@@ -435,15 +520,15 @@ export default function Sermons() {
 
         {/* ── Cards Grid ── */}
         {loading && sermons.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 0', color: '#94a3b8' }}>
+          <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8494' }}>
             <div style={{ fontSize: '1.1rem' }}>Loading sermons...</div>
           </div>
         ) : sermons.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 0', color: '#94a3b8' }}>
+          <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8494' }}>
             <div style={{ fontSize: '1.1rem' }}>No sermons found.</div>
           </div>
         ) : (
-          <div style={cardStyles.grid}>
+          <div className="sermon-cards-grid" style={cardStyles.grid}>
             {sermons.map((sermon, i) => (
               <SermonCard key={sermon._id} sermon={sermon} index={i} />
             ))}
@@ -479,9 +564,9 @@ function FilterButton({ label, active, isOpen, onToggle, options, selected, onSe
         onClick={onToggle}
         style={{
           ...filterStyles.btn,
-          borderColor: active ? '#0ea5e9' : '#e2e8f0',
-          color: active ? '#0ea5e9' : '#374151',
-          background: active ? '#f0f9ff' : '#fff',
+          borderColor: active ? '#d4a017' : '#e8e0d0',
+          color: active ? '#b8860b' : '#1a1a2e',
+          background: active ? '#fdf6e3' : '#fffdf8',
         }}
       >
         {label} <ChevronDown />
@@ -491,7 +576,7 @@ function FilterButton({ label, active, isOpen, onToggle, options, selected, onSe
           {selected && (
             <div
               className="sermon-filter-dropdown-item"
-              style={{ color: '#94a3b8', fontStyle: 'italic' }}
+              style={{ color: '#a89880', fontStyle: 'italic' }}
               onClick={() => onSelect(selected)}
             >
               Clear
@@ -501,7 +586,7 @@ function FilterButton({ label, active, isOpen, onToggle, options, selected, onSe
             <div
               key={opt}
               className="sermon-filter-dropdown-item"
-              style={opt === selected ? { color: '#0ea5e9', fontWeight: '600' } : {}}
+              style={opt === selected ? { color: '#b8860b', fontWeight: '600' } : {}}
               onClick={() => onSelect(opt)}
             >
               {opt}
@@ -515,7 +600,6 @@ function FilterButton({ label, active, isOpen, onToggle, options, selected, onSe
 
 
 function SermonCard({ sermon, index }) {
-  const color = getSeriesColor(sermon.series);
   return (
     <Link
       to={`/sermons/${sermon._id}?play=1`}
@@ -534,20 +618,16 @@ function SermonCard({ sermon, index }) {
         )}
         <div className="sermon-play-overlay" style={cardStyles.playOverlay}>
           <div style={cardStyles.playCircle}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="10,8 16,12 10,16"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="9,6 18,12 9,18"/></svg>
           </div>
         </div>
       </div>
       <div style={cardStyles.body}>
         <div style={cardStyles.tagRow}>
-          <span style={{ ...cardStyles.seriesTag, color }}>{sermon.series}</span>
-          {sermon.series && <span style={cardStyles.dot}>&bull;</span>}
+          {sermon.series && <span style={cardStyles.seriesTag}>{sermon.series}</span>}
           <span style={cardStyles.date}>{formatDate(sermon.date)}</span>
         </div>
         <h3 style={cardStyles.title}>{sermon.title}</h3>
-        {sermon.description && (
-          <p style={cardStyles.desc}>{sermon.description}</p>
-        )}
         <div style={cardStyles.footer}>
           <div style={cardStyles.speaker}>
             <div style={cardStyles.avatar}>
@@ -567,44 +647,61 @@ function SermonCard({ sermon, index }) {
 const heroStyles = {
   section: {
     position: 'relative',
-    width: '100%',
-    height: '380px',
     overflow: 'hidden',
+    padding: '3.5rem 4rem',
+    minHeight: '340px',
   },
-  imgWrap: {
+  mosaicWrap: {
     position: 'absolute',
     inset: 0,
+    overflow: 'hidden',
   },
-  img: {
+  mosaicGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridTemplateRows: 'repeat(3, 1fr)',
+    position: 'absolute',
+    inset: '-10%',
+    gap: '4px',
+    filter: 'blur(6px) saturate(0.5)',
+  },
+  mosaicTile: {
+    overflow: 'hidden',
+  },
+  mosaicImg: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    display: 'block',
   },
-  overlay: {
+  mosaicOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.15) 100%)',
+    background: 'linear-gradient(135deg, rgba(26,26,46,0.92) 0%, rgba(22,33,62,0.88) 40%, rgba(30,58,95,0.85) 100%)',
   },
-  content: {
-    position: 'absolute',
-    inset: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    padding: '0 4rem',
+  inner: {
+    position: 'relative',
     zIndex: 2,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3rem',
+  },
+  textCol: {
+    flex: 1,
+    minWidth: 0,
   },
   tag: {
     display: 'inline-block',
-    background: '#f59e0b',
+    background: '#d4a017',
     color: '#fff',
     fontSize: '0.7rem',
     fontWeight: '700',
-    padding: '4px 12px',
+    padding: '5px 14px',
     borderRadius: '4px',
     letterSpacing: '0.06em',
     marginBottom: '16px',
     width: 'fit-content',
+    textTransform: 'uppercase',
   },
   title: {
     color: '#fff',
@@ -613,7 +710,7 @@ const heroStyles = {
     lineHeight: 1.15,
     margin: '0 0 16px',
     maxWidth: '600px',
-    textShadow: '0 2px 12px rgba(0,0,0,0.3)',
+    textShadow: '0 2px 16px rgba(0,0,0,0.35)',
   },
   meta: {
     display: 'flex',
@@ -625,11 +722,11 @@ const heroStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: '5px',
-    color: '#e2e8f0',
+    color: '#e8e0d0',
     fontSize: '0.85rem',
   },
   metaDot: {
-    color: '#94a3b8',
+    color: '#a89880',
   },
   actions: {
     display: 'flex',
@@ -639,9 +736,24 @@ const heroStyles = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    background: '#0ea5e9',
+    background: '#d4a017',
     color: '#fff',
     border: 'none',
+    borderRadius: '8px',
+    padding: '11px 26px',
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    boxShadow: '0 4px 16px rgba(212,160,23,0.3)',
+  },
+  shareBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#d0c8b8',
+    border: '1px solid rgba(255,255,255,0.18)',
     borderRadius: '8px',
     padding: '10px 24px',
     fontSize: '0.9rem',
@@ -649,19 +761,62 @@ const heroStyles = {
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
-  shareBtn: {
+  playerFrame: {
+    display: 'block',
+    width: '460px',
+    flexShrink: 0,
+    borderRadius: '10px',
+    overflow: 'hidden',
+    background: '#0a0a12',
+    boxShadow: '0 12px 44px rgba(0,0,0,0.5)',
+    textDecoration: 'none',
+  },
+  playerBar: {
+    height: '28px',
+    background: '#111118',
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    background: '#1e293b',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '10px 24px',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
+    padding: '0 12px',
+    position: 'relative',
+  },
+  playerProgress: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '35%',
+    height: '3px',
+    background: '#d4a017',
+    borderRadius: '0 2px 2px 0',
+  },
+  playerImgWrap: {
+    position: 'relative',
+    width: '100%',
+  },
+  playerImg: {
+    display: 'block',
+    width: '100%',
+    aspectRatio: '16/9',
+    objectFit: 'cover',
+  },
+  playerPlayBtn: {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(10,10,18,0.35)',
+    transition: 'background 0.2s ease',
+  },
+  playerPlayCircle: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '50%',
+    background: 'rgba(212,160,23,0.9)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 20px rgba(212,160,23,0.4)',
+    transition: 'transform 0.2s ease',
   },
 };
 
@@ -679,24 +834,24 @@ const sectionStyles = {
   title: {
     fontSize: '1.6rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#1a1a2e',
     margin: 0,
   },
   searchWrap: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '8px 14px',
+    background: '#fffdf8',
+    border: '1px solid #e8e0d0',
+    borderRadius: '10px',
+    padding: '9px 14px',
     width: '300px',
   },
   searchInput: {
     border: 'none',
     outline: 'none',
     fontSize: '0.88rem',
-    color: '#374151',
+    color: '#1a1a2e',
     width: '100%',
     background: 'transparent',
     fontFamily: 'inherit',
@@ -716,18 +871,18 @@ const filterStyles = {
     alignItems: 'center',
     gap: '6px',
     padding: '7px 16px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid #e8e0d0',
     borderRadius: '20px',
-    background: '#fff',
+    background: '#fffdf8',
     fontSize: '0.85rem',
     fontWeight: '500',
-    color: '#374151',
+    color: '#1a1a2e',
     fontFamily: 'inherit',
   },
   clearBtn: {
     background: 'none',
     border: 'none',
-    color: '#0ea5e9',
+    color: '#b8860b',
     fontSize: '0.85rem',
     fontWeight: '600',
     cursor: 'pointer',
@@ -739,23 +894,27 @@ const cardStyles = {
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '1.5rem',
+    gap: '1.8rem',
   },
   card: {
-    background: '#fff',
-    borderRadius: '12px',
+    background: '#fffdf8',
+    borderRadius: '14px',
     overflow: 'hidden',
-    border: '1px solid #f1f5f9',
+    border: '1px solid #ece5d8',
     opacity: 0,
+    boxShadow: '0 2px 12px rgba(26,26,46,0.06)',
   },
   imgWrap: {
     position: 'relative',
     width: '100%',
-    height: '180px',
+    paddingTop: '56.25%',
     overflow: 'hidden',
-    background: '#f1f5f9',
+    background: '#1a1a2e',
   },
   img: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
     width: '100%',
     height: '100%',
     objectFit: 'cover',
@@ -764,66 +923,74 @@ const cardStyles = {
     position: 'absolute',
     bottom: '10px',
     right: '10px',
-    background: 'rgba(0,0,0,0.75)',
+    background: 'rgba(26,26,46,0.85)',
     color: '#fff',
     fontSize: '0.75rem',
     fontWeight: '600',
     padding: '3px 8px',
     borderRadius: '4px',
     zIndex: 2,
+    letterSpacing: '0.02em',
   },
   playOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(0,0,0,0.15)',
+    background: 'rgba(26,26,46,0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0,
-    transition: 'opacity 0.25s ease',
+    transition: 'opacity 0.3s ease',
   },
   playCircle: {
-    width: 44,
-    height: 44,
+    width: 52,
+    height: 52,
     borderRadius: '50%',
-    background: 'rgba(14,165,233,0.9)',
+    background: 'rgba(212,160,23,0.92)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0 4px 16px rgba(212,160,23,0.35)',
   },
   body: {
     padding: '14px 16px 16px',
+    borderTop: '2px solid #d4a017',
   },
   tagRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: '8px',
     marginBottom: '8px',
   },
   seriesTag: {
-    fontSize: '0.72rem',
+    fontSize: '0.7rem',
     fontWeight: '700',
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
-  },
-  dot: {
-    color: '#cbd5e1',
-    fontSize: '0.6rem',
+    color: '#b8860b',
+    background: '#fdf6e3',
+    padding: '2px 8px',
+    borderRadius: '4px',
   },
   date: {
     fontSize: '0.78rem',
-    color: '#94a3b8',
+    color: '#8a8494',
+    marginLeft: 'auto',
   },
   title: {
-    fontSize: '1rem',
+    fontSize: '1.02rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#1a1a2e',
     margin: '0 0 6px',
-    lineHeight: 1.3,
+    lineHeight: 1.35,
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
   },
   desc: {
     fontSize: '0.82rem',
-    color: '#64748b',
+    color: '#6b6b7b',
     margin: '0 0 14px',
     lineHeight: 1.5,
     display: '-webkit-box',
@@ -835,6 +1002,8 @@ const cardStyles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: '10px',
+    borderTop: '1px solid #f0ece4',
   },
   speaker: {
     display: 'flex',
@@ -845,7 +1014,7 @@ const cardStyles = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    background: '#0ea5e9',
+    background: '#1e3a5f',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
@@ -855,18 +1024,8 @@ const cardStyles = {
   },
   speakerName: {
     fontSize: '0.82rem',
-    color: '#374151',
-    fontWeight: '500',
-  },
-  iconRow: {
-    display: 'flex',
-    gap: '10px',
-    alignItems: 'center',
-  },
-  iconBtn: {
-    color: '#94a3b8',
-    display: 'flex',
-    alignItems: 'center',
+    color: '#1a1a2e',
+    fontWeight: '600',
   },
 };
 
@@ -876,10 +1035,10 @@ const loadMoreStyles = {
     alignItems: 'center',
     gap: '8px',
     padding: '10px 28px',
-    border: '1.5px solid #1e293b',
+    border: '1.5px solid #1e3a5f',
     borderRadius: '8px',
-    background: '#fff',
-    color: '#1e293b',
+    background: '#fffdf8',
+    color: '#1e3a5f',
     fontSize: '0.9rem',
     fontWeight: '600',
     fontFamily: 'inherit',
