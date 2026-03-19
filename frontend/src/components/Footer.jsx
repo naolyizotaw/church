@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../api/axios';
 
 const footerCSS = `
 /* ── Wave ── */
@@ -109,6 +110,18 @@ const TwitterIcon = () => (
   </svg>
 );
 
+const InstagramIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  </svg>
+);
+
 const EmailIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
     <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
@@ -130,6 +143,18 @@ const PhoneIcon = () => (
 export default function Footer() {
   const gridRef = useRef(null);
   const styleRef = useRef(null);
+  const [sc, setSc] = useState(null);
+
+  useEffect(() => {
+    api.get('/site-content').then(res => setSc(res.data)).catch(() => {});
+  }, []);
+
+  const churchName = sc?.churchName || 'Kerabu Church';
+  const addressLines = (sc?.address || 'Addis Ababa, Ethiopia\nKerabu Full Gospel Church').split('\n');
+  const phoneNum = sc?.phone || '+251 911 123 456';
+  const emailAddr = sc?.email || 'info@kerabu.org';
+  const mapQ = sc?.mapQuery || 'Kerabu+Full+Gospel+Church+Addis+Ababa+Ethiopia';
+  const social = sc?.socialLinks || {};
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -174,22 +199,18 @@ export default function Footer() {
           <div style={styles.brandRow}>
             <img className="footer-logo" src="/logo.png" alt="Kerabu Church Logo" style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
             <div>
-              <div style={styles.brandName}>Kerabu Church</div>
+              <div style={styles.brandName}>{churchName}</div>
             </div>
           </div>
           <p style={styles.brandDesc}>
             A place of faith, prayer, and love for everyone.
           </p>
           <div style={styles.socials}>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer" className="footer-social" style={styles.socialIcon} aria-label="YouTube">
-              <YouTubeIcon />
-            </a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="footer-social" style={styles.socialIcon} aria-label="Twitter">
-              <TwitterIcon />
-            </a>
-            <a href="mailto:info@kerabu.org" className="footer-social" style={styles.socialIcon} aria-label="Email">
-              <EmailIcon />
-            </a>
+            <a href={social.youtube || '#'} target={social.youtube ? '_blank' : undefined} rel="noreferrer" className="footer-social" style={styles.socialIcon} aria-label="YouTube"><YouTubeIcon /></a>
+            <a href={social.twitter || '#'} target={social.twitter ? '_blank' : undefined} rel="noreferrer" className="footer-social" style={styles.socialIcon} aria-label="Twitter"><TwitterIcon /></a>
+            <a href={social.facebook || '#'} target={social.facebook ? '_blank' : undefined} rel="noreferrer" className="footer-social" style={styles.socialIcon} aria-label="Facebook"><FacebookIcon /></a>
+            <a href={social.instagram || '#'} target={social.instagram ? '_blank' : undefined} rel="noreferrer" className="footer-social" style={styles.socialIcon} aria-label="Instagram"><InstagramIcon /></a>
+            <a href={`mailto:${emailAddr}`} className="footer-social" style={styles.socialIcon} aria-label="Email"><EmailIcon /></a>
           </div>
         </div>
 
@@ -210,11 +231,11 @@ export default function Footer() {
           <div style={styles.contactList}>
             <div style={styles.contactRow}>
               <MapPinIcon />
-              <span>Addis Ababa, Ethiopia<br />Kerabu Full Gospel Church</span>
+              <span>{addressLines.map((l, i) => <span key={i}>{l}{i < addressLines.length - 1 && <br />}</span>)}</span>
             </div>
             <div style={styles.contactRow}>
               <PhoneIcon />
-              <span>+251 911 123 456</span>
+              <span>{phoneNum}</span>
             </div>
           </div>
         </div>
@@ -225,7 +246,7 @@ export default function Footer() {
           <div className="footer-map" style={styles.mapBox}>
             <iframe
               title="Church Location"
-              src="https://maps.google.com/maps?q=Kerabu+Full+Gospel+Church+Addis+Ababa+Ethiopia&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQ)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
               width="100%"
               height="130"
               style={{ border: 0, borderRadius: '8px', display: 'block' }}
@@ -240,7 +261,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="footer-bottom-bar" style={styles.bottomBar}>
         <span style={styles.copyright}>
-          &copy; {new Date().getFullYear()} Kerabu Full Gospel Church. All rights reserved.
+          &copy; {new Date().getFullYear()} {sc?.churchName || 'Kerabu Full Gospel Church'}. All rights reserved.
         </span>
       </div>
     </footer>

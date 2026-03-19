@@ -6,6 +6,7 @@ import api from '../../api/axios';
    ═══════════════════════════════════════════════════════════ */
 
 const SECTION_META = {
+  siteContent: { title: 'Site Content', subtitle: 'Edit contact information, service times, and social links shown across the website' },
   pages: { title: 'Content Pages', subtitle: 'Create and edit static pages for your website (About, Contact info blocks, etc.)' },
   leaders: { title: 'Meet Our Leaders', subtitle: 'Manage leader profiles, photos, and contact details shown on the site' },
   ministries: { title: 'Weekly Ministries', subtitle: 'Programs and ministries shown in the Weekly Ministries section on Services' },
@@ -21,7 +22,7 @@ const emptyLeaderForm = {
 };
 
 export default function AdminPages() {
-  const [section, setSection] = useState('pages');
+  const [section, setSection] = useState('siteContent');
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
@@ -38,6 +39,7 @@ export default function AdminPages() {
   const meta = SECTION_META[section] || SECTION_META.pages;
 
   const tabs = [
+    { key: 'siteContent', label: 'Site Content', Icon: SiteContentIcon },
     { key: 'pages', label: 'Content Pages', Icon: PagesIcon },
     { key: 'leaders', label: 'Meet Our Leaders', Icon: LeadersIcon },
     { key: 'ministries', label: 'Weekly Ministries', Icon: MinistriesIcon },
@@ -82,9 +84,329 @@ export default function AdminPages() {
 
       {/* Active section */}
       <div style={st.sectionBody}>
-        {section === 'pages' ? <PagesSection showToast={showToast} /> : section === 'leaders' ? <LeadersSection showToast={showToast} /> : section === 'ministries' ? <MinistriesSection showToast={showToast} /> : <VerseSection showToast={showToast} />}
+        {section === 'siteContent' ? <SiteContentSection showToast={showToast} /> : section === 'pages' ? <PagesSection showToast={showToast} /> : section === 'leaders' ? <LeadersSection showToast={showToast} /> : section === 'ministries' ? <MinistriesSection showToast={showToast} /> : <VerseSection showToast={showToast} />}
       </div>
     </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   SITE CONTENT SECTION
+   ────────────────────────────────────────────────────────── */
+
+function SiteContentSection({ showToast }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    churchName: '', address: '', phone: '', email: '', mapQuery: '',
+    serviceTimes: [], socialLinks: { youtube: '', twitter: '', facebook: '', instagram: '' },
+  });
+
+  const fetchContent = async () => {
+    try {
+      const { data: d } = await api.get('/site-content');
+      setData(d);
+      setForm({
+        churchName: d.churchName || '',
+        address: d.address || '',
+        phone: d.phone || '',
+        email: d.email || '',
+        mapQuery: d.mapQuery || '',
+        serviceTimes: d.serviceTimes || [],
+        socialLinks: d.socialLinks || { youtube: '', twitter: '', facebook: '', instagram: '' },
+      });
+    } catch { /* defaults stay */ }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchContent(); }, []);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.put('/site-content', form);
+      showToast?.('Site content updated successfully');
+      fetchContent();
+    } catch (err) { alert(err.response?.data?.message || 'Error saving'); }
+    finally { setSaving(false); }
+  };
+
+  const updateServiceTime = (i, field, val) => {
+    const next = [...form.serviceTimes];
+    next[i] = { ...next[i], [field]: val };
+    setForm({ ...form, serviceTimes: next });
+  };
+
+  const addServiceTime = () => {
+    setForm({ ...form, serviceTimes: [...form.serviceTimes, { label: '', time: '', isHighlighted: false }] });
+  };
+
+  const removeServiceTime = (i) => {
+    setForm({ ...form, serviceTimes: form.serviceTimes.filter((_, idx) => idx !== i) });
+  };
+
+  if (loading) {
+    return (
+      <div style={st.loadingWrap}>
+        <div style={st.spinner} />
+        <span style={st.loadingText}>Loading site content...</span>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSave}>
+      {/* Contact Info */}
+      <div style={{ ...st.card, padding: '24px 28px', marginBottom: 20 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>Contact Information</h3>
+        <div style={st.row2}>
+          <div style={st.field}>
+            <label style={st.label}>Church Name</label>
+            <input style={st.input} value={form.churchName} onChange={e => setForm({ ...form, churchName: e.target.value })} placeholder="Kerabu Full Gospel Church" />
+          </div>
+          <div style={st.field}>
+            <label style={st.label}>Phone Number</label>
+            <input style={st.input} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+251 911 123 456" />
+          </div>
+        </div>
+        <div style={{ ...st.row2, marginTop: 14 }}>
+          <div style={st.field}>
+            <label style={st.label}>Email Address</label>
+            <input style={st.input} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="info@kerabuchurch.org" />
+          </div>
+          <div style={st.field}>
+            <label style={st.label}>Google Maps Query</label>
+            <input style={st.input} value={form.mapQuery} onChange={e => setForm({ ...form, mapQuery: e.target.value })} placeholder="Kerabu+Full+Gospel+Church+Addis+Ababa" />
+            <span style={st.hint}>Used in the embedded Google Map</span>
+          </div>
+        </div>
+        <div style={{ ...st.field, marginTop: 14 }}>
+          <label style={st.label}>Address</label>
+          <textarea style={{ ...st.input, height: 70, resize: 'vertical' }} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Addis Ababa, Ethiopia&#10;Kerabu Full Gospel Church" />
+        </div>
+      </div>
+
+      {/* Service Times — Timeline */}
+      <div style={{ ...st.card, padding: '24px 28px', marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Service Times</h3>
+            <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>Schedule displayed on the Contact page</p>
+          </div>
+          <button type="button" style={{ ...st.addBtn, padding: '7px 14px', fontSize: 12 }} onClick={addServiceTime}>+ Add Service</button>
+        </div>
+        {form.serviceTimes.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '36px 20px', background: '#fafbfc', borderRadius: 12, border: '2px dashed #e2e8f0' }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 10 }}>
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#334155', margin: '0 0 4px' }}>No service times yet</p>
+            <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 14px' }}>Add your first service to display on the website.</p>
+            <button type="button" style={{ ...st.addBtn, padding: '8px 18px', fontSize: 12 }} onClick={addServiceTime}>+ Add Service</button>
+          </div>
+        ) : (
+          <div style={{ position: 'relative', paddingLeft: 32 }}>
+            {/* Vertical timeline line */}
+            <div style={{ position: 'absolute', left: 11, top: 6, bottom: 40, width: 2, background: '#e2e8f0', borderRadius: 1 }} />
+
+            {form.serviceTimes.map((st2, i) => {
+              const isMain = st2.isHighlighted;
+              return (
+                <div key={i} style={{ position: 'relative', marginBottom: i < form.serviceTimes.length - 1 ? 20 : 12 }}>
+                  {/* Timeline node */}
+                  <div style={{
+                    position: 'absolute', left: -32, top: 16, width: 24, height: 24,
+                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: isMain ? '#f59e0b' : '#fff',
+                    border: isMain ? '2px solid #f59e0b' : '2px solid #cbd5e1',
+                    boxShadow: isMain ? '0 0 0 4px rgba(245,158,11,0.15)' : '0 0 0 4px #fff',
+                    zIndex: 2,
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isMain ? '#fff' : '#94a3b8'} strokeWidth="2.5" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                    </svg>
+                  </div>
+
+                  {/* Content card */}
+                  <div style={{
+                    padding: '14px 18px', borderRadius: 12,
+                    background: isMain ? 'linear-gradient(135deg, #fffbeb 0%, #fef9c3 100%)' : '#fafbfc',
+                    border: isMain ? '1.5px solid #fde68a' : '1px solid #f1f5f9',
+                    boxShadow: isMain ? '0 2px 10px rgba(245,158,11,0.1)' : 'none',
+                    borderLeft: isMain ? '3px solid #f59e0b' : '3px solid #e2e8f0',
+                  }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <input
+                          style={{ ...st.input, fontWeight: 600, fontSize: 14, padding: '8px 12px', background: '#fff', border: '1px solid #e2e8f0' }}
+                          placeholder="e.g. Sunday Worship"
+                          value={st2.label}
+                          onChange={e => updateServiceTime(i, 'label', e.target.value)}
+                        />
+                        <input
+                          style={{ ...st.input, fontSize: 13, padding: '7px 12px', background: '#fff', border: '1px solid #e2e8f0' }}
+                          placeholder="e.g. 09:00 AM - 12:00 PM"
+                          value={st2.time}
+                          onChange={e => updateServiceTime(i, 'time', e.target.value)}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => updateServiceTime(i, 'isHighlighted', !isMain)}
+                          style={{
+                            padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                            border: isMain ? '1px solid #f59e0b' : '1px solid #e2e8f0',
+                            background: isMain ? '#f59e0b' : '#fff',
+                            color: isMain ? '#fff' : '#94a3b8',
+                          }}
+                        >
+                          {isMain ? '★ Main' : '☆ Main'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeServiceTime(i)}
+                          style={{
+                            padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                            background: '#fff', border: '1px solid #fecaca', color: '#ef4444', cursor: 'pointer',
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Add node at end of timeline */}
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                position: 'absolute', left: -32, top: 8, width: 24, height: 24,
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: '#fff', border: '2px dashed #cbd5e1', zIndex: 2,
+                boxShadow: '0 0 0 4px #fff',
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </div>
+              <button
+                type="button"
+                onClick={addServiceTime}
+                style={{
+                  padding: '10px 18px', borderRadius: 10, border: '1.5px dashed #cbd5e1',
+                  background: 'transparent', color: '#94a3b8', fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer', width: '100%', textAlign: 'left',
+                }}
+              >
+                Add another service time...
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Social Links — Interactive Pill Rows */}
+      <div style={{ ...st.card, padding: '24px 28px', marginBottom: 20 }}>
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Social Media Links</h3>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>Connect your church's social profiles — they appear in the website footer</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { key: 'youtube', name: 'YouTube', color: '#FF0000', placeholder: 'https://youtube.com/@yourchannel',
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg> },
+            { key: 'twitter', name: 'Twitter / X', color: '#000000', placeholder: 'https://x.com/yourchurch',
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+            { key: 'facebook', name: 'Facebook', color: '#1877F2', placeholder: 'https://facebook.com/yourchurch',
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
+            { key: 'instagram', name: 'Instagram', color: '#E4405F', placeholder: 'https://instagram.com/yourchurch',
+              icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="#fff" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/></svg> },
+          ].map(platform => {
+            const val = form.socialLinks[platform.key] || '';
+            const linked = val.trim().length > 0;
+            return (
+              <div key={platform.key} style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '10px 14px',
+                borderRadius: 12,
+                background: linked ? '#fff' : '#fafbfc',
+                border: linked ? `1.5px solid ${platform.color}33` : '1.5px solid #f1f5f9',
+                transition: 'all 0.2s ease',
+              }}>
+                {/* Brand circle */}
+                <div style={{
+                  width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: linked ? platform.color : '#cbd5e1',
+                  boxShadow: linked ? `0 3px 10px ${platform.color}30` : 'none',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {platform.icon}
+                </div>
+
+                {/* Name + input */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 5 }}>{platform.name}</div>
+                  <input
+                    style={{
+                      ...st.input, width: '100%', fontSize: 12, padding: '7px 11px',
+                      background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8,
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder={platform.placeholder}
+                    value={val}
+                    onChange={e => setForm({ ...form, socialLinks: { ...form.socialLinks, [platform.key]: e.target.value } })}
+                  />
+                </div>
+
+                {/* Status badge */}
+                <div style={{
+                  flexShrink: 0, padding: '4px 10px', borderRadius: 20,
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.02em',
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  background: linked ? '#f0fdf4' : '#f8fafc',
+                  color: linked ? '#16a34a' : '#94a3b8',
+                  border: linked ? '1px solid #bbf7d0' : '1px solid #e2e8f0',
+                  transition: 'all 0.2s ease',
+                }}>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: '50%',
+                    background: linked ? '#22c55e' : '#d1d5db',
+                    boxShadow: linked ? '0 0 0 2px rgba(34,197,94,0.2)' : 'none',
+                  }} />
+                  {linked ? 'Connected' : 'Not linked'}
+                </div>
+
+                {/* Visit link */}
+                {linked && (
+                  <a href={val} target="_blank" rel="noopener noreferrer" style={{
+                    flexShrink: 0, width: 30, height: 30, borderRadius: 8,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: '#f8fafc', border: '1px solid #e2e8f0',
+                    color: '#64748b', textDecoration: 'none',
+                    transition: 'all 0.15s ease',
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Save */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+        <button type="button" style={st.cancelBtn} onClick={fetchContent}>Reset</button>
+        <button type="submit" style={st.saveBtn} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+      </div>
+    </form>
   );
 }
 
@@ -1231,6 +1553,15 @@ const LIIcon = () => (
 );
 
 /* ── Tiny inline icons ── */
+
+const SiteContentIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ marginRight: 6 }}>
+    <rect x="2" y="2" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <line x1="6" y1="7" x2="14" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <line x1="6" y1="10" x2="12" y2="10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <line x1="6" y1="13" x2="10" y2="13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
 
 const PagesIcon = () => (
   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ marginRight: 6 }}>

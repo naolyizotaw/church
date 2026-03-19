@@ -18,6 +18,7 @@ import registrationRoutes from "./routes/registrationRoutes.js";
 import leaderRoutes from "./routes/leaderRoutes.js";
 import verseRoutes from "./routes/verseRoutes.js";
 import youtubeRoutes from "./routes/youtubeRoutes.js";
+import siteContentRoutes from "./routes/siteContentRoutes.js";
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use("/api/registrations", registrationRoutes);
 app.use("/api/leaders", leaderRoutes);
 app.use("/api/verses", verseRoutes);
 app.use("/api/youtube", youtubeRoutes);
+app.use("/api/site-content", siteContentRoutes);
 
 
 

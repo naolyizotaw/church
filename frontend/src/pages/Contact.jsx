@@ -420,7 +420,23 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [siteContent, setSiteContent] = useState(null);
   const styleRef = useRef(null);
+
+  useEffect(() => {
+    api.get('/site-content').then(res => setSiteContent(res.data)).catch(() => {});
+  }, []);
+
+  const sc = siteContent || {};
+  const addressLines = (sc.address || 'Kerabu Full Gospel Church\nAddis Ababa, Ethiopia').split('\n');
+  const phoneNum = sc.phone || '+251 91 123 4567';
+  const emailAddr = sc.email || 'info@kerabuchurch.org';
+  const mapQ = sc.mapQuery || 'Kerabu+Full+Gospel+Church+Addis+Ababa+Ethiopia';
+  const times = sc.serviceTimes && sc.serviceTimes.length > 0 ? sc.serviceTimes : [
+    { label: 'Sunday Worship', time: '09:00 AM - 12:00 PM', isHighlighted: true },
+    { label: 'Wednesday Bible Study', time: '05:30 PM - 07:00 PM', isHighlighted: false },
+    { label: 'Friday Prayer', time: '05:00 PM - 08:00 PM', isHighlighted: false },
+  ];
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -576,8 +592,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <div style={s.infoItemLabel}>Visit Us</div>
-                  <div style={s.infoItemText}>Kerabu Full Gospel Church</div>
-                  <div style={s.infoItemText}>Addis Ababa, Ethiopia</div>
+                  {addressLines.map((line, i) => <div key={i} style={s.infoItemText}>{line}</div>)}
                 </div>
               </div>
 
@@ -587,7 +602,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <div style={s.infoItemLabel}>Call Us</div>
-                  <div style={s.infoItemText}>+251 91 123 4567</div>
+                  <div style={s.infoItemText}>{phoneNum}</div>
                   <div style={s.infoItemSub}>Mon - Fri, 9am - 5pm</div>
                 </div>
               </div>
@@ -598,7 +613,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <div style={s.infoItemLabel}>Email Us</div>
-                  <a href="mailto:info@kerabuchurch.org" className="info-email-link" style={s.infoLink}>info@kerabuchurch.org</a>
+                  <a href={`mailto:${emailAddr}`} className="info-email-link" style={s.infoLink}>{emailAddr}</a>
                 </div>
               </div>
             </div>
@@ -613,18 +628,12 @@ export default function Contact() {
                 <h3 style={s.timesTitle}>Service Times</h3>
               </div>
 
-              <div className="service-time-row" style={s.timeRow}>
-                <span style={s.timeLabel}>Sunday Worship</span>
-                <span style={s.timeValueHighlight}>09:00 AM - 12:00 PM</span>
-              </div>
-              <div className="service-time-row" style={s.timeRow}>
-                <span style={s.timeLabel}>Wednesday Bible Study</span>
-                <span style={s.timeValueDark}>05:30 PM - 07:00 PM</span>
-              </div>
-              <div className="service-time-row" style={s.timeRow}>
-                <span style={s.timeLabel}>Friday Prayer</span>
-                <span style={s.timeValueDark}>05:00 PM - 08:00 PM</span>
-              </div>
+              {times.map((t, i) => (
+                <div key={i} className="service-time-row" style={s.timeRow}>
+                  <span style={s.timeLabel}>{t.label}</span>
+                  <span style={t.isHighlighted ? s.timeValueHighlight : s.timeValueDark}>{t.time}</span>
+                </div>
+              ))}
             </div>
 
             {/* Map Card */}
@@ -632,7 +641,7 @@ export default function Contact() {
               <div style={s.mapContainer}>
                 <iframe
                   title="Church Location"
-                  src="https://maps.google.com/maps?q=Kerabu+Full+Gospel+Church+Addis+Ababa+Ethiopia&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQ)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                   width="100%"
                   height="180"
                   style={{ border: 0, display: 'block' }}
