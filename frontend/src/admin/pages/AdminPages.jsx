@@ -1,9 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../../api/axios';
 
 /* ═══════════════════════════════════════════════════════════
    PAGES + LEADERS  —  combined admin view with section tabs
    ═══════════════════════════════════════════════════════════ */
+
+const SECTION_META = {
+  pages: { title: 'Content Pages', subtitle: 'Create and edit static pages for your website (About, Contact info blocks, etc.)' },
+  leaders: { title: 'Meet Our Leaders', subtitle: 'Manage leader profiles, photos, and contact details shown on the site' },
+  ministries: { title: 'Weekly Ministries', subtitle: 'Programs and ministries shown in the Weekly Ministries section on Services' },
+  verses: { title: 'Verse of the Day', subtitle: 'Schedule daily scripture text and references for the homepage' },
+};
 
 const emptyPageForm = { slug: '', title: '', content: '' };
 const emptyLeaderForm = {
@@ -15,42 +22,68 @@ const emptyLeaderForm = {
 
 export default function AdminPages() {
   const [section, setSection] = useState('pages');
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 3200);
+  }, []);
+
+  useEffect(() => () => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+  }, []);
+
+  const meta = SECTION_META[section] || SECTION_META.pages;
+
+  const tabs = [
+    { key: 'pages', label: 'Content Pages', Icon: PagesIcon },
+    { key: 'leaders', label: 'Meet Our Leaders', Icon: LeadersIcon },
+    { key: 'ministries', label: 'Weekly Ministries', Icon: MinistriesIcon },
+    { key: 'verses', label: 'Verse of the Day', Icon: VerseIcon },
+  ];
 
   return (
-    <div>
+    <div style={st.pageWrap}>
+      {/* Toast */}
+      {toast && (
+        <div style={st.globalToast}>
+          <span style={st.globalToastIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <span>{toast}</span>
+          <button type="button" onClick={() => setToast(null)} style={st.globalToastClose} aria-label="Dismiss">&times;</button>
+        </div>
+      )}
+
+      {/* Header */}
       <div style={st.header}>
-        <div>
-          <h1 style={st.title}>Pages</h1>
-          <p style={st.subtitle}>Manage website content pages and sections</p>
+        <div style={st.headerTextWrap}>
+          <h1 style={st.title}>{meta.title}</h1>
+          <p style={st.subtitle}>{meta.subtitle}</p>
         </div>
       </div>
 
       {/* Section Tabs */}
       <div style={st.sectionTabs}>
-        <button
-          style={section === 'pages' ? st.sectionTabActive : st.sectionTab}
-          onClick={() => setSection('pages')}
-        >
-          <PagesIcon />
-          Content Pages
-        </button>
-        <button
-          style={section === 'leaders' ? st.sectionTabActive : st.sectionTab}
-          onClick={() => setSection('leaders')}
-        >
-          <LeadersIcon />
-          Meet Our Leaders
-        </button>
-        <button
-          style={section === 'verses' ? st.sectionTabActive : st.sectionTab}
-          onClick={() => setSection('verses')}
-        >
-          <VerseIcon />
-          Verse of the Day
-        </button>
+        {tabs.map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            style={section === key ? st.sectionTabActive : st.sectionTab}
+            onClick={() => setSection(key)}
+          >
+            <Icon />
+            {label}
+            {section === key && <span style={st.tabUnderline} />}
+          </button>
+        ))}
       </div>
 
-      {section === 'pages' ? <PagesSection /> : section === 'leaders' ? <LeadersSection /> : <VerseSection />}
+      {/* Active section */}
+      <div style={st.sectionBody}>
+        {section === 'pages' ? <PagesSection showToast={showToast} /> : section === 'leaders' ? <LeadersSection showToast={showToast} /> : section === 'ministries' ? <MinistriesSection showToast={showToast} /> : <VerseSection showToast={showToast} />}
+      </div>
     </div>
   );
 }
@@ -59,7 +92,23 @@ export default function AdminPages() {
    PAGES SECTION
    ────────────────────────────────────────────────────────── */
 
-function PagesSection() {
+function previewText(htmlOrText, max = 60) {
+  if (!htmlOrText) return '—';
+  const plain = String(htmlOrText).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (plain.length <= max) return plain || '—';
+  return plain.slice(0, max).trim() + '…';
+}
+
+function EmptyPagesIllustration() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </svg>
+  );
+}
+
+function PagesSection({ showToast }) {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -67,6 +116,7 @@ function PagesSection() {
   const [form, setForm] = useState(emptyPageForm);
   const [saving, setSaving] = useState(false);
   const [deleteSlug, setDeleteSlug] = useState(null);
+  const [search, setSearch] = useState('');
 
   const fetchPages = async () => {
     try { const { data } = await api.get('/pages'); setPages(Array.isArray(data) ? data : []); }
@@ -91,61 +141,117 @@ function PagesSection() {
       await api.put(`/pages/${slug}`, { title: form.title, content: form.content });
       setShowModal(false);
       fetchPages();
+      showToast?.(editing ? 'Page updated successfully' : 'Page created successfully');
     } catch (err) { alert(err.response?.data?.message || 'Error saving page'); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
-    try { await api.delete(`/pages/${deleteSlug}`); setDeleteSlug(null); fetchPages(); }
+    try {
+      await api.delete(`/pages/${deleteSlug}`);
+      setDeleteSlug(null);
+      fetchPages();
+      showToast?.('Page deleted');
+    }
     catch { alert('Error deleting page'); }
   };
+
+  const q = search.trim().toLowerCase();
+  const filteredPages = q
+    ? pages.filter(pg => (pg.title || '').toLowerCase().includes(q) || (pg.slug || '').toLowerCase().includes(q))
+    : pages;
 
   return (
     <>
       <div style={st.sectionHeader}>
-        <span style={st.count}>{pages.length} page{pages.length !== 1 ? 's' : ''}</span>
+        <div style={st.sectionHeaderRow}>
+          <span style={st.count}>{pages.length} page{pages.length !== 1 ? 's' : ''}</span>
+          <input
+            type="search"
+            placeholder="Search by title or slug…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={st.searchInput}
+          />
+        </div>
         <button style={st.addBtn} onClick={openCreate}>+ Add New Page</button>
       </div>
 
       <div style={st.card}>
-        {loading ? <p style={st.empty}>Loading...</p> : pages.length === 0 ? (
-          <p style={st.empty}>No pages found</p>
+        {loading ? (
+          <div style={st.loadingWrap}>
+            <div style={st.spinner} />
+            <span style={st.loadingText}>Loading pages...</span>
+          </div>
+        ) : pages.length === 0 ? (
+          <div style={st.emptyState}>
+            <div style={st.emptyStateIcon} aria-hidden><EmptyPagesIllustration /></div>
+            <p style={st.emptyStateTitle}>No pages yet</p>
+            <p style={st.emptyStateText}>Create your first content page to show on the site — like About Us, Contact, or a custom page.</p>
+            <button type="button" style={st.addBtn} onClick={openCreate}>+ Add New Page</button>
+          </div>
+        ) : filteredPages.length === 0 ? (
+          <div style={st.emptyState}>
+            <SearchEmptyIcon />
+            <p style={st.emptyStateTitle}>No results for "{search}"</p>
+            <p style={st.emptyStateText}>Try a different title or slug.</p>
+          </div>
         ) : (
-          <table style={st.table}>
-            <thead>
-              <tr>
-                <th style={st.th}>Title</th>
-                <th style={st.th}>Slug</th>
-                <th style={st.th}>Last Updated</th>
-                <th style={{ ...st.th, textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pages.map(pg => (
-                <tr key={pg._id || pg.slug} style={st.tr}>
-                  <td style={st.td}><span style={{ fontWeight: 600, color: '#0f172a' }}>{pg.title}</span></td>
-                  <td style={st.td}><code style={st.slugCode}>/{pg.slug}</code></td>
-                  <td style={st.td}>{pg.updatedAt ? new Date(pg.updatedAt).toLocaleDateString() : '—'}</td>
-                  <td style={{ ...st.td, textAlign: 'right' }}>
-                    <button style={st.editBtn} onClick={() => openEdit(pg)}>Edit</button>
-                    <button style={st.deleteBtn} onClick={() => setDeleteSlug(pg.slug)}>Delete</button>
-                  </td>
+          <div style={st.tableWrap}>
+            <table style={st.table}>
+              <thead>
+                <tr>
+                  <th style={st.th}>Title</th>
+                  <th style={st.th}>Slug</th>
+                  <th style={st.th}>Preview</th>
+                  <th style={st.th}>Last Updated</th>
+                  <th style={{ ...st.th, textAlign: 'right' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredPages.map(pg => (
+                  <tr key={pg._id || pg.slug} style={st.tr}>
+                    <td style={st.td}>
+                      <div style={st.titleCell}>
+                        <span style={st.pageTitleDot} />
+                        <span style={{ fontWeight: 600, color: '#0f172a' }}>{pg.title}</span>
+                      </div>
+                    </td>
+                    <td style={st.td}><code style={st.slugCode}>/{pg.slug}</code></td>
+                    <td style={{ ...st.td, maxWidth: 220, color: '#64748b', fontSize: 13 }} title={previewText(pg.content, 500)}>{previewText(pg.content)}</td>
+                    <td style={st.td}>
+                      <span style={st.dateText}>{pg.updatedAt ? new Date(pg.updatedAt).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+                    </td>
+                    <td style={{ ...st.td, textAlign: 'right' }}>
+                      <div style={st.actionGroup}>
+                        <button style={st.editBtn} onClick={() => openEdit(pg)} title="Edit page">
+                          <EditIcon /> Edit
+                        </button>
+                        <button style={st.deleteBtn} onClick={() => setDeleteSlug(pg.slug)} title="Delete page">
+                          <TrashIcon /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {showModal && (
         <div style={st.overlay} onClick={() => setShowModal(false)}>
           <div style={st.modal} onClick={e => e.stopPropagation()}>
-            <h2 style={st.modalTitle}>{editing ? 'Edit Page' : 'Add New Page'}</h2>
+            <div style={st.modalHeader}>
+              <h2 style={st.modalTitle}>{editing ? 'Edit Page' : 'Add New Page'}</h2>
+              <button type="button" style={st.modalClose} onClick={() => setShowModal(false)}>&times;</button>
+            </div>
             <form onSubmit={handleSubmit} style={st.form}>
               <div style={st.field}>
                 <label style={st.label}>Slug *</label>
                 <input
-                  style={st.input} required value={form.slug} disabled={!!editing}
+                  style={{ ...st.input, ...(editing ? st.inputDisabled : {}) }} required value={form.slug} disabled={!!editing}
                   placeholder="e.g. about-us"
                   onChange={e => setForm({ ...form, slug: e.target.value })}
                 />
@@ -153,15 +259,16 @@ function PagesSection() {
               </div>
               <div style={st.field}>
                 <label style={st.label}>Title *</label>
-                <input style={st.input} required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+                <input style={st.input} required value={form.title} placeholder="Page title" onChange={e => setForm({ ...form, title: e.target.value })} />
               </div>
               <div style={st.field}>
                 <label style={st.label}>Content *</label>
-                <textarea style={{ ...st.input, height: 200, resize: 'vertical' }} required value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} />
+                <textarea style={{ ...st.input, height: 200, resize: 'vertical' }} required value={form.content} placeholder="Write the page content here..." onChange={e => setForm({ ...form, content: e.target.value })} />
+                <span style={st.charCount}>{(form.content || '').length} characters</span>
               </div>
               <div style={st.modalActions}>
                 <button type="button" style={st.cancelBtn} onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" style={st.saveBtn} disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button>
+                <button type="submit" style={st.saveBtn} disabled={saving}>{saving ? 'Saving...' : editing ? 'Update Page' : 'Create Page'}</button>
               </div>
             </form>
           </div>
@@ -171,11 +278,14 @@ function PagesSection() {
       {deleteSlug && (
         <div style={st.overlay} onClick={() => setDeleteSlug(null)}>
           <div style={st.confirmBox} onClick={e => e.stopPropagation()}>
+            <div style={st.confirmIconWrap}>
+              <TrashIcon size={24} color="#ef4444" />
+            </div>
             <h3 style={st.confirmTitle}>Delete Page</h3>
             <p style={st.confirmText}>Are you sure you want to delete <strong>/{deleteSlug}</strong>? This action cannot be undone.</p>
-            <div style={st.modalActions}>
-              <button style={st.cancelBtn} onClick={() => setDeleteSlug(null)}>Cancel</button>
-              <button style={st.deleteBtnFull} onClick={handleDelete}>Delete</button>
+            <div style={st.confirmActions}>
+              <button style={st.cancelBtn} onClick={() => setDeleteSlug(null)}>Keep Page</button>
+              <button style={st.deleteBtnFull} onClick={handleDelete}>Yes, Delete</button>
             </div>
           </div>
         </div>
@@ -188,7 +298,7 @@ function PagesSection() {
    LEADERS SECTION  (embedded inside Pages dashboard)
    ────────────────────────────────────────────────────────── */
 
-function LeadersSection() {
+function LeadersSection({ showToast }) {
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -255,19 +365,27 @@ function LeadersSection() {
       }
       setShowModal(false);
       fetchLeaders();
+      showToast?.(editing ? 'Leader updated successfully' : 'Leader added successfully');
     } catch (err) { alert(err.response?.data?.message || 'Error saving leader'); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
-    try { await api.delete(`/leaders/${deleteId}`); setDeleteId(null); fetchLeaders(); }
+    try {
+      await api.delete(`/leaders/${deleteId}`);
+      setDeleteId(null);
+      fetchLeaders();
+      showToast?.('Leader deleted');
+    }
     catch { alert('Error deleting leader'); }
   };
 
   const toggleActive = async (leader) => {
     try {
-      await api.put(`/leaders/${leader._id}`, { isActive: !leader.isActive });
+      const next = !leader.isActive;
+      await api.put(`/leaders/${leader._id}`, { isActive: next });
       fetchLeaders();
+      showToast?.(next ? 'Leader is now visible on the site' : 'Leader hidden from the site');
     } catch { alert('Error updating leader'); }
   };
 
@@ -293,8 +411,18 @@ function LeadersSection() {
 
       {/* Leaders Card Grid */}
       <div style={st.leaderGrid}>
-        {loading ? <p style={st.empty}>Loading...</p> : filtered.length === 0 ? (
-          <p style={st.empty}>No leaders found. Add your first leader to get started.</p>
+        {loading ? (
+          <div style={st.loadingWrap}>
+            <div style={st.spinner} />
+            <span style={st.loadingText}>Loading leaders...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={st.emptyState}>
+            <LeadersIcon />
+            <p style={st.emptyStateTitle}>No leaders found</p>
+            <p style={st.emptyStateText}>Add your first leader to get started.</p>
+            <button type="button" style={st.addBtn} onClick={openCreate}>+ Add Leader</button>
+          </div>
         ) : filtered.map(l => (
           <div key={l._id} style={{ ...st.leaderCard, opacity: l.isActive ? 1 : 0.55 }}>
             {/* Status bar */}
@@ -477,11 +605,329 @@ function LeadersSection() {
       {deleteId && (
         <div style={st.overlay} onClick={() => setDeleteId(null)}>
           <div style={st.confirmBox} onClick={e => e.stopPropagation()}>
+            <div style={st.confirmIconWrap}>
+              <TrashIcon size={24} color="#ef4444" />
+            </div>
             <h3 style={st.confirmTitle}>Delete Leader</h3>
-            <p style={st.confirmText}>Are you sure? This will permanently remove this leader and their photo.</p>
-            <div style={st.modalActions}>
-              <button style={st.cancelBtn} onClick={() => setDeleteId(null)}>Cancel</button>
-              <button style={st.deleteBtnFull} onClick={handleDelete}>Delete</button>
+            <p style={st.confirmText}>This will permanently remove this leader and their photo. This cannot be undone.</p>
+            <div style={st.confirmActions}>
+              <button style={st.cancelBtn} onClick={() => setDeleteId(null)}>Keep Leader</button>
+              <button style={st.deleteBtnFull} onClick={handleDelete}>Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   WEEKLY MINISTRIES SECTION
+   ────────────────────────────────────────────────────────── */
+
+const CATEGORY_OPTIONS = [
+  { value: 'youth', label: 'Youth' },
+  { value: 'prayer', label: 'Prayer' },
+  { value: 'bible-study', label: 'Bible Study' },
+  { value: 'children', label: 'Children' },
+  { value: 'women', label: 'Women' },
+  { value: 'choir', label: 'Choir' },
+  { value: 'ministry', label: 'Ministry' },
+  { value: 'other', label: 'Other' },
+];
+
+const ICON_OPTIONS = [
+  { value: 'youth', label: 'Youth / Community' },
+  { value: 'prayer', label: 'Prayer Hands' },
+  { value: 'bible-study', label: 'Bible' },
+  { value: 'children', label: 'Children' },
+  { value: 'women', label: 'Women' },
+  { value: 'choir', label: 'Choir / Music' },
+];
+
+const DAY_OPTIONS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+
+const DAY_DOT_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#8b5cf6'];
+
+const CATEGORY_VISUAL = {
+  youth: { badgeBg: '#e0e7ff', badgeFg: '#3730a3' },
+  prayer: { badgeBg: '#fce7f3', badgeFg: '#9d174d' },
+  'bible-study': { badgeBg: '#fef3c7', badgeFg: '#b45309' },
+  children: { badgeBg: '#dcfce7', badgeFg: '#166534' },
+  women: { badgeBg: '#f3e8ff', badgeFg: '#6b21a8' },
+  choir: { badgeBg: '#e0f2fe', badgeFg: '#0369a1' },
+  ministry: { badgeBg: '#f1f5f9', badgeFg: '#334155' },
+  other: { badgeBg: '#f5f5f4', badgeFg: '#44403c' },
+};
+
+function ministryDayDotColor(dayName) {
+  const i = DAY_OPTIONS.indexOf(dayName);
+  return DAY_DOT_COLORS[i >= 0 ? i : 0];
+}
+
+function ministryIconLetter(icon) {
+  const opt = ICON_OPTIONS.find(o => o.value === icon);
+  if (!opt) return '?';
+  const word = opt.label.split(/[\s/]+/).find(w => /[A-Za-z]/.test(w));
+  return word ? word.charAt(0).toUpperCase() : '?';
+}
+
+const emptyMinistryForm = { title: '', titleAmharic: '', description: '', descriptionAmharic: '', icon: 'youth', day: 'Sundays', time: '', location: '', category: 'ministry', order: 0, isActive: true };
+
+function MinistriesSection({ showToast }) {
+  const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyMinistryForm);
+  const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const fetchPrograms = async () => {
+    try { const { data } = await api.get('/programs?admin=true'); setPrograms(Array.isArray(data) ? data : []); }
+    catch { setPrograms([]); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchPrograms(); }, []);
+
+  const openCreate = () => { setEditing(null); setForm(emptyMinistryForm); setShowModal(true); };
+  const openEdit = (p) => {
+    setEditing(p._id);
+    setForm({
+      title: p.title || '', titleAmharic: p.titleAmharic || '',
+      description: p.description || '', descriptionAmharic: p.descriptionAmharic || '',
+      icon: p.icon || 'youth', day: p.day || 'Sundays', time: p.time || '',
+      location: p.location || '', category: p.category || 'ministry',
+      order: p.order ?? 0, isActive: p.isActive !== false,
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editing) await api.put(`/programs/${editing}`, form);
+      else await api.post('/programs', form);
+      setShowModal(false);
+      fetchPrograms();
+      showToast?.(editing ? 'Ministry updated successfully' : 'Ministry created successfully');
+    } catch (err) { alert(err.response?.data?.message || 'Error saving ministry'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/programs/${deleteId}`);
+      setDeleteId(null);
+      fetchPrograms();
+      showToast?.('Ministry deleted');
+    }
+    catch { alert('Error deleting ministry'); }
+  };
+
+  const toggleActive = async (p) => {
+    try {
+      const next = !p.isActive;
+      await api.put(`/programs/${p._id}`, { isActive: next });
+      fetchPrograms();
+      showToast?.(next ? 'Ministry is now active' : 'Ministry hidden');
+    }
+    catch { alert('Error updating ministry'); }
+  };
+
+  const filtered = programs.filter(p =>
+    p.title?.toLowerCase().includes(search.toLowerCase()) ||
+    p.day?.toLowerCase().includes(search.toLowerCase()) ||
+    p.category?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <>
+      <div style={st.sectionHeader}>
+        <input type="text" placeholder="Search ministries..." value={search} onChange={e => setSearch(e.target.value)} style={st.searchInput} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={st.count}>{filtered.length} ministr{filtered.length !== 1 ? 'ies' : 'y'}</span>
+          <button style={st.addBtn} onClick={openCreate}>+ Add Ministry</button>
+        </div>
+      </div>
+
+      <div style={st.card}>
+        {loading ? (
+          <div style={st.loadingWrap}>
+            <div style={st.spinner} />
+            <span style={st.loadingText}>Loading ministries...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={st.emptyState}>
+            <MinistriesIcon />
+            <p style={st.emptyStateTitle}>No ministries found</p>
+            <p style={st.emptyStateText}>Add your first weekly ministry program!</p>
+            <button type="button" style={st.addBtn} onClick={openCreate}>+ Add Ministry</button>
+          </div>
+        ) : (
+          <div style={st.tableWrap}>
+          <table style={st.table}>
+            <thead>
+              <tr>
+                <th style={st.th}>Icon</th>
+                <th style={st.th}>Title</th>
+                <th style={st.th}>Day & Time</th>
+                <th style={st.th}>Location</th>
+                <th style={st.th}>Category</th>
+                <th style={st.th}>Status</th>
+                <th style={{ ...st.th, textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(p => {
+                const cv = CATEGORY_VISUAL[p.category] || CATEGORY_VISUAL.other;
+                const iconOpt = ICON_OPTIONS.find(i => i.value === p.icon);
+                return (
+                <tr key={p._id} style={{ ...st.tr, opacity: p.isActive ? 1 : 0.55 }}>
+                  <td style={st.td}>
+                    <span
+                      style={{ ...st.ministryIconBadge, background: cv.badgeBg, color: cv.badgeFg }}
+                      title={iconOpt ? `${iconOpt.label} · ${p.category || 'other'}` : p.category}
+                    >
+                      {ministryIconLetter(p.icon)}
+                    </span>
+                  </td>
+                  <td style={st.td}>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.title}</div>
+                    {p.titleAmharic && <div style={{ fontSize: 12, color: '#64748b', marginTop: 1 }}>{p.titleAmharic}</div>}
+                    {p.descriptionAmharic && (
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, maxWidth: 280 }} title={previewText(p.descriptionAmharic, 200)}>
+                        {previewText(p.descriptionAmharic, 48)}
+                      </div>
+                    )}
+                  </td>
+                  <td style={st.td}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ ...st.ministryDayDot, background: ministryDayDotColor(p.day) }} title={p.day} />
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.day}</div>
+                        <div style={{ fontSize: 12, color: '#64748b' }}>{p.time}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={st.td}>{p.location || '—'}</td>
+                  <td style={st.td}>
+                    <span style={{ ...st.ministryCatBadge, background: cv.badgeBg, color: cv.badgeFg }}>{(p.category || 'other').replace(/-/g, ' ')}</span>
+                  </td>
+                  <td style={st.td}>
+                    <button
+                      style={{ ...st.verseStatusBtn, background: p.isActive ? '#dcfce7' : '#f1f5f9', color: p.isActive ? '#16a34a' : '#64748b' }}
+                      onClick={() => toggleActive(p)}
+                    >
+                      {p.isActive ? 'Active' : 'Hidden'}
+                    </button>
+                  </td>
+                  <td style={{ ...st.td, textAlign: 'right' }}>
+                    <div style={st.actionGroup}>
+                      <button style={st.editBtn} onClick={() => openEdit(p)}><EditIcon /> Edit</button>
+                      <button style={st.deleteBtn} onClick={() => setDeleteId(p._id)}><TrashIcon /> Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <div style={st.overlay} onClick={() => setShowModal(false)}>
+          <div style={{ ...st.modal, maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+            <div style={st.modalHeader}>
+              <h2 style={st.modalTitle}>{editing ? 'Edit Ministry' : 'Add Weekly Ministry'}</h2>
+              <button type="button" style={st.modalClose} onClick={() => setShowModal(false)}>&times;</button>
+            </div>
+            <form onSubmit={handleSubmit} style={st.form}>
+              <div style={st.row2}>
+                <div style={st.field}>
+                  <label style={st.label}>Title (English) *</label>
+                  <input style={st.input} required placeholder="e.g. Youth Aflame Ministry" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>Title (Amharic)</label>
+                  <input style={st.input} placeholder="e.g. ወጣት አገልግሎት" value={form.titleAmharic} onChange={e => setForm({ ...form, titleAmharic: e.target.value })} />
+                </div>
+              </div>
+              <div style={st.field}>
+                <label style={st.label}>Description (English) *</label>
+                <textarea style={{ ...st.input, height: 80, resize: 'vertical' }} required placeholder="What this ministry is about..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              </div>
+              <div style={st.field}>
+                <label style={st.label}>Description (Amharic)</label>
+                <textarea style={{ ...st.input, height: 80, resize: 'vertical' }} placeholder="የአማርኛ ማብራሪያ..." value={form.descriptionAmharic} onChange={e => setForm({ ...form, descriptionAmharic: e.target.value })} />
+              </div>
+              <div style={st.row2}>
+                <div style={st.field}>
+                  <label style={st.label}>Day *</label>
+                  <select style={st.input} value={form.day} onChange={e => setForm({ ...form, day: e.target.value })}>
+                    {DAY_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>Time *</label>
+                  <input style={st.input} required placeholder="e.g. 6:00 PM" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
+                </div>
+              </div>
+              <div style={st.row2}>
+                <div style={st.field}>
+                  <label style={st.label}>Location</label>
+                  <input style={st.input} placeholder="e.g. Youth Hall" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>Category</label>
+                  <select style={st.input} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                    {CATEGORY_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={st.row2}>
+                <div style={st.field}>
+                  <label style={st.label}>Icon</label>
+                  <select style={st.input} value={form.icon} onChange={e => setForm({ ...form, icon: e.target.value })}>
+                    {ICON_OPTIONS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
+                  </select>
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>Display Order</label>
+                  <input style={st.input} type="number" min="0" value={form.order} onChange={e => setForm({ ...form, order: parseInt(e.target.value) || 0 })} />
+                  <span style={st.hint}>Lower numbers appear first</span>
+                </div>
+              </div>
+              <div style={st.verseActiveWrap}>
+                <label style={{ ...st.label, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} style={{ width: 16, height: 16, accentColor: '#0ea5e9', cursor: 'pointer' }} />
+                  Active (visible on the Services page)
+                </label>
+              </div>
+              <div style={st.modalActions}>
+                <button type="button" style={st.cancelBtn} onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" style={st.saveBtn} disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {deleteId && (
+        <div style={st.overlay} onClick={() => setDeleteId(null)}>
+          <div style={st.confirmBox} onClick={e => e.stopPropagation()}>
+            <div style={st.confirmIconWrap}>
+              <TrashIcon size={24} color="#ef4444" />
+            </div>
+            <h3 style={st.confirmTitle}>Delete Ministry</h3>
+            <p style={st.confirmText}>Are you sure you want to delete this ministry? This cannot be undone.</p>
+            <div style={st.confirmActions}>
+              <button style={st.cancelBtn} onClick={() => setDeleteId(null)}>Keep Ministry</button>
+              <button style={st.deleteBtnFull} onClick={handleDelete}>Yes, Delete</button>
             </div>
           </div>
         </div>
@@ -496,9 +942,34 @@ function LeadersSection() {
 
 const emptyVerseForm = { textEnglish: '', textAmharic: '', referenceEnglish: '', referenceAmharic: '', date: '', isActive: true };
 
-function VerseSection() {
+function verseStartOfDayMs(d) {
+  const x = new Date(d);
+  return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+}
+
+function verseRelativeLabel(d) {
+  const t = verseStartOfDayMs(new Date());
+  const v = verseStartOfDayMs(d);
+  const diff = Math.round((v - t) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === -1) return 'Yesterday';
+  return '';
+}
+
+function verseRowStyle(d) {
+  const t = verseStartOfDayMs(new Date());
+  const v = verseStartOfDayMs(d);
+  const diff = Math.round((v - t) / 86400000);
+  if (diff === 0) return { borderLeft: '4px solid #38bdf8', background: 'linear-gradient(90deg, #eff6ff 0%, #fff 14%)' };
+  if (diff < 0) return { opacity: 0.72 };
+  return {};
+}
+
+function VerseSection({ showToast }) {
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [verseSearch, setVerseSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyVerseForm);
@@ -538,37 +1009,78 @@ function VerseSection() {
       else await api.post('/verses', form);
       setShowModal(false);
       fetchVerses();
+      showToast?.(editing ? 'Verse updated successfully' : 'Verse scheduled successfully');
     } catch (err) { alert(err.response?.data?.message || 'Error saving verse'); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async () => {
-    try { await api.delete(`/verses/${deleteId}`); setDeleteId(null); fetchVerses(); }
+    try {
+      await api.delete(`/verses/${deleteId}`);
+      setDeleteId(null);
+      fetchVerses();
+      showToast?.('Verse deleted');
+    }
     catch { alert('Error deleting verse'); }
   };
 
   const toggleActive = async (v) => {
-    try { await api.put(`/verses/${v._id}`, { isActive: !v.isActive }); fetchVerses(); }
+    try {
+      const next = !v.isActive;
+      await api.put(`/verses/${v._id}`, { isActive: next });
+      fetchVerses();
+      showToast?.(next ? 'Verse is active on the homepage' : 'Verse deactivated');
+    }
     catch { alert('Error updating verse'); }
   };
 
-  const isToday = (d) => {
-    const today = new Date();
-    const vd = new Date(d);
-    return vd.getFullYear() === today.getFullYear() && vd.getMonth() === today.getMonth() && vd.getDate() === today.getDate();
-  };
+  const vq = verseSearch.trim().toLowerCase();
+  const filteredVerses = vq
+    ? verses.filter(v =>
+        (v.textEnglish || '').toLowerCase().includes(vq) ||
+        (v.textAmharic || '').toLowerCase().includes(vq) ||
+        (v.referenceEnglish || '').toLowerCase().includes(vq) ||
+        (v.referenceAmharic || '').toLowerCase().includes(vq)
+      )
+    : verses;
 
   return (
     <>
       <div style={st.sectionHeader}>
-        <span style={st.count}>{verses.length} verse{verses.length !== 1 ? 's' : ''}</span>
+        <div style={st.sectionHeaderRow}>
+          <span style={st.count}>{verses.length} verse{verses.length !== 1 ? 's' : ''}</span>
+          <input
+            type="search"
+            placeholder="Search verse text or reference…"
+            value={verseSearch}
+            onChange={e => setVerseSearch(e.target.value)}
+            style={st.searchInput}
+          />
+        </div>
         <button style={st.addBtn} onClick={openCreate}>+ Add Verse</button>
       </div>
 
       <div style={st.card}>
-        {loading ? <p style={st.empty}>Loading...</p> : verses.length === 0 ? (
-          <p style={st.empty}>No verses yet. Add your first verse of the day!</p>
+        {loading ? (
+          <div style={st.loadingWrap}>
+            <div style={st.spinner} />
+            <span style={st.loadingText}>Loading verses...</span>
+          </div>
+        ) : verses.length === 0 ? (
+          <div style={st.emptyState}>
+            <VerseIcon />
+            <p style={st.emptyStateTitle}>No verses yet</p>
+            <p style={st.emptyStateText}>Add your first verse of the day for the homepage!</p>
+            <button type="button" style={st.addBtn} onClick={openCreate}>+ Add Verse</button>
+          </div>
+        ) : filteredVerses.length === 0 ? (
+          <div style={st.emptyState}>
+            <SearchEmptyIcon />
+            <p style={st.emptyStateTitle}>No results for "{verseSearch}"</p>
+            <p style={st.emptyStateText}>Try a different search term.</p>
+          </div>
         ) : (
+          <div style={st.tableWrap}>
           <table style={st.table}>
             <thead>
               <tr>
@@ -580,13 +1092,15 @@ function VerseSection() {
               </tr>
             </thead>
             <tbody>
-              {verses.map(v => (
-                <tr key={v._id} style={st.tr}>
+              {filteredVerses.map(v => {
+                const rel = verseRelativeLabel(v.date);
+                return (
+                <tr key={v._id} style={{ ...st.tr, ...verseRowStyle(v.date) }}>
                   <td style={st.td}>
                     <div style={{ fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>
                       {new Date(v.date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
-                    {isToday(v.date) && <span style={st.verseTodayBadge}>TODAY</span>}
+                    {rel ? <span style={st.verseRelativeBadge}>{rel}</span> : null}
                   </td>
                   <td style={{ ...st.td, maxWidth: 340 }}>
                     <div style={{ whiteSpace: 'normal', lineHeight: 1.5 }}>
@@ -607,13 +1121,16 @@ function VerseSection() {
                     </button>
                   </td>
                   <td style={{ ...st.td, textAlign: 'right' }}>
-                    <button style={st.editBtn} onClick={() => openEdit(v)}>Edit</button>
-                    <button style={st.deleteBtn} onClick={() => setDeleteId(v._id)}>Delete</button>
+                    <div style={st.actionGroup}>
+                      <button style={st.editBtn} onClick={() => openEdit(v)}><EditIcon /> Edit</button>
+                      <button style={st.deleteBtn} onClick={() => setDeleteId(v._id)}><TrashIcon /> Delete</button>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -621,7 +1138,10 @@ function VerseSection() {
       {showModal && (
         <div style={st.overlay} onClick={() => setShowModal(false)}>
           <div style={st.modal} onClick={e => e.stopPropagation()}>
-            <h2 style={st.modalTitle}>{editing ? 'Edit Verse' : 'Add Verse of the Day'}</h2>
+            <div style={st.modalHeader}>
+              <h2 style={st.modalTitle}>{editing ? 'Edit Verse' : 'Add Verse of the Day'}</h2>
+              <button type="button" style={st.modalClose} onClick={() => setShowModal(false)}>&times;</button>
+            </div>
             <form onSubmit={handleSubmit} style={st.form}>
               <div style={st.field}>
                 <label style={st.label}>Date *</label>
@@ -664,11 +1184,14 @@ function VerseSection() {
       {deleteId && (
         <div style={st.overlay} onClick={() => setDeleteId(null)}>
           <div style={st.confirmBox} onClick={e => e.stopPropagation()}>
+            <div style={st.confirmIconWrap}>
+              <TrashIcon size={24} color="#ef4444" />
+            </div>
             <h3 style={st.confirmTitle}>Delete Verse</h3>
-            <p style={st.confirmText}>Are you sure you want to delete this verse? This action cannot be undone.</p>
-            <div style={st.modalActions}>
-              <button style={st.cancelBtn} onClick={() => setDeleteId(null)}>Cancel</button>
-              <button style={st.deleteBtnFull} onClick={handleDelete}>Delete</button>
+            <p style={st.confirmText}>Are you sure you want to delete this verse? This cannot be undone.</p>
+            <div style={st.confirmActions}>
+              <button style={st.cancelBtn} onClick={() => setDeleteId(null)}>Keep Verse</button>
+              <button style={st.deleteBtnFull} onClick={handleDelete}>Yes, Delete</button>
             </div>
           </div>
         </div>
@@ -723,6 +1246,15 @@ const LeadersIcon = () => (
   </svg>
 );
 
+const MinistriesIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ marginRight: 6 }}>
+    <circle cx="10" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+    <circle cx="4.5" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" fill="none"/>
+    <circle cx="15.5" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" fill="none"/>
+  </svg>
+);
+
 const VerseIcon = () => (
   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ marginRight: 6 }}>
     <path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H18" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
@@ -739,136 +1271,358 @@ const CameraIcon = () => (
   </svg>
 );
 
+const EditIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }}>
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
+
+const TrashIcon = ({ size, color } = {}) => {
+  const s = size || 13;
+  const c = color || 'currentColor';
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: s > 13 ? 0 : 4 }}>
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>
+  );
+};
+
+const SearchEmptyIcon = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <line x1="8" y1="11" x2="14" y2="11"/>
+    </svg>
+  </div>
+);
+
 /* ── Styles ── */
 
 const st = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-  title: { fontSize: 26, fontWeight: 700, color: '#0f172a', margin: 0 },
-  subtitle: { fontSize: 14, color: '#64748b', margin: '4px 0 0' },
+  pageWrap: { minHeight: '100%' },
 
+  /* ── Header ── */
+  header: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8,
+    padding: '4px 0 12px', borderBottom: '1px solid #f1f5f9',
+  },
+  headerTextWrap: { maxWidth: 640 },
+  title: { fontSize: 28, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' },
+  subtitle: { fontSize: 14, color: '#64748b', margin: '6px 0 0', lineHeight: 1.5 },
+
+  /* ── Toast ── */
+  globalToast: {
+    position: 'fixed', top: 24, right: 24, zIndex: 300, display: 'flex', alignItems: 'center', gap: 10,
+    padding: '14px 18px', background: '#fff', borderRadius: 14,
+    boxShadow: '0 16px 48px rgba(15,23,42,0.14), 0 2px 6px rgba(15,23,42,0.06)',
+    border: '1px solid #bbf7d0', color: '#14532d', fontSize: 14, fontWeight: 600,
+    maxWidth: 'min(380px, calc(100vw - 48px))',
+    animation: 'slideInRight .3s ease',
+  },
+  globalToastIcon: {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: 28, height: 28, borderRadius: 8, background: '#22c55e', flexShrink: 0,
+  },
+  globalToastClose: {
+    marginLeft: 4, background: 'none', border: 'none', fontSize: 20, lineHeight: 1,
+    color: '#166534', cursor: 'pointer', padding: '0 4px', opacity: 0.5,
+  },
+
+  /* ── Section Tabs ── */
   sectionTabs: {
-    display: 'flex', gap: 0, marginBottom: 20, background: '#fff', borderRadius: 10,
-    border: '1px solid #e2e8f0', overflow: 'hidden', width: 'fit-content',
+    display: 'flex', flexWrap: 'wrap', gap: 0, margin: '16px 0 24px', background: '#fff',
+    borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden',
+    boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
   },
   sectionTab: {
-    display: 'flex', alignItems: 'center', padding: '10px 20px', fontSize: 14, fontWeight: 600,
-    color: '#64748b', background: '#fff', border: 'none', cursor: 'pointer',
-    borderRight: '1px solid #e2e8f0', transition: 'all 0.15s',
+    position: 'relative', display: 'flex', alignItems: 'center', padding: '12px 22px',
+    fontSize: 13, fontWeight: 600, color: '#64748b', background: '#fff', border: 'none',
+    cursor: 'pointer', borderRight: '1px solid #f1f5f9', transition: 'color .15s, background .15s',
+    gap: 2,
   },
   sectionTabActive: {
-    display: 'flex', alignItems: 'center', padding: '10px 20px', fontSize: 14, fontWeight: 600,
-    color: '#fff', background: '#0ea5e9', border: 'none', cursor: 'pointer',
-    borderRight: '1px solid #0ea5e9', transition: 'all 0.15s',
+    position: 'relative', display: 'flex', alignItems: 'center', padding: '12px 22px',
+    fontSize: 13, fontWeight: 700, color: '#0ea5e9', background: '#f0f9ff', border: 'none',
+    cursor: 'pointer', borderRight: '1px solid #e0f2fe', transition: 'color .15s, background .15s',
+    gap: 2,
+  },
+  tabUnderline: {
+    position: 'absolute', bottom: 0, left: 12, right: 12, height: 3,
+    borderRadius: '3px 3px 0 0', background: '#0ea5e9',
   },
 
-  sectionHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  searchInput: { padding: '9px 14px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, width: 260, outline: 'none', background: '#fff' },
-  count: { fontSize: 13, color: '#94a3b8' },
-  addBtn: { padding: '9px 18px', borderRadius: 8, border: 'none', background: '#0ea5e9', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' },
+  sectionBody: { animation: 'fadeIn .25s ease' },
 
-  card: { background: '#fff', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' },
+  /* ── Section header ── */
+  sectionHeader: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18,
+    flexWrap: 'wrap', gap: 12,
+  },
+  sectionHeaderRow: { display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
+  searchInput: {
+    padding: '10px 14px 10px 36px', borderRadius: 10, border: '1px solid #e2e8f0',
+    fontSize: 14, minWidth: 200, flex: '1 1 200px', maxWidth: 320, outline: 'none',
+    background: '#fff url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\' stroke-linecap=\'round\'%3E%3Ccircle cx=\'7\' cy=\'7\' r=\'5\'/%3E%3Cline x1=\'12\' y1=\'12\' x2=\'15\' y2=\'15\'/%3E%3C/svg%3E") 12px center no-repeat',
+    transition: 'border-color .2s, box-shadow .2s',
+  },
+  count: { fontSize: 13, color: '#94a3b8', fontWeight: 500 },
+  addBtn: {
+    padding: '10px 20px', borderRadius: 10, border: 'none',
+    background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff',
+    fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap',
+    boxShadow: '0 2px 8px rgba(14,165,233,0.25)', transition: 'transform .1s, box-shadow .1s',
+  },
+
+  /* ── Card / Table wrapper ── */
+  card: {
+    background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 4px rgba(15,23,42,0.05)', overflow: 'hidden',
+  },
+  tableWrap: { overflowX: 'auto' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { textAlign: 'left', padding: '12px 16px', fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' },
-  tr: { borderBottom: '1px solid #f8fafc' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#334155', verticalAlign: 'middle' },
-  slugCode: { padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', fontSize: 13, color: '#64748b', fontFamily: 'monospace' },
+  th: {
+    textAlign: 'left', padding: '14px 18px', fontSize: 11, fontWeight: 700, color: '#94a3b8',
+    textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid #f1f5f9',
+    background: '#fafbfc',
+  },
+  tr: { borderBottom: '1px solid #f1f5f9', transition: 'background .12s' },
+  td: { padding: '14px 18px', fontSize: 14, color: '#334155', verticalAlign: 'middle' },
+  titleCell: { display: 'flex', alignItems: 'center', gap: 10 },
+  pageTitleDot: { width: 8, height: 8, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0 },
+  dateText: { fontSize: 13, color: '#94a3b8', whiteSpace: 'nowrap' },
+  slugCode: {
+    padding: '3px 10px', borderRadius: 6, background: '#f1f5f9', fontSize: 12, color: '#64748b',
+    fontFamily: "'SF Mono', Menlo, Consolas, monospace", border: '1px solid #e2e8f0',
+  },
 
-  editBtn: { background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#334155', cursor: 'pointer', marginRight: 6 },
-  deleteBtn: { background: 'none', border: '1px solid #fecaca', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#ef4444', cursor: 'pointer' },
-  empty: { gridColumn: '1 / -1', padding: 50, textAlign: 'center', color: '#94a3b8', fontSize: 14, background: '#fff', borderRadius: 14, border: '1px solid #f1f5f9' },
+  /* ── Action buttons ── */
+  actionGroup: { display: 'flex', gap: 6, justifyContent: 'flex-end' },
+  editBtn: {
+    display: 'inline-flex', alignItems: 'center', background: '#fff', border: '1px solid #e2e8f0',
+    borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#334155',
+    cursor: 'pointer', transition: 'all .15s',
+  },
+  deleteBtn: {
+    display: 'inline-flex', alignItems: 'center', background: '#fff', border: '1px solid #fecaca',
+    borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#ef4444',
+    cursor: 'pointer', transition: 'all .15s',
+  },
 
-  /* leader grid */
-  leaderGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 16 },
+  /* ── Loading ── */
+  loadingWrap: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    padding: '56px 24px', gap: 12,
+  },
+  spinner: {
+    width: 28, height: 28, borderRadius: '50%',
+    border: '3px solid #e2e8f0', borderTopColor: '#0ea5e9',
+    animation: 'spin 0.7s linear infinite',
+  },
+  loadingText: { fontSize: 14, color: '#94a3b8', fontWeight: 500 },
+
+  /* ── Empty states ── */
+  empty: {
+    gridColumn: '1 / -1', padding: 56, textAlign: 'center', color: '#94a3b8', fontSize: 14,
+    background: '#fff', borderRadius: 14, border: '1px solid #f1f5f9',
+  },
+  emptyState: { padding: '56px 24px', textAlign: 'center', background: '#fafbfc' },
+  emptyStateIcon: { marginBottom: 16, display: 'flex', justifyContent: 'center', color: '#cbd5e1' },
+  emptyStateTitle: { margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: '#1e293b' },
+  emptyStateText: {
+    margin: '0 0 20px', fontSize: 14, color: '#94a3b8', lineHeight: 1.6, maxWidth: 380,
+    marginLeft: 'auto', marginRight: 'auto',
+  },
+  charCount: { fontSize: 12, color: '#94a3b8', marginTop: 4, textAlign: 'right' },
+
+  /* ── Leader grid ── */
+  leaderGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 18 },
   leaderCard: {
-    background: '#fff', borderRadius: 12, padding: '18px 16px 14px', border: '1px solid #f1f5f9',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center',
-    transition: 'box-shadow 0.2s',
+    background: '#fff', borderRadius: 16, padding: '20px 18px 16px', border: '1px solid #e2e8f0',
+    boxShadow: '0 1px 4px rgba(15,23,42,0.05)', display: 'flex', flexDirection: 'column',
+    alignItems: 'center', transition: 'box-shadow .2s, transform .2s',
   },
-  lcTop: { display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  lcTop: { display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   lcDot: (on) => ({
-    width: 8, height: 8, borderRadius: '50%', background: on ? '#22c55e' : '#cbd5e1',
-    boxShadow: on ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
+    width: 9, height: 9, borderRadius: '50%', background: on ? '#22c55e' : '#cbd5e1',
+    boxShadow: on ? '0 0 0 3px rgba(34,197,94,0.18)' : 'none',
   }),
-  lcOrder: { fontSize: 11, color: '#94a3b8', fontWeight: 600, background: '#f8fafc', padding: '2px 7px', borderRadius: 4 },
+  lcOrder: {
+    fontSize: 11, color: '#94a3b8', fontWeight: 700, background: '#f8fafc', padding: '3px 8px',
+    borderRadius: 6, border: '1px solid #f1f5f9',
+  },
 
-  lcAvatarWrap: { marginBottom: 10 },
-  lcAvatar: { width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #e2e8f0' },
+  lcAvatarWrap: { marginBottom: 12 },
+  lcAvatar: {
+    width: 84, height: 84, borderRadius: '50%', objectFit: 'cover',
+    border: '3px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+  },
   lcAvatarFallback: {
-    width: 80, height: 80, borderRadius: '50%', background: '#e0f2fe',
+    width: 84, height: 84, borderRadius: '50%',
+    background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 26, fontWeight: 800, color: '#0ea5e9', border: '3px solid #bae6fd',
+    fontSize: 28, fontWeight: 800, color: '#0ea5e9', border: '3px solid #bae6fd',
   },
 
-  lcName: { fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 2px', textAlign: 'center' },
-  lcRole: { fontSize: 13, color: '#0ea5e9', fontWeight: 600, margin: '0 0 1px', textAlign: 'center' },
-  lcRoleAm: { fontSize: 11, color: '#94a3b8', fontStyle: 'italic', margin: '0 0 8px', textAlign: 'center' },
+  lcName: { fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 3px', textAlign: 'center' },
+  lcRole: { fontSize: 13, color: '#0ea5e9', fontWeight: 600, margin: '0 0 2px', textAlign: 'center' },
+  lcRoleAm: { fontSize: 11, color: '#94a3b8', fontStyle: 'italic', margin: '0 0 10px', textAlign: 'center' },
 
-  lcChips: { display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 8, width: '100%', alignItems: 'center' },
-  lcChip: { fontSize: 11, color: '#64748b', background: '#f8fafc', padding: '2px 8px', borderRadius: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  lcChips: { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10, width: '100%', alignItems: 'center' },
+  lcChip: {
+    fontSize: 11, color: '#64748b', background: '#f8fafc', padding: '3px 10px', borderRadius: 6,
+    maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    border: '1px solid #f1f5f9',
+  },
 
-  lcSocials: { display: 'flex', gap: 6, marginBottom: 10 },
+  lcSocials: { display: 'flex', gap: 8, marginBottom: 12 },
   lcSocialLink: {
-    width: 30, height: 30, borderRadius: '50%', border: '1px solid #e2e8f0', background: '#fff',
+    width: 32, height: 32, borderRadius: '50%', border: '1px solid #e2e8f0', background: '#fff',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    textDecoration: 'none', transition: 'border-color 0.15s, background 0.15s',
+    textDecoration: 'none', transition: 'all .15s',
   },
 
-  lcActions: { display: 'flex', gap: 6, width: '100%', justifyContent: 'center', borderTop: '1px solid #f1f5f9', paddingTop: 10 },
+  lcActions: {
+    display: 'flex', gap: 6, width: '100%', justifyContent: 'center',
+    borderTop: '1px solid #f1f5f9', paddingTop: 12, marginTop: 4,
+  },
   lcToggleBtn: (on) => ({
-    background: 'none', border: `1px solid ${on ? '#fde68a' : '#bbf7d0'}`, borderRadius: 6,
-    padding: '5px 12px', fontSize: 12, fontWeight: 600,
+    background: 'none', border: `1px solid ${on ? '#fde68a' : '#bbf7d0'}`, borderRadius: 8,
+    padding: '6px 14px', fontSize: 12, fontWeight: 600,
     color: on ? '#b45309' : '#16a34a', cursor: 'pointer',
   }),
 
-  /* modals */
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 },
-  modal: { background: '#fff', borderRadius: 14, padding: 28, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto' },
-  leaderModal: { background: '#fff', borderRadius: 16, width: '100%', maxWidth: 600, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' },
-  lmHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px 0' },
-  lmClose: { background: 'none', border: 'none', fontSize: 24, color: '#94a3b8', cursor: 'pointer', padding: '0 4px', lineHeight: 1 },
-  lmTabs: { display: 'flex', gap: 0, padding: '14px 24px 0', borderBottom: '1px solid #f1f5f9' },
+  /* ── Modals ── */
+  overlay: {
+    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)',
+    backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 200, animation: 'fadeIn .2s ease',
+  },
+  modal: {
+    background: '#fff', borderRadius: 18, padding: '0 0 28px', width: '100%', maxWidth: 560,
+    maxHeight: '90vh', overflowY: 'auto',
+    boxShadow: '0 24px 64px rgba(15,23,42,0.18)',
+  },
+  modalHeader: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 28px 0',
+  },
+  modalClose: {
+    background: '#f1f5f9', border: 'none', width: 32, height: 32, borderRadius: 8,
+    fontSize: 20, color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', lineHeight: 1, transition: 'all .15s',
+  },
+  leaderModal: {
+    background: '#fff', borderRadius: 18, width: '100%', maxWidth: 620, maxHeight: '92vh',
+    overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
+  },
+  lmHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 26px 0' },
+  lmClose: {
+    background: '#f1f5f9', border: 'none', width: 32, height: 32, borderRadius: 8,
+    fontSize: 20, color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', lineHeight: 1,
+  },
+  lmTabs: { display: 'flex', gap: 0, padding: '16px 26px 0', borderBottom: '1px solid #f1f5f9' },
   lmTab: {
-    padding: '7px 14px', fontSize: 13, fontWeight: 600, color: '#94a3b8', background: 'none',
-    border: 'none', borderBottom: '2px solid transparent', cursor: 'pointer',
+    padding: '8px 16px', fontSize: 13, fontWeight: 600, color: '#94a3b8', background: 'none',
+    border: 'none', borderBottom: '2px solid transparent', cursor: 'pointer', transition: 'all .15s',
   },
   lmTabActive: {
-    padding: '7px 14px', fontSize: 13, fontWeight: 600, color: '#0ea5e9', background: 'none',
-    border: 'none', borderBottom: '2px solid #0ea5e9', cursor: 'pointer',
+    padding: '8px 16px', fontSize: 13, fontWeight: 700, color: '#0ea5e9', background: 'none',
+    border: 'none', borderBottom: '2.5px solid #0ea5e9', cursor: 'pointer',
   },
 
-  modalTitle: { fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 20px' },
-  form: { display: 'flex', flexDirection: 'column', gap: 14 },
+  modalTitle: { fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' },
+  form: { display: 'flex', flexDirection: 'column', gap: 16, padding: '20px 28px 0' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
-  field: { display: 'flex', flexDirection: 'column', gap: 5 },
+  field: { display: 'flex', flexDirection: 'column', gap: 6 },
   label: { fontSize: 13, fontWeight: 600, color: '#334155' },
-  input: { padding: '9px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, color: '#0f172a', outline: 'none', background: '#f8fafc', fontFamily: 'inherit' },
+  input: {
+    padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14,
+    color: '#0f172a', outline: 'none', background: '#fafbfc', fontFamily: 'inherit',
+    transition: 'border-color .2s, box-shadow .2s',
+  },
+  inputDisabled: { background: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' },
   hint: { fontSize: 12, color: '#94a3b8' },
 
-  photoRow: { display: 'flex', gap: 14, alignItems: 'center', padding: '8px 0' },
+  photoRow: { display: 'flex', gap: 16, alignItems: 'center', padding: '8px 0' },
   photoUpload: {
-    width: 80, height: 80, borderRadius: '50%', border: '2px dashed #cbd5e1', background: '#f8fafc',
+    width: 84, height: 84, borderRadius: '50%', border: '2px dashed #cbd5e1', background: '#f8fafc',
     display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-    overflow: 'hidden', flexShrink: 0,
+    overflow: 'hidden', flexShrink: 0, transition: 'border-color .2s',
   },
   photoImg: { width: '100%', height: '100%', objectFit: 'cover' },
   photoPlaceholder: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  removePhotoBtn: { marginTop: 6, padding: '3px 10px', borderRadius: 5, border: '1px solid #fecaca', background: '#fff', color: '#ef4444', fontSize: 11, fontWeight: 600, cursor: 'pointer' },
+  removePhotoBtn: {
+    marginTop: 8, padding: '4px 12px', borderRadius: 6, border: '1px solid #fecaca',
+    background: '#fff', color: '#ef4444', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+  },
 
-  visToggle: { display: 'flex', borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0' },
-  visOpt: { flex: 1, padding: '7px 0', fontSize: 13, fontWeight: 600, background: '#f8fafc', color: '#94a3b8', border: 'none', cursor: 'pointer' },
-  visActive: { flex: 1, padding: '7px 0', fontSize: 13, fontWeight: 600, background: '#dcfce7', color: '#16a34a', border: 'none', cursor: 'pointer' },
-  visHidden: { flex: 1, padding: '7px 0', fontSize: 13, fontWeight: 600, background: '#fef9c3', color: '#b45309', border: 'none', cursor: 'pointer' },
+  visToggle: { display: 'flex', borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0' },
+  visOpt: { flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 600, background: '#f8fafc', color: '#94a3b8', border: 'none', cursor: 'pointer', transition: 'all .15s' },
+  visActive: { flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 700, background: '#dcfce7', color: '#16a34a', border: 'none', cursor: 'pointer' },
+  visHidden: { flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 700, background: '#fef9c3', color: '#b45309', border: 'none', cursor: 'pointer' },
 
-  modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 },
-  cancelBtn: { padding: '9px 18px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#334155', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  saveBtn: { padding: '9px 18px', borderRadius: 8, border: 'none', background: '#0ea5e9', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  confirmBox: { background: '#fff', borderRadius: 14, padding: 28, width: '100%', maxWidth: 420 },
+  modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8, padding: '0 28px 0' },
+  cancelBtn: {
+    padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#fff',
+    color: '#334155', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all .15s',
+  },
+  saveBtn: {
+    padding: '10px 20px', borderRadius: 10, border: 'none',
+    background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff',
+    fontSize: 14, fontWeight: 700, cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(14,165,233,0.25)', transition: 'all .15s',
+  },
+
+  /* ── Confirm delete ── */
+  confirmBox: {
+    background: '#fff', borderRadius: 18, padding: '32px 28px 28px', width: '100%', maxWidth: 420,
+    textAlign: 'center', boxShadow: '0 24px 64px rgba(15,23,42,0.18)',
+  },
+  confirmIconWrap: {
+    display: 'flex', justifyContent: 'center', marginBottom: 16,
+  },
   confirmTitle: { fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 8px' },
-  confirmText: { fontSize: 14, color: '#64748b', margin: '0 0 20px', lineHeight: 1.5 },
-  deleteBtnFull: { padding: '9px 18px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  confirmText: { fontSize: 14, color: '#64748b', margin: '0 0 24px', lineHeight: 1.6 },
+  confirmActions: { display: 'flex', justifyContent: 'center', gap: 12 },
+  deleteBtnFull: {
+    padding: '10px 24px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff',
+    fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(239,68,68,0.25)',
+  },
 
-  verseTodayBadge: { display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', letterSpacing: '0.04em' },
-  verseRefBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' },
-  verseStatusBtn: { padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.02em' },
-  verseActiveWrap: { background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '12px 14px' },
+  /* ── Ministry badges ── */
+  ministryCatBadge: {
+    display: 'inline-block', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+    textTransform: 'capitalize', letterSpacing: '0.02em',
+  },
+  ministryIconBadge: {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36,
+    borderRadius: 10, fontSize: 14, fontWeight: 800, border: '1px solid rgba(15,23,42,0.06)',
+  },
+  ministryDayDot: {
+    width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+    boxShadow: '0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,0.06)',
+  },
+
+  /* ── Verse badges ── */
+  verseTodayBadge: {
+    display: 'inline-block', marginTop: 4, padding: '2px 10px', borderRadius: 6, fontSize: 10,
+    fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', letterSpacing: '0.04em',
+  },
+  verseRelativeBadge: {
+    display: 'inline-block', marginTop: 4, padding: '2px 10px', borderRadius: 6, fontSize: 10,
+    fontWeight: 700, background: '#e0f2fe', color: '#0369a1', letterSpacing: '0.04em',
+  },
+  verseRefBadge: {
+    display: 'inline-block', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+    background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd',
+  },
+  verseStatusBtn: {
+    padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: 'none',
+    cursor: 'pointer', letterSpacing: '0.02em', transition: 'all .15s',
+  },
+  verseActiveWrap: {
+    background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '14px 16px',
+  },
 };

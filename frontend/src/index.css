@@ -673,3 +673,16 @@ button {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Admin Pages dashboard animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}

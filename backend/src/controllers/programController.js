@@ -2,8 +2,9 @@ import Program from "../models/Program.js";
 
 export const getPrograms = async (req, res) => {
   try {
-    const { category } = req.query;
-    const filter = { isActive: true };
+    const { category, admin } = req.query;
+    const filter = {};
+    if (!admin) filter.isActive = true;
     if (category) filter.category = category;
 
     const programs = await Program.find(filter)
