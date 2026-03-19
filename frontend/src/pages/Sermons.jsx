@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import Footer from '../components/Footer';
 
@@ -20,6 +21,9 @@ const pageCSS = `
 }
 .sermon-card:hover .sermon-card-img {
   transform: scale(1.05);
+}
+.sermon-card:hover .sermon-play-overlay {
+  opacity: 1 !important;
 }
 .sermon-filter-btn {
   transition: all 0.2s ease;
@@ -363,10 +367,12 @@ export default function Sermons() {
             </span>
           </div>
           <div style={heroStyles.actions}>
-            <button className="sermon-watch-btn" style={heroStyles.watchBtn}>
+            <Link to={`/sermons/${heroData._id}?play=1`} className="sermon-watch-btn" style={{ ...heroStyles.watchBtn, textDecoration: 'none' }}>
               <PlayIcon /> Watch Now
-            </button>
-            <button className="sermon-share-btn" style={heroStyles.shareBtn}>
+            </Link>
+            <button className="sermon-share-btn" style={heroStyles.shareBtn} onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/sermons/${heroData._id}`);
+            }}>
               <ShareIcon /> Share
             </button>
           </div>
@@ -511,9 +517,10 @@ function FilterButton({ label, active, isOpen, onToggle, options, selected, onSe
 function SermonCard({ sermon, index }) {
   const color = getSeriesColor(sermon.series);
   return (
-    <div
+    <Link
+      to={`/sermons/${sermon._id}?play=1`}
       className="sermon-card"
-      style={{ ...cardStyles.card, animationDelay: `${index * 0.08}s` }}
+      style={{ ...cardStyles.card, animationDelay: `${index * 0.08}s`, textDecoration: 'none', color: 'inherit', display: 'block' }}
     >
       <div style={cardStyles.imgWrap}>
         <img
@@ -525,6 +532,11 @@ function SermonCard({ sermon, index }) {
         {sermon.duration && (
           <span style={cardStyles.duration}>{sermon.duration}</span>
         )}
+        <div className="sermon-play-overlay" style={cardStyles.playOverlay}>
+          <div style={cardStyles.playCircle}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="10,8 16,12 10,16"/></svg>
+          </div>
+        </div>
       </div>
       <div style={cardStyles.body}>
         <div style={cardStyles.tagRow}>
@@ -543,13 +555,9 @@ function SermonCard({ sermon, index }) {
             </div>
             <span style={cardStyles.speakerName}>{sermon.speaker}</span>
           </div>
-          <div style={cardStyles.iconRow}>
-            <span className="sermon-icon-btn" style={cardStyles.iconBtn}><HomeIcon /></span>
-            <span className="sermon-icon-btn" style={cardStyles.iconBtn}><CopyIcon /></span>
-          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -762,6 +770,26 @@ const cardStyles = {
     fontWeight: '600',
     padding: '3px 8px',
     borderRadius: '4px',
+    zIndex: 2,
+  },
+  playOverlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.15)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0,
+    transition: 'opacity 0.25s ease',
+  },
+  playCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    background: 'rgba(14,165,233,0.9)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
     padding: '14px 16px 16px',

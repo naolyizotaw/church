@@ -36,6 +36,10 @@ const sermonSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    youtubeVideoId: {
+      type: String,
+      trim: true,
+    },
     duration: {
       type: String,
       trim: true,
