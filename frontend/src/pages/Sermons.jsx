@@ -21,6 +21,10 @@ const pageCSS = `
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
 
 .sermon-hero-text > * {
   opacity: 0;
@@ -692,16 +696,22 @@ const heroStyles = {
   },
   tag: {
     display: 'inline-block',
-    background: '#d4a017',
-    color: '#fff',
-    fontSize: '0.7rem',
+    background: 'transparent',
+    border: '1.5px solid #d4a017',
+    fontSize: '0.72rem',
     fontWeight: '700',
-    padding: '5px 14px',
-    borderRadius: '4px',
-    letterSpacing: '0.06em',
+    padding: '5px 18px',
+    borderRadius: '20px',
+    letterSpacing: '0.08em',
     marginBottom: '16px',
     width: 'fit-content',
     textTransform: 'uppercase',
+    backgroundImage: 'linear-gradient(90deg, #d4a017 0%, #f0d060 50%, #d4a017 100%)',
+    backgroundSize: '200% auto',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    animation: 'shimmer 3s linear infinite',
   },
   title: {
     color: '#fff',

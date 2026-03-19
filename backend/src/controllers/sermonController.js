@@ -33,7 +33,7 @@ export const getSermons = async (req, res) => {
 
     const sermons = await Sermon.find(filter)
       .populate("uploadedBy", "name email")
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -58,7 +58,7 @@ export const getFeaturedSermon = async (req, res) => {
   try {
     let sermon = await Sermon.findOne({ isFeatured: true }).populate("uploadedBy", "name email");
     if (!sermon) {
-      sermon = await Sermon.findOne().sort({ date: -1 }).populate("uploadedBy", "name email");
+      sermon = await Sermon.findOne().sort({ date: -1, createdAt: -1 }).populate("uploadedBy", "name email");
     }
     if (!sermon) {
       return res.status(404).json({ message: "No sermons found" });
