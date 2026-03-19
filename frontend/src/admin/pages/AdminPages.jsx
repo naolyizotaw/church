@@ -41,9 +41,16 @@ export default function AdminPages() {
           <LeadersIcon />
           Meet Our Leaders
         </button>
+        <button
+          style={section === 'verses' ? st.sectionTabActive : st.sectionTab}
+          onClick={() => setSection('verses')}
+        >
+          <VerseIcon />
+          Verse of the Day
+        </button>
       </div>
 
-      {section === 'pages' ? <PagesSection /> : <LeadersSection />}
+      {section === 'pages' ? <PagesSection /> : section === 'leaders' ? <LeadersSection /> : <VerseSection />}
     </div>
   );
 }
@@ -483,6 +490,193 @@ function LeadersSection() {
   );
 }
 
+/* ──────────────────────────────────────────────────────────
+   VERSE OF THE DAY SECTION
+   ────────────────────────────────────────────────────────── */
+
+const emptyVerseForm = { textEnglish: '', textAmharic: '', referenceEnglish: '', referenceAmharic: '', date: '', isActive: true };
+
+function VerseSection() {
+  const [verses, setVerses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyVerseForm);
+  const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const fetchVerses = async () => {
+    try { const { data } = await api.get('/verses'); setVerses(Array.isArray(data) ? data : []); }
+    catch { setVerses([]); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchVerses(); }, []);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ ...emptyVerseForm, date: new Date().toISOString().split('T')[0] });
+    setShowModal(true);
+  };
+
+  const openEdit = (v) => {
+    setEditing(v._id);
+    setForm({
+      textEnglish: v.textEnglish || '', textAmharic: v.textAmharic || '',
+      referenceEnglish: v.referenceEnglish || '', referenceAmharic: v.referenceAmharic || '',
+      date: v.date ? new Date(v.date).toISOString().split('T')[0] : '',
+      isActive: v.isActive !== false,
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editing) await api.put(`/verses/${editing}`, form);
+      else await api.post('/verses', form);
+      setShowModal(false);
+      fetchVerses();
+    } catch (err) { alert(err.response?.data?.message || 'Error saving verse'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    try { await api.delete(`/verses/${deleteId}`); setDeleteId(null); fetchVerses(); }
+    catch { alert('Error deleting verse'); }
+  };
+
+  const toggleActive = async (v) => {
+    try { await api.put(`/verses/${v._id}`, { isActive: !v.isActive }); fetchVerses(); }
+    catch { alert('Error updating verse'); }
+  };
+
+  const isToday = (d) => {
+    const today = new Date();
+    const vd = new Date(d);
+    return vd.getFullYear() === today.getFullYear() && vd.getMonth() === today.getMonth() && vd.getDate() === today.getDate();
+  };
+
+  return (
+    <>
+      <div style={st.sectionHeader}>
+        <span style={st.count}>{verses.length} verse{verses.length !== 1 ? 's' : ''}</span>
+        <button style={st.addBtn} onClick={openCreate}>+ Add Verse</button>
+      </div>
+
+      <div style={st.card}>
+        {loading ? <p style={st.empty}>Loading...</p> : verses.length === 0 ? (
+          <p style={st.empty}>No verses yet. Add your first verse of the day!</p>
+        ) : (
+          <table style={st.table}>
+            <thead>
+              <tr>
+                <th style={st.th}>Date</th>
+                <th style={st.th}>Verse (English)</th>
+                <th style={st.th}>Reference</th>
+                <th style={st.th}>Status</th>
+                <th style={{ ...st.th, textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {verses.map(v => (
+                <tr key={v._id} style={st.tr}>
+                  <td style={st.td}>
+                    <div style={{ fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                      {new Date(v.date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                    {isToday(v.date) && <span style={st.verseTodayBadge}>TODAY</span>}
+                  </td>
+                  <td style={{ ...st.td, maxWidth: 340 }}>
+                    <div style={{ whiteSpace: 'normal', lineHeight: 1.5 }}>
+                      <div style={{ color: '#0f172a', fontWeight: 500 }}>{v.textEnglish?.length > 100 ? v.textEnglish.slice(0, 100) + '...' : v.textEnglish}</div>
+                      {v.textAmharic && <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{v.textAmharic?.length > 80 ? v.textAmharic.slice(0, 80) + '...' : v.textAmharic}</div>}
+                    </div>
+                  </td>
+                  <td style={st.td}>
+                    <span style={st.verseRefBadge}>{v.referenceEnglish}</span>
+                    {v.referenceAmharic && <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{v.referenceAmharic}</div>}
+                  </td>
+                  <td style={st.td}>
+                    <button
+                      style={{ ...st.verseStatusBtn, background: v.isActive ? '#dcfce7' : '#f1f5f9', color: v.isActive ? '#16a34a' : '#64748b' }}
+                      onClick={() => toggleActive(v)}
+                    >
+                      {v.isActive ? 'Active' : 'Inactive'}
+                    </button>
+                  </td>
+                  <td style={{ ...st.td, textAlign: 'right' }}>
+                    <button style={st.editBtn} onClick={() => openEdit(v)}>Edit</button>
+                    <button style={st.deleteBtn} onClick={() => setDeleteId(v._id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Create / Edit Modal */}
+      {showModal && (
+        <div style={st.overlay} onClick={() => setShowModal(false)}>
+          <div style={st.modal} onClick={e => e.stopPropagation()}>
+            <h2 style={st.modalTitle}>{editing ? 'Edit Verse' : 'Add Verse of the Day'}</h2>
+            <form onSubmit={handleSubmit} style={st.form}>
+              <div style={st.field}>
+                <label style={st.label}>Date *</label>
+                <input style={st.input} type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+              </div>
+              <div style={st.field}>
+                <label style={st.label}>Verse Text (English) *</label>
+                <textarea style={{ ...st.input, height: 90, resize: 'vertical' }} required placeholder='e.g. "For God so loved the world..."' value={form.textEnglish} onChange={e => setForm({ ...form, textEnglish: e.target.value })} />
+              </div>
+              <div style={st.field}>
+                <label style={st.label}>Verse Text (Amharic)</label>
+                <textarea style={{ ...st.input, height: 90, resize: 'vertical' }} placeholder="የአማርኛ ትርጉም..." value={form.textAmharic} onChange={e => setForm({ ...form, textAmharic: e.target.value })} />
+              </div>
+              <div style={st.row2}>
+                <div style={st.field}>
+                  <label style={st.label}>Reference (English) *</label>
+                  <input style={st.input} required placeholder="e.g. John 3:16" value={form.referenceEnglish} onChange={e => setForm({ ...form, referenceEnglish: e.target.value })} />
+                </div>
+                <div style={st.field}>
+                  <label style={st.label}>Reference (Amharic)</label>
+                  <input style={st.input} placeholder="e.g. ዮሐንስ 3:16" value={form.referenceAmharic} onChange={e => setForm({ ...form, referenceAmharic: e.target.value })} />
+                </div>
+              </div>
+              <div style={st.verseActiveWrap}>
+                <label style={{ ...st.label, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} style={{ width: 16, height: 16, accentColor: '#0ea5e9', cursor: 'pointer' }} />
+                  Active (visible on homepage)
+                </label>
+              </div>
+              <div style={st.modalActions}>
+                <button type="button" style={st.cancelBtn} onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" style={st.saveBtn} disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm */}
+      {deleteId && (
+        <div style={st.overlay} onClick={() => setDeleteId(null)}>
+          <div style={st.confirmBox} onClick={e => e.stopPropagation()}>
+            <h3 style={st.confirmTitle}>Delete Verse</h3>
+            <p style={st.confirmText}>Are you sure you want to delete this verse? This action cannot be undone.</p>
+            <div style={st.modalActions}>
+              <button style={st.cancelBtn} onClick={() => setDeleteId(null)}>Cancel</button>
+              <button style={st.deleteBtnFull} onClick={handleDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 /* ── LeaderAvatar with image error fallback ── */
 
 function LeaderAvatar({ src, name, initials }) {
@@ -526,6 +720,15 @@ const LeadersIcon = () => (
   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ marginRight: 6 }}>
     <circle cx="10" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
     <path d="M3 17.5c0-3.59 3.13-6.5 7-6.5s7 2.91 7 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+  </svg>
+);
+
+const VerseIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={{ marginRight: 6 }}>
+    <path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H18" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+    <path d="M6.5 2H18v18H6.5A2.5 2.5 0 0 1 4 17.5v-13A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <line x1="8" y1="7" x2="14" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    <line x1="8" y1="10" x2="12" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
   </svg>
 );
 
@@ -663,4 +866,9 @@ const st = {
   confirmTitle: { fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 8px' },
   confirmText: { fontSize: 14, color: '#64748b', margin: '0 0 20px', lineHeight: 1.5 },
   deleteBtnFull: { padding: '9px 18px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+
+  verseTodayBadge: { display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', letterSpacing: '0.04em' },
+  verseRefBadge: { display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' },
+  verseStatusBtn: { padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', letterSpacing: '0.02em' },
+  verseActiveWrap: { background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, padding: '12px 14px' },
 };

@@ -39,6 +39,7 @@ export default function Home() {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [verse, setVerse] = useState(null);
 
   const heroRef = useScrollReveal(0.1);
   const scriptureRef = useScrollReveal(0.2);
@@ -50,6 +51,9 @@ export default function Home() {
       .then((res) => setEvents(res.data.slice(0, 3)))
       .catch(() => {})
       .finally(() => setEventsLoading(false));
+    api.get('/verses/today')
+      .then((res) => setVerse(res.data))
+      .catch(() => {});
   }, []);
 
   const handleSubscribe = (e) => {
@@ -99,14 +103,19 @@ export default function Home() {
           </div>
           <div style={scriptureStyles.quoteIcon}>&ldquo;</div>
           <blockquote style={scriptureStyles.quote}>
-            "Jesus Christ is the same yesterday and today and forever."
+            "{verse?.textEnglish || 'Jesus Christ is the same yesterday and today and forever.'}"
           </blockquote>
           <div style={scriptureStyles.divider} />
-          <p style={scriptureStyles.amharic}>
-            "ኢየሱስ ክርስቶስ ትናንትና ዛሬ እንዲሁም ለዘላለም አንድ ነው::"
-          </p>
+          {(verse?.textAmharic) && (
+            <p style={scriptureStyles.amharic}>
+              "{verse.textAmharic}"
+            </p>
+          )}
           <p style={scriptureStyles.reference}>
-            <span style={scriptureStyles.refBadge}>Hebrews 13:8 &nbsp;|&nbsp; ዕብራውያን 13:8</span>
+            <span style={scriptureStyles.refBadge}>
+              {verse?.referenceEnglish || 'Hebrews 13:8'}
+              {(verse?.referenceAmharic) ? ` \u00A0|\u00A0 ${verse.referenceAmharic}` : ''}
+            </span>
           </p>
         </div>
       </section>
