@@ -3,12 +3,8 @@ import Sermon from "../models/Sermon.js";
 import Event from "../models/Event.js";
 import Leader from "../models/Leader.js";
 import Service from "../models/Service.js";
-import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { deleteFromCloudinary } from "../config/cloudinary.js";
 
 function getCategory(mimeType) {
   if (mimeType.startsWith("image/")) return "image";
@@ -47,12 +43,12 @@ export const uploadMedia = async (req, res) => {
     }
     const { file } = req;
     const media = await Media.create({
-      filename: file.filename,
+      filename: file.filename || file.originalname,
       originalName: file.originalname,
       mimeType: file.mimetype,
       size: file.size,
       path: file.path,
-      url: `/uploads/${file.filename}`,
+      url: file.path,
       category: getCategory(file.mimetype),
       uploadedBy: req.user._id,
     });
@@ -71,12 +67,12 @@ export const uploadBulkMedia = async (req, res) => {
     const mediaItems = await Promise.all(
       req.files.map((file) =>
         Media.create({
-          filename: file.filename,
+          filename: file.filename || file.originalname,
           originalName: file.originalname,
           mimeType: file.mimetype,
           size: file.size,
           path: file.path,
-          url: `/uploads/${file.filename}`,
+          url: file.path,
           category: getCategory(file.mimetype),
           uploadedBy: req.user._id,
         })
@@ -108,13 +104,10 @@ export const deleteMedia = async (req, res) => {
     if (!media) {
       return res.status(404).json({ message: "File not found" });
     }
-    try {
-      if (fs.existsSync(media.path)) {
-        fs.unlinkSync(media.path);
-      }
-    } catch (fsErr) {
-      console.error("File delete warning:", fsErr.message);
-    }
+
+    const resourceType = media.category === "video" || media.category === "audio" ? "video" : "image";
+    await deleteFromCloudinary(media.url, resourceType);
+
     await media.deleteOne();
     res.json({ message: "File deleted successfully" });
   } catch (error) {
@@ -146,7 +139,6 @@ function categoryFromExt(ext) {
 export const syncMedia = async (req, res) => {
   try {
     let synced = 0;
-    const uploadsDir = path.join(__dirname, "../../uploads");
     const existingUrls = new Set((await Media.find({}, "url")).map((m) => m.url));
 
     const sources = [
@@ -172,84 +164,24 @@ export const syncMedia = async (req, res) => {
           const url = doc[field.urlField];
           if (!url || existingUrls.has(url)) continue;
 
-          if (url.startsWith("http://") || url.startsWith("https://")) {
-            const ext = path.extname(new URL(url).pathname) || ".jpg";
-            const originalName = `${doc[field.nameField] || src.modelName}${ext}`;
-            const category = field.fileType || categoryFromExt(ext);
-            await Media.create({
-              filename: path.basename(url),
-              originalName,
-              mimeType: guessMimeType(ext),
-              size: 0,
-              path: "",
-              url,
-              category,
-              usedBy: [{ model: src.modelName, modelId: doc._id, field: field.urlField }],
-              uploadedBy: req.user._id,
-            });
-            existingUrls.add(url);
-            synced++;
-            continue;
-          }
-
-          const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
-          if (existingUrls.has(normalizedUrl)) continue;
-
-          const filename = path.basename(normalizedUrl);
-          const diskPath = path.join(uploadsDir, filename);
-          const ext = path.extname(filename);
+          const ext = path.extname(new URL(url).pathname || "") || ".jpg";
+          const originalName = `${doc[field.nameField] || src.modelName}${ext}`;
           const category = field.fileType || categoryFromExt(ext);
-          let fileSize = 0;
-
-          try {
-            if (fs.existsSync(diskPath)) {
-              fileSize = fs.statSync(diskPath).size;
-            }
-          } catch { /* file may not exist yet */ }
-
-          const originalName = `${doc[field.nameField] || src.modelName} - ${field.urlField}${ext}`;
 
           await Media.create({
-            filename,
+            filename: path.basename(url),
             originalName,
             mimeType: guessMimeType(ext),
-            size: fileSize,
-            path: diskPath,
-            url: normalizedUrl,
+            size: 0,
+            path: "",
+            url,
             category,
             usedBy: [{ model: src.modelName, modelId: doc._id, field: field.urlField }],
             uploadedBy: req.user._id,
           });
-          existingUrls.add(normalizedUrl);
+          existingUrls.add(url);
           synced++;
         }
-      }
-    }
-
-    if (fs.existsSync(uploadsDir)) {
-      const diskFiles = fs.readdirSync(uploadsDir).filter((f) => f !== ".gitkeep");
-      for (const filename of diskFiles) {
-        const url = `/uploads/${filename}`;
-        if (existingUrls.has(url)) continue;
-
-        const diskPath = path.join(uploadsDir, filename);
-        let stat;
-        try { stat = fs.statSync(diskPath); } catch { continue; }
-        if (!stat.isFile()) continue;
-
-        const ext = path.extname(filename);
-        await Media.create({
-          filename,
-          originalName: filename,
-          mimeType: guessMimeType(ext),
-          size: stat.size,
-          path: diskPath,
-          url,
-          category: categoryFromExt(ext),
-          uploadedBy: req.user._id,
-        });
-        existingUrls.add(url);
-        synced++;
       }
     }
 

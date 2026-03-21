@@ -1,10 +1,5 @@
 import Event from "../models/Event.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { deleteFromCloudinary } from "../config/cloudinary.js";
 
 function getNextOccurrence(event) {
   if (!event.isRecurring || !event.recurrencePattern) return event;
@@ -108,7 +103,6 @@ export const createEvent = async (req, res) => {
     const { title, description, date, endDate, location, category, isRecurring, recurrencePattern, recurrenceEnd, requiresRegistration } = req.body;
 
     if (!title || !description || !date) {
-      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({
         message: "Please provide title, description, and date",
       });
@@ -116,7 +110,7 @@ export const createEvent = async (req, res) => {
 
     let posterUrl = null;
     if (req.file) {
-      posterUrl = `/uploads/${req.file.filename}`;
+      posterUrl = req.file.path;
     }
 
     const recurring = isRecurring === "true" || isRecurring === true;
@@ -140,7 +134,6 @@ export const createEvent = async (req, res) => {
     res.status(201).json(event);
   } catch (error) {
     console.error("Create event error:", error);
-    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -157,7 +150,6 @@ export const updateEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(404).json({ message: "Event not found" });
     }
 
@@ -179,12 +171,9 @@ export const updateEvent = async (req, res) => {
 
     if (req.file) {
       if (event.posterUrl) {
-        try {
-          const oldPath = path.join(__dirname, "../../", event.posterUrl);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        } catch (e) { console.error("Error deleting old poster:", e); }
+        await deleteFromCloudinary(event.posterUrl);
       }
-      event.posterUrl = `/uploads/${req.file.filename}`;
+      event.posterUrl = req.file.path;
     }
 
     const updatedEvent = await event.save();
@@ -193,7 +182,6 @@ export const updateEvent = async (req, res) => {
     res.json(updatedEvent);
   } catch (error) {
     console.error("Update event error:", error);
-    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -212,10 +200,7 @@ export const deleteEvent = async (req, res) => {
     }
 
     if (event.posterUrl) {
-      try {
-        const filePath = path.join(__dirname, "../../", event.posterUrl);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      } catch (e) { console.error("Error deleting poster:", e); }
+      await deleteFromCloudinary(event.posterUrl);
     }
 
     await event.deleteOne();

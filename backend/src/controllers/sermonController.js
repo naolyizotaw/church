@@ -1,11 +1,6 @@
 import Sermon from "../models/Sermon.js";
 import { extractVideoId } from "./youtubeController.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { deleteFromCloudinary } from "../config/cloudinary.js";
 
 /**
  * @desc    Get all sermons (supports filtering by series, speaker, topic, search)
@@ -126,9 +121,6 @@ export const createSermon = async (req, res) => {
     const { title, description, speaker, date, fileType, series, topic, thumbnailUrl, videoUrl, duration, isFeatured } = req.body;
 
     if (!title || !speaker || !date) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(400).json({
         message: "Please provide title, speaker, and date",
       });
@@ -136,7 +128,7 @@ export const createSermon = async (req, res) => {
 
     let fileUrl = null;
     if (req.file) {
-      fileUrl = `/uploads/${req.file.filename}`;
+      fileUrl = req.file.path;
     }
 
     const youtubeVideoId = extractVideoId(videoUrl);
@@ -163,11 +155,6 @@ export const createSermon = async (req, res) => {
     res.status(201).json(sermon);
   } catch (error) {
     console.error("Create sermon error:", error);
-
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
-
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -225,14 +212,8 @@ export const deleteSermon = async (req, res) => {
     }
 
     if (sermon.fileUrl) {
-      try {
-        const filePath = path.join(__dirname, "../../", sermon.fileUrl);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      } catch (fileError) {
-        console.error("Error deleting file:", fileError);
-      }
+      const resourceType = sermon.fileType === "video" ? "video" : "video";
+      await deleteFromCloudinary(sermon.fileUrl, resourceType);
     }
 
     await sermon.deleteOne();

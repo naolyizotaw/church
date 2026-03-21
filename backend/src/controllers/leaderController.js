@@ -1,10 +1,5 @@
 import Leader from "../models/Leader.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { deleteFromCloudinary } from "../config/cloudinary.js";
 
 /**
  * @desc    Get all leaders (public — only active, sorted by displayOrder)
@@ -54,13 +49,12 @@ export const createLeader = async (req, res) => {
     } = req.body;
 
     if (!name || !role) {
-      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: "Name and role are required" });
     }
 
     let photoUrl = req.body.photoUrl || "";
     if (req.file) {
-      photoUrl = `/uploads/${req.file.filename}`;
+      photoUrl = req.file.path;
     }
 
     const leader = await Leader.create({
@@ -73,7 +67,6 @@ export const createLeader = async (req, res) => {
     res.status(201).json(leader);
   } catch (error) {
     console.error("Create leader error:", error);
-    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -87,7 +80,6 @@ export const updateLeader = async (req, res) => {
   try {
     const leader = await Leader.findById(req.params.id);
     if (!leader) {
-      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(404).json({ message: "Leader not found" });
     }
 
@@ -107,13 +99,10 @@ export const updateLeader = async (req, res) => {
     }
 
     if (req.file) {
-      if (leader.photoUrl && leader.photoUrl.startsWith("/uploads/")) {
-        try {
-          const oldPath = path.join(__dirname, "../../", leader.photoUrl);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        } catch (e) { /* ignore */ }
+      if (leader.photoUrl) {
+        await deleteFromCloudinary(leader.photoUrl);
       }
-      leader.photoUrl = `/uploads/${req.file.filename}`;
+      leader.photoUrl = req.file.path;
     } else if (req.body.photoUrl !== undefined) {
       leader.photoUrl = req.body.photoUrl;
     }
@@ -122,7 +111,6 @@ export const updateLeader = async (req, res) => {
     res.json(updated);
   } catch (error) {
     console.error("Update leader error:", error);
-    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -139,11 +127,8 @@ export const deleteLeader = async (req, res) => {
       return res.status(404).json({ message: "Leader not found" });
     }
 
-    if (leader.photoUrl && leader.photoUrl.startsWith("/uploads/")) {
-      try {
-        const filePath = path.join(__dirname, "../../", leader.photoUrl);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      } catch (e) { /* ignore */ }
+    if (leader.photoUrl) {
+      await deleteFromCloudinary(leader.photoUrl);
     }
 
     await leader.deleteOne();
