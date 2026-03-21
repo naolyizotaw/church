@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../api/axios';
 
-const donationChartData = [
-  { month: 'JAN', amount: 4200 },
-  { month: 'FEB', amount: 5800 },
-  { month: 'MAR', amount: 8500 },
-  { month: 'APR', amount: 9200 },
-  { month: 'MAY', amount: 8800 },
-  { month: 'JUN', amount: 9500 },
+const fallbackChartData = [
+  { month: 'JAN', amount: 0 },
+  { month: 'FEB', amount: 0 },
+  { month: 'MAR', amount: 0 },
+  { month: 'APR', amount: 0 },
+  { month: 'MAY', amount: 0 },
+  { month: 'JUN', amount: 0 },
 ];
 
 function formatTimeAgo(dateStr) {
@@ -54,11 +54,13 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
   const [sermons, setSermons] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [donationStats, setDonationStats] = useState(null);
+  const [donationChartData, setDonationChartData] = useState(fallbackChartData);
   const [stats, setStats] = useState({
-    totalDonations: 'RM 12,450.00',
-    donationChange: '+12.5%',
-    activeMembers: '1,284',
-    memberChange: '+3.2%',
+    totalDonations: 'ETB 0',
+    donationChange: '',
+    activeMembers: '—',
+    memberChange: '',
     plannedEvents: 0,
     newContacts: 0,
     unreadContacts: 0,
@@ -67,24 +69,35 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [eventsRes, sermonsRes, contactsRes] = await Promise.all([
+        const [eventsRes, sermonsRes, contactsRes, donStatsRes] = await Promise.all([
           api.get('/events').catch(() => ({ data: [] })),
           api.get('/sermons?limit=2').catch(() => ({ data: { sermons: [] } })),
           api.get('/contacts').catch(() => ({ data: [] })),
+          api.get('/donations/stats').catch(() => ({ data: null })),
         ]);
 
         const eventsData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
         const sermonsData = sermonsRes.data?.sermons || (Array.isArray(sermonsRes.data) ? sermonsRes.data : []);
         const contactsData = Array.isArray(contactsRes.data) ? contactsRes.data : [];
+        const dStats = donStatsRes.data;
 
         const upcomingEvents = eventsData.filter(e => new Date(e.date) >= new Date());
         setEvents(upcomingEvents.slice(0, 3));
         setSermons(sermonsData.slice(0, 2));
         setContacts(contactsData.slice(0, 2));
 
+        if (dStats) {
+          setDonationStats(dStats);
+          if (dStats.monthlyTrend?.length) {
+            setDonationChartData(dStats.monthlyTrend.map(t => ({ month: t.month, amount: t.amount })));
+          }
+        }
+
         const unread = contactsData.filter(c => !c.isRead).length;
         setStats(prev => ({
           ...prev,
+          totalDonations: dStats ? `ETB ${dStats.totalAmount.toLocaleString()}` : 'ETB 0',
+          donationChange: dStats?.totalDonations ? `${dStats.totalDonations} total` : '',
           plannedEvents: upcomingEvents.length,
           newContacts: contactsData.length,
           unreadContacts: unread,
@@ -114,17 +127,15 @@ export default function AdminDashboard() {
     {
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="9" cy="8" r="3" stroke="#a855f7" strokeWidth="1.5" fill="none"/>
-          <circle cx="16" cy="8" r="3" stroke="#a855f7" strokeWidth="1.5" fill="none"/>
-          <path d="M3 19C3 16.2386 5.23858 14 8 14H10C12.7614 14 15 16.2386 15 19" stroke="#a855f7" strokeWidth="1.5" fill="none"/>
-          <path d="M14 14H16C18.7614 14 21 16.2386 21 19" stroke="#a855f7" strokeWidth="1.5" fill="none"/>
+          <path d="M12 2L3 7V12C3 17.55 6.84 22.74 12 24C17.16 22.74 21 17.55 21 12V7L12 2Z" stroke="#a855f7" strokeWidth="1.5" fill="none"/>
+          <path d="M9 12L11 14L15 10" stroke="#a855f7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ),
       iconBg: '#faf5ff',
-      label: 'ACTIVE MEMBERS',
-      value: stats.activeMembers,
-      change: stats.memberChange,
-      changeColor: '#22c55e',
+      label: 'THIS MONTH',
+      value: donationStats ? `ETB ${donationStats.monthlyTotal.toLocaleString()}` : 'ETB 0',
+      change: 'Current month',
+      changeColor: '#a855f7',
     },
     {
       icon: (
@@ -218,7 +229,7 @@ export default function AdminDashboard() {
           <div style={s.chartHeader}>
             <div>
               <h3 style={s.cardTitle}>Donation Trends</h3>
-              <p style={s.cardSubtitle}>Total monthly contributions for 2024</p>
+              <p style={s.cardSubtitle}>Monthly contributions via Chapa</p>
             </div>
             <select style={s.chartSelect}>
               <option>Last 6 Months</option>
@@ -241,7 +252,7 @@ export default function AdminDashboard() {
                 <Tooltip
                   contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13 }}
                   labelStyle={{ color: '#94a3b8' }}
-                  formatter={(val) => [`RM ${val.toLocaleString()}`, 'Donations']}
+                  formatter={(val) => [`ETB ${val.toLocaleString()}`, 'Donations']}
                 />
                 <Area type="monotone" dataKey="amount" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#donationGradient)"/>
               </AreaChart>

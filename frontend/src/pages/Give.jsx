@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import api from '../api/axios';
 import Footer from '../components/Footer';
 
 const giveCSS = `
@@ -393,6 +394,12 @@ export default function Give() {
   const [selectedAmount, setSelectedAmount] = useState(500);
   const [customAmount, setCustomAmount] = useState('');
   const [copiedField, setCopiedField] = useState(null);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const styleRef = useRef(null);
 
   useEffect(() => {
@@ -407,6 +414,44 @@ export default function Give() {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const getFinalAmount = () => {
+    if (customAmount && Number(customAmount) > 0) return Number(customAmount);
+    return selectedAmount || 0;
+  };
+
+  const handlePayment = async () => {
+    setError('');
+    const amount = getFinalAmount();
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please enter your first and last name.');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (amount < 1) {
+      setError('Please select or enter a valid amount.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data } = await api.post('/donations/initialize', {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        amount,
+        donationType,
+      });
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Payment initialization failed. Please try again.');
+      setLoading(false);
+    }
   };
 
   const amounts = [250, 500, 1000];
@@ -477,6 +522,47 @@ export default function Give() {
               </button>
             </div>
 
+            <div style={formStyles.nameRow}>
+              <div style={formStyles.inputWrap}>
+                <input
+                  type="text"
+                  placeholder="First Name *"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  style={formStyles.textInput}
+                />
+              </div>
+              <div style={formStyles.inputWrap}>
+                <input
+                  type="text"
+                  placeholder="Last Name *"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  style={formStyles.textInput}
+                />
+              </div>
+            </div>
+            <div style={formStyles.nameRow}>
+              <div style={formStyles.inputWrap}>
+                <input
+                  type="email"
+                  placeholder="Email *"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={formStyles.textInput}
+                />
+              </div>
+              <div style={formStyles.inputWrap}>
+                <input
+                  type="tel"
+                  placeholder="Phone (optional)"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  style={formStyles.textInput}
+                />
+              </div>
+            </div>
+
             <p style={formStyles.amountLabel}>Select Amount / መጠን ይምረጡ</p>
             <div style={formStyles.amountGrid}>
               {amounts.map((amt) => {
@@ -508,40 +594,32 @@ export default function Give() {
               />
             </div>
 
-            <p style={formStyles.paymentLabel}>Primary Local Payment Methods</p>
-            <div style={formStyles.paymentGrid}>
+            <p style={formStyles.paymentLabel}>Pay Securely via Chapa</p>
+            <div style={{ ...formStyles.paymentGrid, gridTemplateColumns: '1fr' }}>
               <div className="give-pay-card" style={formStyles.paymentCard}>
-                <div className="give-badge" style={formStyles.badge}>FASTEST</div>
+                <div className="give-badge" style={formStyles.badge}>SECURE</div>
                 <span style={formStyles.chapaText}>CHAPA</span>
-                <span style={formStyles.paymentSub}>PAY WITH CHAPA</span>
-              </div>
-              <div className="give-pay-card" style={{ ...formStyles.paymentCard, animationDelay: '1.5s' }}>
-                <div className="give-badge" style={{ ...formStyles.badge, ...formStyles.badgeRecommended }}>RECOMMENDED</div>
-                <span style={formStyles.santimText}>
-                  SANTIM<span style={{ color: '#10b981' }}>PAY</span>
-                </span>
-                <span style={formStyles.paymentSub}>SANTIM PAY</span>
+                <span style={formStyles.paymentSub}>Telebirr, CBE Birr, M-Pesa, Bank Transfer & more</span>
               </div>
             </div>
 
-            <p style={formStyles.otherLabel}>Other Methods</p>
-            <div style={formStyles.otherGrid}>
-              <div className="give-other-item" style={formStyles.otherItem}>
-                <CardIcon />
-                <span style={formStyles.otherText}>CARD</span>
+            {error && (
+              <div style={formStyles.errorBox}>
+                {error}
               </div>
-              <div className="give-other-item" style={formStyles.otherItem}>
-                <BankTransferIcon />
-                <span style={formStyles.otherText}>BANKTRANSFER</span>
-              </div>
-              <div className="give-other-item" style={formStyles.otherItem}>
-                <PaypalIcon />
-                <span style={formStyles.otherText}>PAYPAL</span>
-              </div>
-            </div>
+            )}
 
-            <button className="give-submit-btn" style={formStyles.submitBtn}>
-              Proceed to Secure Payment | አሁንትኩ ይክፈሉ
+            <button
+              className="give-submit-btn"
+              style={{
+                ...formStyles.submitBtn,
+                opacity: loading ? 0.7 : 1,
+                pointerEvents: loading ? 'none' : 'auto',
+              }}
+              onClick={handlePayment}
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : `Donate ETB ${getFinalAmount()} | አሁን ይክፈሉ`}
             </button>
           </div>
 
@@ -763,6 +841,35 @@ const formStyles = {
   toggleActive: {
     background: '#ffffff',
     color: '#0ea5e9',
+  },
+  nameRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0.75rem',
+    marginBottom: '0.75rem',
+  },
+  inputWrap: {
+    display: 'flex',
+  },
+  textInput: {
+    width: '100%',
+    padding: '0.65rem 0.85rem',
+    border: '2px solid #e2e8f0',
+    borderRadius: '10px',
+    fontSize: '0.88rem',
+    color: '#334155',
+    fontFamily: 'inherit',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+  },
+  errorBox: {
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    borderRadius: '10px',
+    padding: '0.65rem 1rem',
+    fontSize: '0.85rem',
+    marginBottom: '1rem',
   },
   amountLabel: {
     fontSize: '0.82rem',

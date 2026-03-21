@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Ministries from './pages/Ministries';
 import Give from './pages/Give';
+import GiveSuccess from './pages/GiveSuccess';
 import Events from './pages/Events';
 import Sermons from './pages/Sermons';
 import SermonDetail from './pages/SermonDetail';
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/ministries" element={<Ministries />} />
           <Route path="/give" element={<Give />} />
+          <Route path="/give/success" element={<GiveSuccess />} />
           <Route path="/events" element={<Events />} />
           <Route path="/sermons" element={<Sermons />} />
           <Route path="/sermons/:id" element={<SermonDetail />} />
