@@ -1,5 +1,6 @@
 import Registration from "../models/Registration.js";
 import Event from "../models/Event.js";
+import { createNotification } from "./notificationController.js";
 
 /**
  * @desc    Register for an event
@@ -32,6 +33,14 @@ export const registerForEvent = async (req, res) => {
       name,
       email: email || undefined,
       phone,
+    });
+
+    createNotification({
+      type: "registration",
+      title: "New Event Registration",
+      message: `${name} registered for ${event.title}`,
+      relatedId: registration._id,
+      relatedModel: "Registration",
     });
 
     res.status(201).json(registration);

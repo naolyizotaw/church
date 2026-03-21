@@ -49,6 +49,14 @@ function formatEventTime(dateStr) {
   return d.toLocaleString('en', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(' ', ' ');
 }
 
+const activityTypeConfig = {
+  donation: { color: '#0ea5e9', label: 'Donation' },
+  contact: { color: '#f43f5e', label: 'Contact' },
+  registration: { color: '#f59e0b', label: 'Registration' },
+  event_reminder: { color: '#8b5cf6', label: 'Event' },
+  system: { color: '#64748b', label: 'System' },
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
@@ -56,24 +64,30 @@ export default function AdminDashboard() {
   const [contacts, setContacts] = useState([]);
   const [donationStats, setDonationStats] = useState(null);
   const [donationChartData, setDonationChartData] = useState(fallbackChartData);
+  const [activityFeed, setActivityFeed] = useState([]);
+  const [overviewData, setOverviewData] = useState(null);
   const [stats, setStats] = useState({
     totalDonations: 'ETB 0',
     donationChange: '',
+    donationPercent: 0,
     activeMembers: '—',
     memberChange: '',
     plannedEvents: 0,
     newContacts: 0,
     unreadContacts: 0,
+    contactPercent: 0,
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [eventsRes, sermonsRes, contactsRes, donStatsRes] = await Promise.all([
+        const [eventsRes, sermonsRes, contactsRes, donStatsRes, notifRes, overviewRes] = await Promise.all([
           api.get('/events').catch(() => ({ data: [] })),
           api.get('/sermons?limit=2').catch(() => ({ data: { sermons: [] } })),
           api.get('/contacts').catch(() => ({ data: [] })),
           api.get('/donations/stats').catch(() => ({ data: null })),
+          api.get('/notifications?limit=10').catch(() => ({ data: { notifications: [] } })),
+          api.get('/reports/overview').catch(() => ({ data: null })),
         ]);
 
         const eventsData = Array.isArray(eventsRes.data) ? eventsRes.data : [];
@@ -85,6 +99,9 @@ export default function AdminDashboard() {
         setEvents(upcomingEvents.slice(0, 3));
         setSermons(sermonsData.slice(0, 2));
         setContacts(contactsData.slice(0, 2));
+        setActivityFeed(notifRes.data?.notifications || []);
+
+        if (overviewRes.data) setOverviewData(overviewRes.data);
 
         if (dStats) {
           setDonationStats(dStats);
@@ -94,13 +111,18 @@ export default function AdminDashboard() {
         }
 
         const unread = contactsData.filter(c => !c.isRead).length;
+        const donationPct = overviewRes.data?.thisMonth?.donations?.change || 0;
+        const contactPct = overviewRes.data?.thisMonth?.contacts?.change || 0;
+
         setStats(prev => ({
           ...prev,
           totalDonations: dStats ? `ETB ${dStats.totalAmount.toLocaleString()}` : 'ETB 0',
           donationChange: dStats?.totalDonations ? `${dStats.totalDonations} total` : '',
+          donationPercent: donationPct,
           plannedEvents: upcomingEvents.length,
           newContacts: contactsData.length,
           unreadContacts: unread,
+          contactPercent: contactPct,
         }));
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -121,8 +143,9 @@ export default function AdminDashboard() {
       iconBg: '#eff6ff',
       label: 'TOTAL DONATIONS',
       value: stats.totalDonations,
-      change: stats.donationChange,
-      changeColor: '#22c55e',
+      change: stats.donationPercent !== 0 ? `${stats.donationPercent > 0 ? '+' : ''}${stats.donationPercent}% vs last month` : (stats.donationChange || 'This period'),
+      changeColor: stats.donationPercent >= 0 ? '#22c55e' : '#ef4444',
+      arrow: stats.donationPercent > 0 ? 'up' : stats.donationPercent < 0 ? 'down' : null,
     },
     {
       icon: (
@@ -162,8 +185,9 @@ export default function AdminDashboard() {
       iconBg: '#fff1f2',
       label: 'CONTACT MESSAGES',
       value: String(stats.newContacts),
-      change: stats.unreadContacts > 0 ? `${stats.unreadContacts} New` : '0 New',
+      change: stats.unreadContacts > 0 ? `${stats.unreadContacts} unread` : '0 new',
       changeColor: '#f43f5e',
+      arrow: stats.contactPercent > 0 ? 'up' : stats.contactPercent < 0 ? 'down' : null,
     },
   ];
 
@@ -196,7 +220,7 @@ export default function AdminDashboard() {
           </svg>
           Create Event
         </button>
-        <button style={s.actionBtnDark}>
+        <button style={s.actionBtnDark} onClick={() => navigate('/admin/pages')}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M11 3H13C13.5523 3 14 3.44772 14 4V6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
             <path d="M3 7L2 8.5L5 11L9 13L13 11L16 8.5L15 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -204,7 +228,7 @@ export default function AdminDashboard() {
             <line x1="7" y1="6.5" x2="10" y2="6.5" stroke="white" strokeWidth="1.1"/>
             <line x1="7" y1="8.5" x2="10" y2="8.5" stroke="white" strokeWidth="1.1"/>
           </svg>
-          Post Announcement
+          Manage Pages
         </button>
       </div>
 
@@ -214,7 +238,11 @@ export default function AdminDashboard() {
           <div key={i} style={s.statCard}>
             <div style={s.statTop}>
               <div style={{ ...s.statIcon, background: card.iconBg }}>{card.icon}</div>
-              <span style={{ ...s.statChange, color: card.changeColor }}>{card.change}</span>
+              <span style={{ ...s.statChange, color: card.changeColor }}>
+                {card.arrow === 'up' && <span style={{ marginRight: 2 }}>{'\u2191'}</span>}
+                {card.arrow === 'down' && <span style={{ marginRight: 2 }}>{'\u2193'}</span>}
+                {card.change}
+              </span>
             </div>
             <div style={s.statLabel}>{card.label}</div>
             <div style={s.statValue}>{card.value}</div>
@@ -231,10 +259,20 @@ export default function AdminDashboard() {
               <h3 style={s.cardTitle}>Donation Trends</h3>
               <p style={s.cardSubtitle}>Monthly contributions via Chapa</p>
             </div>
-            <select style={s.chartSelect}>
-              <option>Last 6 Months</option>
-              <option>Last 12 Months</option>
-              <option>This Year</option>
+            <select
+              style={s.chartSelect}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!donationStats?.monthlyTrend?.length) return;
+                const trend = donationStats.monthlyTrend;
+                if (val === '6') setDonationChartData(trend.slice(-6).map(t => ({ month: t.month, amount: t.amount })));
+                else if (val === '12') setDonationChartData(trend.slice(-12).map(t => ({ month: t.month, amount: t.amount })));
+                else setDonationChartData(trend.map(t => ({ month: t.month, amount: t.amount })));
+              }}
+            >
+              <option value="6">Last 6 Months</option>
+              <option value="12">Last 12 Months</option>
+              <option value="all">All Time</option>
             </select>
           </div>
           <div style={{ width: '100%', height: 220 }}>
@@ -452,9 +490,39 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Activity Feed */}
+      <div style={s.activityCard}>
+        <div style={s.activityHeader}>
+          <h3 style={s.cardTitle}>Recent Activity</h3>
+          <button style={s.viewAllBtn} onClick={() => navigate('/admin/reports')}>View Reports</button>
+        </div>
+        <div style={s.activityList}>
+          {activityFeed.length > 0 ? activityFeed.slice(0, 8).map((item) => {
+            const cfg = activityTypeConfig[item.type] || activityTypeConfig.system;
+            return (
+              <div key={item._id} style={s.activityItem}>
+                <div style={{ ...s.activityDot, background: cfg.color }} />
+                <div style={s.activityContent}>
+                  <div style={s.activityText}>
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{item.title}</span>
+                    <span style={{ color: '#64748b' }}> &mdash; {item.message}</span>
+                  </div>
+                  <div style={s.activityTime}>{formatTimeAgo(item.createdAt)}</div>
+                </div>
+                <span style={{ ...s.activityBadge, background: cfg.color + '15', color: cfg.color }}>{cfg.label}</span>
+              </div>
+            );
+          }) : (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+              No recent activity to display
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Footer */}
       <div style={s.footer}>
-        &copy; 2024 Kerabu Full Gospel Believers Church. Managed via Central Admin Portal.
+        &copy; 2025 Kerabu Full Gospel Believers Church. Managed via Central Admin Portal.
       </div>
     </div>
   );
@@ -812,6 +880,62 @@ const s = {
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
+  },
+  activityCard: {
+    background: '#fff',
+    borderRadius: 14,
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    border: '1px solid #f1f5f9',
+    marginBottom: 24,
+  },
+  activityHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  activityList: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  activityItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '10px 0',
+    borderBottom: '1px solid #f8fafc',
+  },
+  activityDot: {
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    flexShrink: 0,
+  },
+  activityContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  activityText: {
+    fontSize: 13,
+    lineHeight: 1.4,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  activityTime: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  activityBadge: {
+    padding: '3px 8px',
+    borderRadius: 6,
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '0.03em',
+    flexShrink: 0,
+    textTransform: 'uppercase',
   },
   footer: {
     textAlign: 'center',

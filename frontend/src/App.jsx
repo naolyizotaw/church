@@ -22,6 +22,8 @@ import AdminPages from './admin/pages/AdminPages';
 import AdminContacts from './admin/pages/AdminContacts';
 import AdminDonations from './admin/pages/AdminDonations';
 import AdminSettings from './admin/pages/AdminSettings';
+import AdminReports from './admin/pages/AdminReports';
+import AdminMedia from './admin/pages/AdminMedia';
 
 function PublicLayout() {
   return (
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="pages" element={<AdminPages />} />
           <Route path="contacts" element={<AdminContacts />} />
           <Route path="donations" element={<AdminDonations />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="media" element={<AdminMedia />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 

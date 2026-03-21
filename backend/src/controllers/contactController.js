@@ -1,4 +1,5 @@
 import Contact from "../models/Contact.js";
+import { createNotification } from "./notificationController.js";
 
 /**
  * @desc    Get all contact submissions
@@ -62,6 +63,14 @@ export const submitContact = async (req, res) => {
       phone,
       subject,
       message,
+    });
+
+    createNotification({
+      type: "contact",
+      title: "New Contact Message",
+      message: `${name}: ${subject || message.slice(0, 60)}`,
+      relatedId: contact._id,
+      relatedModel: "Contact",
     });
 
     res.status(201).json({
