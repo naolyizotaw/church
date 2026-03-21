@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 
 const sidebarLinks = [
   { to: '/admin', icon: 'dashboard', label: 'Dashboard', end: true },
@@ -8,8 +9,11 @@ const sidebarLinks = [
   { to: '/admin/pages', icon: 'pages', label: 'Pages' },
   { to: '/admin/sermons', icon: 'sermons', label: 'Sermons' },
   { to: '/admin/events', icon: 'events', label: 'Events' },
+  { to: '/admin/media', icon: 'media', label: 'Media Library' },
   { heading: 'ADMINISTRATION' },
   { to: '/admin/donations', icon: 'donations', label: 'Donations' },
+  { to: '/admin/reports', icon: 'reports', label: 'Reports' },
+  { to: '/admin/contacts', icon: 'contacts', label: 'Contacts' },
   { to: '/admin/settings', icon: 'settings', label: 'Settings' },
 ];
 
@@ -59,17 +63,139 @@ const iconMap = {
       <path d="M10 2V4M10 16V18M2 10H4M16 10H18M4.93 4.93L6.34 6.34M13.66 13.66L15.07 15.07M15.07 4.93L13.66 6.34M6.34 13.66L4.93 15.07" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   ),
+  media: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <circle cx="7" cy="8" r="2" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+      <path d="M2 14L6 10L10 14L14 9L18 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+  ),
+  reports: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <line x1="6" y1="6" x2="14" y2="6" stroke="currentColor" strokeWidth="1.2"/>
+      <line x1="6" y1="9" x2="14" y2="9" stroke="currentColor" strokeWidth="1.2"/>
+      <line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" strokeWidth="1.2"/>
+      <rect x="11" y="11" width="3" height="4" rx="0.5" stroke="currentColor" strokeWidth="1" fill="none"/>
+    </svg>
+  ),
+  contacts: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M3 6L10 11L17 6" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    </svg>
+  ),
 };
+
+const notifTypeConfig = {
+  donation: { color: '#0ea5e9', icon: 'ETB', route: '/admin/donations' },
+  contact: { color: '#f43f5e', icon: 'MSG', route: '/admin/contacts' },
+  registration: { color: '#f59e0b', icon: 'REG', route: '/admin/events' },
+  event_reminder: { color: '#8b5cf6', icon: 'EVT', route: '/admin/events' },
+  system: { color: '#64748b', icon: 'SYS', route: '/admin' },
+};
+
+function formatNotifTime(dateStr) {
+  const now = new Date();
+  const d = new Date(dateStr);
+  const diffMin = Math.floor((now - d) / 60000);
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  return `${diffDays}d ago`;
+}
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const notifRef = useRef(null);
+  const searchRef = useRef(null);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await api.get('/notifications?limit=15');
+      setNotifications(res.data.notifications || []);
+      setUnreadCount(res.data.unreadCount || 0);
+    } catch {
+      /* silent */
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifPanel(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchResults(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.put('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch {
+      /* silent */
+    }
+  };
+
+  const handleNotifClick = async (notif) => {
+    if (!notif.isRead) {
+      try {
+        await api.put(`/notifications/${notif._id}/read`);
+        setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch {
+        /* silent */
+      }
+    }
+    const cfg = notifTypeConfig[notif.type] || notifTypeConfig.system;
+    setShowNotifPanel(false);
+    navigate(cfg.route);
+  };
+
+  const handleSearch = async (q) => {
+    setSearchQuery(q);
+    if (q.length < 2) { setSearchResults(null); return; }
+    try {
+      const [sermons, events, contacts] = await Promise.all([
+        api.get(`/sermons?search=${encodeURIComponent(q)}&limit=3`).catch(() => ({ data: { sermons: [] } })),
+        api.get('/events').catch(() => ({ data: [] })),
+        api.get('/contacts').catch(() => ({ data: [] })),
+      ]);
+      const sData = sermons.data?.sermons || (Array.isArray(sermons.data) ? sermons.data : []);
+      const eData = (Array.isArray(events.data) ? events.data : [])
+        .filter(e => e.title?.toLowerCase().includes(q.toLowerCase())).slice(0, 3);
+      const cData = (Array.isArray(contacts.data) ? contacts.data : [])
+        .filter(c => c.name?.toLowerCase().includes(q.toLowerCase()) || c.subject?.toLowerCase().includes(q.toLowerCase())).slice(0, 3);
+      setSearchResults({ sermons: sData.slice(0, 3), events: eData, contacts: cData });
+    } catch {
+      setSearchResults(null);
+    }
+  };
 
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
   };
+
+  const totalSearchResults = searchResults
+    ? (searchResults.sermons?.length || 0) + (searchResults.events?.length || 0) + (searchResults.contacts?.length || 0)
+    : 0;
 
   return (
     <div style={styles.wrapper}>
@@ -123,31 +249,107 @@ export default function AdminLayout() {
 
       <main style={styles.main}>
         <header style={styles.topbar}>
-          <div style={styles.searchBox}>
+          <div style={styles.searchBox} ref={searchRef}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
               <circle cx="8" cy="8" r="5.5" stroke="#94a3b8" strokeWidth="1.5"/>
               <line x1="12" y1="12" x2="16" y2="16" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             <input
               type="text"
-              placeholder="Search for events, sermons or members..."
+              placeholder="Search sermons, events, contacts..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
               style={styles.searchInput}
             />
+            {searchResults && (
+              <div style={styles.searchDropdown}>
+                {totalSearchResults === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No results found</div>
+                ) : (
+                  <>
+                    {searchResults.sermons?.length > 0 && (
+                      <>
+                        <div style={styles.searchCategory}>Sermons</div>
+                        {searchResults.sermons.map(s => (
+                          <div key={s._id} style={styles.searchItem} onClick={() => { navigate('/admin/sermons'); setSearchResults(null); setSearchQuery(''); }}>
+                            <span style={{ ...styles.searchDot, background: '#3b82f6' }} />
+                            <span>{s.title}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                    {searchResults.events?.length > 0 && (
+                      <>
+                        <div style={styles.searchCategory}>Events</div>
+                        {searchResults.events.map(e => (
+                          <div key={e._id} style={styles.searchItem} onClick={() => { navigate('/admin/events'); setSearchResults(null); setSearchQuery(''); }}>
+                            <span style={{ ...styles.searchDot, background: '#f59e0b' }} />
+                            <span>{e.title}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                    {searchResults.contacts?.length > 0 && (
+                      <>
+                        <div style={styles.searchCategory}>Contacts</div>
+                        {searchResults.contacts.map(c => (
+                          <div key={c._id} style={styles.searchItem} onClick={() => { navigate('/admin/contacts'); setSearchResults(null); setSearchQuery(''); }}>
+                            <span style={{ ...styles.searchDot, background: '#f43f5e' }} />
+                            <span>{c.name} - {c.subject || 'No subject'}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <div style={styles.topbarRight}>
-            <div style={styles.langToggle}>
-              <button style={styles.langBtnActive}>EN</button>
-              <button style={styles.langBtn}>BM</button>
+            <div style={styles.notifWrapper} ref={notifRef}>
+              <button style={styles.notifBtn} onClick={() => setShowNotifPanel(p => !p)}>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <path d="M11 3C8.23858 3 6 5.23858 6 8V12L4 15H18L16 12V8C16 5.23858 13.7614 3 11 3Z" stroke="#334155" strokeWidth="1.5" fill="none"/>
+                  <path d="M9 17C9 18.1046 9.89543 19 11 19C12.1046 19 13 18.1046 13 17" stroke="#334155" strokeWidth="1.5"/>
+                </svg>
+                {unreadCount > 0 && (
+                  <span style={styles.notifBadge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+              </button>
+              {showNotifPanel && (
+                <div style={styles.notifPanel}>
+                  <div style={styles.notifPanelHeader}>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>Notifications</span>
+                    {unreadCount > 0 && (
+                      <button style={styles.markAllBtn} onClick={handleMarkAllRead}>Mark all read</button>
+                    )}
+                  </div>
+                  <div style={styles.notifList}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>No notifications yet</div>
+                    ) : notifications.map(n => {
+                      const cfg = notifTypeConfig[n.type] || notifTypeConfig.system;
+                      return (
+                        <div
+                          key={n._id}
+                          style={{ ...styles.notifItem, background: n.isRead ? '#fff' : '#f0f9ff' }}
+                          onClick={() => handleNotifClick(n)}
+                        >
+                          <div style={{ ...styles.notifTypeIcon, background: cfg.color + '18', color: cfg.color }}>
+                            {cfg.icon}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: n.isRead ? 400 : 600, color: '#0f172a', marginBottom: 2 }}>{n.title}</div>
+                            <div style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.message}</div>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap', flexShrink: 0 }}>{formatNotifTime(n.createdAt)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-            <button style={styles.notifBtn}>
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path d="M11 3C8.23858 3 6 5.23858 6 8V12L4 15H18L16 12V8C16 5.23858 13.7614 3 11 3Z" stroke="#334155" strokeWidth="1.5" fill="none"/>
-                <path d="M9 17C9 18.1046 9.89543 19 11 19C12.1046 19 13 18.1046 13 17" stroke="#334155" strokeWidth="1.5"/>
-              </svg>
-              <span style={styles.notifDot}></span>
-            </button>
           </div>
         </header>
         <div style={styles.content}>
@@ -346,6 +548,9 @@ const styles = {
     border: 'none',
     cursor: 'pointer',
   },
+  notifWrapper: {
+    position: 'relative',
+  },
   notifBtn: {
     position: 'relative',
     background: 'none',
@@ -355,15 +560,115 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
   },
-  notifDot: {
+  notifBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 0,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    background: '#ef4444',
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 4px',
+    border: '2px solid #ffffff',
+  },
+  notifPanel: {
+    position: 'absolute',
+    top: '100%',
+    right: 0,
+    marginTop: 8,
+    width: 380,
+    maxHeight: 480,
+    background: '#fff',
+    borderRadius: 14,
+    boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+    border: '1px solid #e2e8f0',
+    zIndex: 200,
+    overflow: 'hidden',
+  },
+  notifPanelHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '14px 16px',
+    borderBottom: '1px solid #f1f5f9',
+  },
+  markAllBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#0ea5e9',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    padding: 0,
+  },
+  notifList: {
+    maxHeight: 400,
+    overflowY: 'auto',
+  },
+  notifItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '12px 16px',
+    cursor: 'pointer',
+    borderBottom: '1px solid #f8fafc',
+    transition: 'background 0.1s',
+  },
+  notifTypeIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '0.02em',
+    flexShrink: 0,
+  },
+  searchDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: 4,
+    background: '#fff',
+    borderRadius: 12,
+    boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
+    border: '1px solid #e2e8f0',
+    zIndex: 200,
+    maxHeight: 360,
+    overflowY: 'auto',
+  },
+  searchCategory: {
+    padding: '10px 14px 4px',
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#94a3b8',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+  },
+  searchItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '8px 14px',
+    fontSize: 13,
+    color: '#334155',
+    cursor: 'pointer',
+    transition: 'background 0.1s',
+  },
+  searchDot: {
     width: 8,
     height: 8,
     borderRadius: '50%',
-    background: '#ef4444',
-    border: '2px solid #ffffff',
+    flexShrink: 0,
   },
   content: {
     flex: 1,

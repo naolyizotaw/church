@@ -1,4 +1,5 @@
 import Donation from "../models/Donation.js";
+import { createNotification } from "./notificationController.js";
 
 const CHAPA_BASE = "https://api.chapa.co/v1";
 
@@ -125,6 +126,13 @@ export const verifyPayment = async (req, res) => {
       donation.chapaRef = chapaRes.data.reference;
       donation.paymentMethod = chapaRes.data.payment_type || "chapa";
       await donation.save();
+      createNotification({
+        type: "donation",
+        title: "New Donation Received",
+        message: `ETB ${donation.amount.toLocaleString()} from ${donation.firstName} ${donation.lastName}`,
+        relatedId: donation._id,
+        relatedModel: "Donation",
+      });
       return res.json({ status: "success", donation });
     }
 
@@ -165,6 +173,13 @@ export const chapaCallback = async (req, res) => {
       donation.status = "success";
       donation.chapaRef = reference || "";
       await donation.save();
+      createNotification({
+        type: "donation",
+        title: "New Donation Received",
+        message: `ETB ${donation.amount.toLocaleString()} from ${donation.firstName} ${donation.lastName}`,
+        relatedId: donation._id,
+        relatedModel: "Donation",
+      });
     } else {
       donation.status = "failed";
       await donation.save();

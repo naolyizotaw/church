@@ -20,6 +20,9 @@ import verseRoutes from "./routes/verseRoutes.js";
 import youtubeRoutes from "./routes/youtubeRoutes.js";
 import siteContentRoutes from "./routes/siteContentRoutes.js";
 import donationRoutes from "./routes/donationRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
+import mediaRoutes from "./routes/mediaRoutes.js";
 
 dotenv.config();
 
@@ -54,6 +57,9 @@ app.use("/api/verses", verseRoutes);
 app.use("/api/youtube", youtubeRoutes);
 app.use("/api/site-content", siteContentRoutes);
 app.use("/api/donations", donationRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/media", mediaRoutes);
 
 
 
@@ -61,10 +67,12 @@ app.use("/api/donations", donationRoutes);
 
 
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+    app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
     app.get("*", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+        if (!req.path.startsWith("/api") && !req.path.startsWith("/uploads")) {
+            res.sendFile(path.resolve(__dirname, "../../frontend/dist", "index.html"));
+        }
     });
 }
 
