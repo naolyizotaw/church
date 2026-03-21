@@ -42,21 +42,21 @@ const FALLBACK_PROGRAMS = [
 ];
 
 const ClockIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
     <circle cx="12" cy="12" r="10" />
     <polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
 const MapPinIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
     <circle cx="12" cy="10" r="3" />
   </svg>
 );
 
 const CalendarIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
     <line x1="16" y1="2" x2="16" y2="6" />
     <line x1="8" y1="2" x2="8" y2="6" />
@@ -85,7 +85,7 @@ const ListViewIcon = () => (
 );
 
 const PlayIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
     <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.25)" />
     <polygon points="10,7 18,12 10,17" fill="white" />
   </svg>
@@ -98,23 +98,20 @@ const ChurchIcon = () => (
 );
 
 const DirectionsArrowIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
     <line x1="5" y1="12" x2="19" y2="12" />
     <polyline points="12 5 19 12 12 19" />
   </svg>
 );
 
 const HeartIcon = ({ color = '#0ea5e9' }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
-const ICON_COLOR = '#0ea5e9';
 const ICON_CYAN = '#34C9E0';
 const BADGE_PALE = '#E0F7FA';
-
-const svgProps = (size = 28) => ({ width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: ICON_COLOR, strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' });
 
 /* Three figures interconnected in circle — community/unity */
 const YouthAflameIcon = () => (
@@ -255,122 +252,139 @@ export default function Services() {
   const displayPrograms = programs.length > 0 ? programs : FALLBACK_PROGRAMS;
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", width: '100%', overflowX: 'hidden' }}>
+    <div className="w-full overflow-x-hidden" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <style>{pageCSS}</style>
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section style={hero.section}>
-        <div style={hero.overlay} />
-        <div style={hero.content}>
-          <h1 style={hero.title}>Worship & Community</h1>
-          <p style={hero.amharic}>አምልኮ እና ህብረት</p>
-          <div style={hero.divider} />
-          <p style={hero.verse}>
+      <section
+        className="relative min-h-[420px] w-full flex items-center justify-center bg-cover bg-top text-white"
+        style={{ backgroundImage: `url('/hero.jpg')` }}
+      >
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,20,50,0.72) 0%, rgba(10,20,50,0.68) 100%)' }} />
+        <div className="relative z-10 w-full max-w-[900px] mx-auto px-4 sm:px-8 py-14 md:py-18 text-center">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-1 text-white italic">
+            Worship & Community
+          </h1>
+          <p className="text-lg sm:text-xl text-slate-300 mb-4 italic">አምልኮ እና ህብረት</p>
+          <div className="w-[60px] h-[3px] bg-sky-500 mx-auto mb-4 rounded-sm" />
+          <p className="text-sm sm:text-base text-slate-200 mb-1">
             Hebrews 10:25 - Experiencing God's presence together.
           </p>
-          <p style={hero.verseAmharic}>
+          <p className="text-sm text-slate-400 mb-8 italic">
             ዕብራውያን 10:25 - የእግዚአብሔርን ሕልውና አንድ ላይ ማግኘት።
           </p>
-          <div style={hero.buttons}>
-            <a href="#sunday-service" className="hero-primary-btn" style={hero.primaryBtn}>
+          <div className="flex flex-wrap gap-3 sm:gap-4 justify-center">
+            <a
+              href="#sunday-service"
+              className="hero-primary-btn bg-sky-500 text-white no-underline px-5 sm:px-7 py-2.5 sm:py-3 rounded-md font-bold text-sm flex items-center"
+            >
               <PlayIcon />
-              <span style={{ marginLeft: 8 }}>Watch Live Stream</span>
+              <span className="ml-2">Watch Live Stream</span>
             </a>
-            <Link to="/events" className="hero-secondary-btn" style={hero.secondaryBtn}>
+            <Link
+              to="/events"
+              className="hero-secondary-btn border-[1.5px] border-white/40 bg-white/10 text-white no-underline px-5 sm:px-7 py-2.5 sm:py-3 rounded-md font-semibold text-sm flex items-center"
+            >
               <CalendarIcon />
-              <span style={{ marginLeft: 8 }}>Upcoming Events</span>
+              <span className="ml-2">Upcoming Events</span>
             </Link>
           </div>
         </div>
       </section>
 
       {/* ── Sunday Service ───────────────────────────────── */}
-      <section id="sunday-service" ref={sundayRef} className={sundayVisible ? 'sunday-visible' : ''} style={main.section}>
-        <div style={main.inner}>
-          <div style={main.sectionLabel}>
+      <section
+        id="sunday-service"
+        ref={sundayRef}
+        className={`${sundayVisible ? 'sunday-visible' : ''} bg-slate-50 w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-16`}
+      >
+        <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
+          <div className="flex items-center gap-2 mb-6">
             <ChurchIcon />
-            <h2 className="sunday-heading" style={main.heading}>Sunday Service</h2>
+            <h2 className="sunday-heading text-xl sm:text-2xl font-bold text-slate-900 m-0">Sunday Service</h2>
           </div>
-          <div className="sunday-underline" style={main.underline} />
+          <div className="sunday-underline w-12 h-[3px] rounded-sm mb-6" style={{ background: 'linear-gradient(90deg, #0ea5e9, #38bdf8)' }} />
 
-          <div className="service-main-card" style={main.card}>
-            <div style={main.cardContent}>
-              <span className="sunday-badge" style={main.badge}>
-                <span style={main.badgeDot} />
+          <div className="service-main-card bg-white rounded-[14px] overflow-hidden border border-slate-200 grid grid-cols-1 md:grid-cols-2" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.08), 0 0 24px rgba(14,165,233,0.1), 0 0 48px rgba(14,165,233,0.05)' }}>
+            <div className="p-5 sm:p-8 lg:p-10 flex flex-col justify-center">
+              <span className="sunday-badge inline-flex items-center gap-1.5 text-sky-500 text-[0.68rem] font-extrabold tracking-widest px-3.5 py-1 rounded-full mb-3 w-fit border border-sky-500/15" style={{ background: 'linear-gradient(135deg, #eff6ff, #e0f2fe)' }}>
+                <span className="w-[7px] h-[7px] rounded-full bg-sky-500 shrink-0" />
                 MAIN EVENT
               </span>
-              <h3 style={main.cardTitle}>{service.title}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">{service.title}</h3>
               {service.titleAmharic && (
-                <p style={main.cardAmharic}>{service.titleAmharic}</p>
+                <p className="text-base text-slate-500 mb-4 italic">{service.titleAmharic}</p>
               )}
-              <p style={main.cardDesc}>{service.description}</p>
+              <p className="text-sm text-slate-600 leading-relaxed mb-2">{service.description}</p>
               {service.descriptionAmharic && (
-                <p style={main.cardDescAmharic}>{service.descriptionAmharic}</p>
+                <p className="text-[0.85rem] text-slate-400 leading-relaxed mb-6 italic">{service.descriptionAmharic}</p>
               )}
 
-              <div style={main.metaRow}>
-                <div style={main.metaItem}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6 py-4 border-y border-slate-100">
+                <div className="flex items-center gap-2">
                   <span className="sunday-meta-icon"><ClockIcon /></span>
-                  <div style={main.metaBlock}>
-                    <span style={main.metaLabel}>TIME</span>
-                    <span style={main.metaValue}>
+                  <div className="flex flex-col">
+                    <span className="text-[0.65rem] font-bold text-slate-400 tracking-wide">TIME</span>
+                    <span className="text-sm font-semibold text-slate-900">
                       {service.time}{service.endTime ? ` - ${service.endTime}` : ''}
                     </span>
                   </div>
                 </div>
-                <div className="sunday-divider" style={main.metaDivider} />
-                <div style={main.metaItem}>
+                <div className="sunday-divider hidden sm:block w-px h-8" style={{ background: 'linear-gradient(to bottom, transparent, #0ea5e9, transparent)' }} />
+                <div className="flex items-center gap-2">
                   <span className="sunday-meta-icon" style={{ animationDelay: '0.5s' }}><MapPinIcon /></span>
-                  <div style={main.metaBlock}>
-                    <span style={main.metaLabel}>LOCATION</span>
-                    <span style={main.metaValue}>{service.location || 'Main Sanctuary'}</span>
+                  <div className="flex flex-col">
+                    <span className="text-[0.65rem] font-bold text-slate-400 tracking-wide">LOCATION</span>
+                    <span className="text-sm font-semibold text-slate-900">{service.location || 'Main Sanctuary'}</span>
                   </div>
                 </div>
               </div>
 
-              <div style={main.actions}>
-                <Link to="/contact" className="sunday-plan-btn" style={main.planBtn}>Plan Your Visit</Link>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/contact" className="sunday-plan-btn bg-sky-500 text-white no-underline px-5 sm:px-6 py-2.5 rounded-md font-bold text-sm">Plan Your Visit</Link>
                 <a
                   href="https://maps.google.com/?q=Kerabu+Full+Gospel+Church+Addis+Ababa"
                   target="_blank"
                   rel="noreferrer"
-                  className="sunday-directions-btn"
-                  style={main.directionsBtn}
+                  className="sunday-directions-btn flex items-center bg-transparent text-slate-600 no-underline px-3 sm:px-4 py-2.5 rounded-md border border-slate-200 font-semibold text-sm"
                 >
                   <DirectionsArrowIcon />
-                  <span style={{ marginLeft: 6 }}>Get Directions</span>
+                  <span className="ml-1.5">Get Directions</span>
                 </a>
               </div>
             </div>
 
-            <div style={main.cardImage}>
+            <div className="relative min-h-[240px] sm:min-h-[320px] overflow-hidden">
               <img
                 src="/hero.jpg"
                 alt="Sunday Service Worship"
-                className="sunday-image"
-                style={main.img}
+                className="sunday-image w-full h-full object-cover block"
               />
-              <div className="sunday-image-overlay" style={main.imgOverlay} />
+              <div className="sunday-image-overlay absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.08) 0%, transparent 40%)' }} />
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Weekly Ministries / Programs ─────────────────── */}
-      <section ref={weeklyRef} style={weekly.section}>
-        <div style={weekly.inner}>
-          <div style={weekly.header}>
+      <section ref={weeklyRef} className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-16" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)' }}>
+        <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4">
+          <div className="mb-8 flex flex-wrap items-start justify-between gap-4 sm:gap-6">
             <div>
-              <h2 className={weeklyVisible ? 'weekly-header-visible' : ''} style={weekly.heading}>Weekly Ministries</h2>
-              <div className={weeklyVisible ? 'weekly-underline-visible' : ''} style={weekly.underline} />
-              <p className={weeklyVisible ? 'weekly-sub-visible' : ''} style={weekly.sub}>Connect, grow and serve throughout the week.</p>
+              <h2 className={`${weeklyVisible ? 'weekly-header-visible' : ''} text-xl sm:text-2xl font-bold text-slate-900 mb-1`}>Weekly Ministries</h2>
+              <div className={`${weeklyVisible ? 'weekly-underline-visible' : ''} w-12 h-[3px] bg-sky-500 rounded-sm mt-2 origin-left scale-x-0`} />
+              <p className={`${weeklyVisible ? 'weekly-sub-visible' : ''} text-slate-500 mt-2 text-sm sm:text-base`}>Connect, grow and serve throughout the week.</p>
             </div>
             {!loading && (
-              <div className="weekly-view-toggle" style={weekly.viewToggle}>
+              <div className="weekly-view-toggle flex gap-1">
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
-                  style={{ ...weekly.toggleBtn, ...(viewMode === 'grid' ? weekly.toggleBtnActive : {}) }}
+                  className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
+                    viewMode === 'grid'
+                      ? 'bg-sky-500 text-white border-sky-500'
+                      : 'bg-white text-slate-500 border-slate-200'
+                  }`}
                   aria-label="Grid view"
                 >
                   <GridViewIcon />
@@ -378,7 +392,11 @@ export default function Services() {
                 <button
                   type="button"
                   onClick={() => setViewMode('list')}
-                  style={{ ...weekly.toggleBtn, ...(viewMode === 'list' ? weekly.toggleBtnActive : {}) }}
+                  className={`p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
+                    viewMode === 'list'
+                      ? 'bg-sky-500 text-white border-sky-500'
+                      : 'bg-white text-slate-500 border-slate-200'
+                  }`}
                   aria-label="List view"
                 >
                   <ListViewIcon />
@@ -388,43 +406,52 @@ export default function Services() {
           </div>
 
           {loading ? (
-            <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>Loading programs...</p>
+            <p className="text-slate-500 text-center p-8">Loading programs...</p>
           ) : (
-            <div style={viewMode === 'list' ? weekly.list : weekly.grid}>
+            <div className={
+              viewMode === 'list'
+                ? 'flex flex-col gap-4'
+                : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'
+            }>
               {displayPrograms.map((prog, idx) => (
                 <div
                   key={prog._id}
-                  className={`program-card ${weeklyVisible ? 'program-card-visible' : ''}`}
+                  className={`program-card ${weeklyVisible ? 'program-card-visible' : ''} rounded-xl p-4 sm:p-6 border border-slate-200 cursor-default ${
+                    viewMode === 'list' ? 'flex flex-row items-center gap-4 sm:gap-6 !p-4 sm:!px-6 sm:!py-5' : ''
+                  }`}
                   style={{
-                    ...weekly.card,
-                    ...(viewMode === 'list' ? weekly.cardList : {}),
+                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.04), 0 0 24px rgba(14,165,233,0.1), 0 0 48px rgba(14,165,233,0.05)',
                     transitionDelay: weeklyVisible ? `${idx * 80}ms` : undefined,
                   }}
                 >
-                  <div style={weekly.cardTop}>
-                    <div className="program-icon-badge" style={{ ...weekly.iconBadge, ...weekly.iconBadgePale }}>
+                  <div className={viewMode === 'list' ? '' : 'mb-3'}>
+                    <div
+                      className="program-icon-badge w-11 h-11 rounded-[10px] flex items-center justify-center"
+                      style={{ background: BADGE_PALE, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+                    >
                       <MinistryIcon icon={prog.icon} category={prog.category} />
                     </div>
                   </div>
-                  <div style={viewMode === 'list' ? weekly.cardListBody : {}}>
-                    <h3 style={weekly.cardTitle}>{prog.title}</h3>
+                  <div className={viewMode === 'list' ? 'flex-1 flex flex-col gap-1' : ''}>
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-0.5">{prog.title}</h3>
                     {prog.titleAmharic && (
-                      <p style={weekly.cardAmharic}>{prog.titleAmharic}</p>
+                      <p className="text-sm text-slate-500 mb-2 italic">{prog.titleAmharic}</p>
                     )}
-                    <p style={weekly.cardDesc}>{prog.description}</p>
-                    <div className="program-meta" style={weekly.cardMeta}>
-                      <div style={weekly.metaItem}>
+                    <p className="text-sm text-slate-600 leading-relaxed mb-4">{prog.description}</p>
+                    <div className="program-meta flex flex-wrap gap-2 sm:gap-3 pt-3 border-t border-slate-100">
+                      <div className="flex items-center gap-1.5">
                         <CalendarIcon />
-                        <span style={weekly.metaText}>{prog.day}</span>
+                        <span className="text-xs text-slate-500 font-medium">{prog.day}</span>
                       </div>
-                      <div style={weekly.metaItem}>
+                      <div className="flex items-center gap-1.5">
                         <ClockIcon />
-                        <span style={weekly.metaText}>{prog.time}</span>
+                        <span className="text-xs text-slate-500 font-medium">{prog.time}</span>
                       </div>
                       {prog.location && (
-                        <div style={weekly.metaItem}>
+                        <div className="flex items-center gap-1.5">
                           <MapPinIcon />
-                          <span style={weekly.metaText}>{prog.location}</span>
+                          <span className="text-xs text-slate-500 font-medium">{prog.location}</span>
                         </div>
                       )}
                     </div>
@@ -437,8 +464,11 @@ export default function Services() {
       </section>
 
       {/* ── CTA: New Here / Prayer ───────────────────────── */}
-      <section style={cta.section}>
-        <div style={cta.wrapper}>
+      <section className="w-full py-14 sm:py-16 px-4 sm:px-6 lg:px-16 bg-white">
+        <div
+          className="relative w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-10 py-10 sm:py-12 rounded-2xl overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #bae6fd 0%, #e0f2fe 40%, #f0f9ff 100%)' }}
+        >
           <div className="cta-rays-bg" />
           <div className="cta-float-shapes">
             {CTA_FLOAT_SHAPES.map((s, i) => (
@@ -466,8 +496,8 @@ export default function Services() {
               />
             ))}
           </div>
-          <div style={cta.figuresBg} aria-hidden="true">
-            <svg viewBox="0 0 200 120" fill="currentColor" style={{ width: '100%', height: '100%', opacity: 0.06 }}>
+          <div className="absolute top-0 right-0 w-[45%] h-full text-sky-500 pointer-events-none" aria-hidden="true">
+            <svg viewBox="0 0 200 120" fill="currentColor" className="w-full h-full opacity-[0.06]">
               <ellipse cx="140" cy="55" rx="18" ry="22" />
               <path d="M125 95c0-8 7-15 15-15s15 7 15 15" />
               <ellipse cx="100" cy="50" rx="22" ry="26" />
@@ -476,28 +506,28 @@ export default function Services() {
               <path d="M153 92c0-6 5-12 12-12s12 6 12 12" />
             </svg>
           </div>
-          <div style={cta.inner}>
-            <div style={cta.text}>
-              <h2 style={cta.heading}>New Here? Need Prayer?</h2>
-              <p style={cta.sub}>
+          <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 flex-wrap">
+            <div className="flex-1 min-w-[240px] sm:min-w-[280px]">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">New Here? Need Prayer?</h2>
+              <p className="text-slate-600 mb-1 text-sm sm:text-base leading-relaxed">
                 We would love to connect with you. Plan a visit or send us your prayer request.
               </p>
-              <p style={cta.subAmharic}>
+              <p className="text-slate-500 text-sm leading-relaxed">
                 አዲስ ነዎት? ጸሎት ይፈልጋሉ? ከእርስዎ ጋር መገናኘት እንወዳለን።
               </p>
             </div>
-            <div style={cta.buttons}>
-              <Link to="/contact" className="cta-primary-btn" style={cta.primaryBtn}>I'm New Here</Link>
-              <Link to="/contact" className="cta-secondary-btn" style={cta.secondaryBtn}>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/contact" className="cta-primary-btn bg-sky-500 text-white no-underline px-5 sm:px-7 py-3 rounded-lg font-bold text-sm">I'm New Here</Link>
+              <Link to="/contact" className="cta-secondary-btn bg-white text-slate-700 no-underline px-5 sm:px-7 py-3 rounded-lg font-semibold text-sm border border-slate-300 flex items-center">
                 <HeartIcon />
-                <span style={{ marginLeft: 8 }}>Prayer Request</span>
+                <span className="ml-2">Prayer Request</span>
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <div style={{ width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent 5%, #e2e8f0 30%, #e2e8f0 70%, transparent 95%)' }} />
+      <div className="w-full h-px" style={{ background: 'linear-gradient(90deg, transparent 5%, #e2e8f0 30%, #e2e8f0 70%, transparent 95%)' }} />
 
       <Footer />
     </div>
@@ -920,493 +950,3 @@ const pageCSS = `
     opacity: 0.9;
   }
 `;
-
-/* ─── Styles ─────────────────────────────────────────────── */
-
-const hero = {
-  section: {
-    position: 'relative',
-    minHeight: '420px',
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundImage: `url('/hero.jpg')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center top',
-    color: '#fff',
-  },
-  overlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(to bottom, rgba(10,20,50,0.72) 0%, rgba(10,20,50,0.68) 100%)',
-  },
-  content: {
-    position: 'relative',
-    zIndex: 1,
-    width: '100%',
-    maxWidth: '900px',
-    margin: '0 auto',
-    padding: '4.5rem 2rem',
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: 'clamp(2rem, 4.5vw, 3rem)',
-    fontWeight: '800',
-    lineHeight: 1.15,
-    margin: '0 0 0.4rem',
-    color: '#ffffff',
-    fontStyle: 'italic',
-  },
-  amharic: {
-    fontSize: '1.2rem',
-    color: '#cbd5e1',
-    margin: '0 0 1rem',
-    fontStyle: 'italic',
-  },
-  divider: {
-    width: '60px',
-    height: '3px',
-    background: '#0ea5e9',
-    margin: '0 auto 1rem',
-    borderRadius: '2px',
-  },
-  verse: {
-    fontSize: '0.95rem',
-    color: '#e2e8f0',
-    margin: '0 0 0.3rem',
-  },
-  verseAmharic: {
-    fontSize: '0.9rem',
-    color: '#94a3b8',
-    margin: '0 0 2rem',
-    fontStyle: 'italic',
-  },
-  buttons: {
-    display: 'flex',
-    gap: '1rem',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-  },
-  primaryBtn: {
-    background: '#0ea5e9',
-    color: '#fff',
-    textDecoration: 'none',
-    padding: '0.7rem 1.75rem',
-    borderRadius: '6px',
-    fontWeight: '700',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  secondaryBtn: {
-    background: 'rgba(255,255,255,0.1)',
-    border: '1.5px solid rgba(255,255,255,0.4)',
-    color: '#fff',
-    textDecoration: 'none',
-    padding: '0.7rem 1.75rem',
-    borderRadius: '6px',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'center',
-  },
-};
-
-const main = {
-  section: {
-    background: '#f8fafc',
-    padding: '4rem 1.5rem',
-    width: '100%',
-  },
-  inner: {
-    width: '100%',
-    maxWidth: '1600px',
-    margin: '0 auto',
-    padding: '0 1rem',
-  },
-  sectionLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '1.5rem',
-  },
-  heading: {
-    fontSize: '1.6rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: 0,
-  },
-  underline: {
-    width: '48px',
-    height: '3px',
-    background: 'linear-gradient(90deg, #0ea5e9, #38bdf8)',
-    borderRadius: '3px',
-    marginBottom: '1.5rem',
-  },
-  card: {
-    background: '#ffffff',
-    borderRadius: '14px',
-    overflow: 'hidden',
-    boxShadow: '0 2px 16px rgba(0,0,0,0.08), 0 0 24px rgba(14,165,233,0.1), 0 0 48px rgba(14,165,233,0.05)',
-    border: '1px solid #e2e8f0',
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-  },
-  cardContent: {
-    padding: '2.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  badge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    background: 'linear-gradient(135deg, #eff6ff, #e0f2fe)',
-    color: '#0ea5e9',
-    fontSize: '0.68rem',
-    fontWeight: '800',
-    letterSpacing: '0.12em',
-    padding: '5px 14px',
-    borderRadius: '20px',
-    marginBottom: '0.75rem',
-    width: 'fit-content',
-    border: '1px solid rgba(14,165,233,0.15)',
-  },
-  badgeDot: {
-    width: '7px',
-    height: '7px',
-    borderRadius: '50%',
-    background: '#0ea5e9',
-    flexShrink: 0,
-  },
-  cardTitle: {
-    fontSize: '1.4rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.25rem',
-  },
-  cardAmharic: {
-    fontSize: '1rem',
-    color: '#64748b',
-    margin: '0 0 1rem',
-    fontStyle: 'italic',
-  },
-  cardDesc: {
-    fontSize: '0.9rem',
-    color: '#475569',
-    lineHeight: 1.65,
-    margin: '0 0 0.5rem',
-  },
-  cardDescAmharic: {
-    fontSize: '0.85rem',
-    color: '#94a3b8',
-    lineHeight: 1.55,
-    margin: '0 0 1.5rem',
-    fontStyle: 'italic',
-  },
-  metaRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1.5rem',
-    marginBottom: '1.5rem',
-    padding: '1rem 0',
-    borderTop: '1px solid #f1f5f9',
-    borderBottom: '1px solid #f1f5f9',
-  },
-  metaItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  metaBlock: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  metaLabel: {
-    fontSize: '0.65rem',
-    fontWeight: '700',
-    color: '#94a3b8',
-    letterSpacing: '0.05em',
-  },
-  metaValue: {
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  metaDivider: {
-    width: '1px',
-    height: '32px',
-    background: 'linear-gradient(to bottom, transparent, #0ea5e9, transparent)',
-  },
-  actions: {
-    display: 'flex',
-    gap: '0.75rem',
-    flexWrap: 'wrap',
-  },
-  planBtn: {
-    background: '#0ea5e9',
-    color: '#ffffff',
-    textDecoration: 'none',
-    padding: '0.6rem 1.5rem',
-    borderRadius: '6px',
-    fontWeight: '700',
-    fontSize: '0.85rem',
-  },
-  directionsBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    background: 'transparent',
-    color: '#475569',
-    textDecoration: 'none',
-    padding: '0.6rem 1rem',
-    borderRadius: '6px',
-    border: '1px solid #e2e8f0',
-    fontWeight: '600',
-    fontSize: '0.85rem',
-  },
-  cardImage: {
-    position: 'relative',
-    minHeight: '320px',
-    overflow: 'hidden',
-  },
-  img: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    display: 'block',
-  },
-  imgOverlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(to right, rgba(255,255,255,0.08) 0%, transparent 40%)',
-  },
-};
-
-const weekly = {
-  section: {
-    background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-    padding: '4rem 1.5rem',
-    width: '100%',
-  },
-  inner: {
-    width: '100%',
-    maxWidth: '1600px',
-    margin: '0 auto',
-    padding: '0 1rem',
-  },
-  header: {
-    marginBottom: '2rem',
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: '1.5rem',
-    flexWrap: 'wrap',
-  },
-  heading: {
-    fontSize: '1.6rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.3rem',
-  },
-  underline: {
-    width: '48px',
-    height: '3px',
-    background: '#0ea5e9',
-    borderRadius: '2px',
-    margin: '0.5rem 0 0',
-    transformOrigin: 'left',
-    transform: 'scaleX(0)',
-  },
-  sub: {
-    color: '#64748b',
-    margin: '0.5rem 0 0',
-    fontSize: '0.95rem',
-  },
-  viewToggle: {
-    display: 'flex',
-    gap: '0.25rem',
-  },
-  toggleBtn: {
-    padding: '0.5rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    background: '#ffffff',
-    color: '#64748b',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-  },
-  toggleBtnActive: {
-    background: '#0ea5e9',
-    color: '#ffffff',
-    borderColor: '#0ea5e9',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '1.25rem',
-  },
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  card: {
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 1px 6px rgba(0,0,0,0.04), 0 0 24px rgba(14,165,233,0.1), 0 0 48px rgba(14,165,233,0.05)',
-    cursor: 'default',
-  },
-  cardList: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '1.5rem',
-    padding: '1.25rem 1.5rem',
-  },
-  cardListBody: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  cardTop: {
-    marginBottom: '0.75rem',
-  },
-  iconBadge: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '10px',
-    background: '#bae6fd',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBadgePale: {
-    background: BADGE_PALE,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-  },
-  cardTitle: {
-    fontSize: '1.05rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.15rem',
-  },
-  cardAmharic: {
-    fontSize: '0.85rem',
-    color: '#64748b',
-    margin: '0 0 0.5rem',
-    fontStyle: 'italic',
-  },
-  cardDesc: {
-    fontSize: '0.85rem',
-    color: '#475569',
-    lineHeight: 1.55,
-    margin: '0 0 1rem',
-  },
-  cardMeta: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.75rem',
-    paddingTop: '0.75rem',
-    borderTop: '1px solid #f1f5f9',
-  },
-  metaItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-  },
-  metaText: {
-    fontSize: '0.78rem',
-    color: '#64748b',
-    fontWeight: '500',
-  },
-};
-
-const cta = {
-  section: {
-    padding: '3.5rem 1.5rem 4rem',
-    width: '100%',
-    background: '#ffffff',
-  },
-  wrapper: {
-    position: 'relative',
-    width: '100%',
-    maxWidth: '1600px',
-    margin: '0 auto',
-    padding: '3rem 2.5rem',
-    background: 'linear-gradient(135deg, #bae6fd 0%, #e0f2fe 40%, #f0f9ff 100%)',
-    borderRadius: '16px',
-    overflow: 'hidden',
-  },
-  figuresBg: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: '45%',
-    height: '100%',
-    color: '#0ea5e9',
-    pointerEvents: 'none',
-  },
-  inner: {
-    position: 'relative',
-    zIndex: 1,
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '2rem',
-    flexWrap: 'wrap',
-  },
-  text: {
-    flex: 1,
-    minWidth: '280px',
-  },
-  heading: {
-    fontSize: '1.6rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.5rem',
-  },
-  sub: {
-    color: '#475569',
-    margin: '0 0 0.25rem',
-    fontSize: '0.95rem',
-    lineHeight: 1.5,
-  },
-  subAmharic: {
-    color: '#64748b',
-    margin: 0,
-    fontSize: '0.9rem',
-    lineHeight: 1.5,
-  },
-  buttons: {
-    display: 'flex',
-    gap: '0.75rem',
-    flexWrap: 'wrap',
-  },
-  primaryBtn: {
-    background: '#0ea5e9',
-    color: '#ffffff',
-    textDecoration: 'none',
-    padding: '0.75rem 1.75rem',
-    borderRadius: '8px',
-    fontWeight: '700',
-    fontSize: '0.9rem',
-  },
-  secondaryBtn: {
-    background: '#ffffff',
-    color: '#334155',
-    textDecoration: 'none',
-    padding: '0.75rem 1.75rem',
-    borderRadius: '8px',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    border: '1px solid #cbd5e1',
-    display: 'flex',
-    alignItems: 'center',
-  },
-};

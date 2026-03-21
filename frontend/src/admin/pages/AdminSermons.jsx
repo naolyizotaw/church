@@ -124,6 +124,7 @@ export default function AdminSermons() {
         {loading ? <p style={st.empty}>Loading...</p> : filtered.length === 0 ? (
           <p style={st.empty}>No sermons found</p>
         ) : (
+          <div className="admin-table-wrap">
           <table style={st.table}>
             <thead>
               <tr>
@@ -164,6 +165,7 @@ export default function AdminSermons() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

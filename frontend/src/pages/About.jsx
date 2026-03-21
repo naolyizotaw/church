@@ -601,13 +601,12 @@ function useJourneyObserver() {
   return ref;
 }
 
-const LeaderPhoto = ({ src, fallbackSrc, alt, style, className }) => {
+const LeaderPhoto = ({ src, fallbackSrc, alt, className }) => {
   const [imgSrc, setImgSrc] = useState(src);
   return (
     <img
       src={imgSrc}
       alt={alt}
-      style={style}
       className={className}
       onError={() => setImgSrc(fallbackSrc)}
     />
@@ -700,7 +699,7 @@ const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
 function JourneySection() {
   const timelineRef = useJourneyObserver();
   return (
-    <section style={{ ...journeyStyles.section, position: 'relative', overflow: 'hidden' }}>
+    <section className="relative overflow-hidden bg-slate-100 px-4 py-16 sm:px-6 sm:py-20 lg:px-16">
       <div className="journey-particles">
         {PARTICLES.map((p, i) => (
           <div
@@ -717,36 +716,41 @@ function JourneySection() {
           />
         ))}
       </div>
-      <div style={{ ...journeyStyles.inner, position: 'relative', zIndex: 1 }}>
-        <h2 style={journeyStyles.heading}>Our Journey / ጉዞአችን</h2>
-        <p style={journeyStyles.subheading}>
+      <div className="relative z-10 mx-auto max-w-[700px]">
+        <h2 className="mb-1 text-center text-2xl font-bold text-slate-900 md:text-3xl lg:text-[2rem]">
+          Our Journey / ጉዞአችን
+        </h2>
+        <p className="mb-10 text-center text-sm text-slate-500 sm:text-base md:mb-12">
           Tracing God&rsquo;s faithfulness through the years
         </p>
-        <div style={journeyStyles.timeline} ref={timelineRef}>
+        <div className="flex flex-col" ref={timelineRef}>
           {milestones.map((m, i) => (
-            <div key={i} className="journey-item" style={journeyStyles.item}>
-              <div style={journeyStyles.dotCol}>
+            <div key={i} className="journey-item flex min-h-[120px] items-stretch gap-4 sm:gap-5">
+              <div className="flex shrink-0 flex-col items-center pt-5">
                 <div
-                  className="journey-dot"
-                  style={i === milestones.length - 1 ? journeyStyles.dotFilled : journeyStyles.dot}
+                  className={`journey-dot flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-sky-500 sm:h-12 sm:w-12 ${
+                    i === milestones.length - 1 ? 'bg-sky-500' : 'bg-sky-100'
+                  }`}
                 >
                   {m.icon}
                 </div>
                 {i < milestones.length - 1 && (
-                  <div className="journey-line-wrap" style={journeyStyles.line}>
-                    <div className="journey-line-inner" style={journeyStyles.lineInner} />
+                  <div className="journey-line-wrap relative flex flex-1 justify-center" style={{ width: '6px' }}>
+                    <div className="journey-line-inner h-full w-0.5 rounded-sm bg-sky-200" />
                     <div className="journey-energy-orb" />
                     <div className="journey-energy-orb" style={{ animationDelay: '1.2s' }} />
                   </div>
                 )}
               </div>
-              <div className="journey-card" style={journeyStyles.itemCard}>
-                <div style={journeyStyles.cardHeader}>
-                  <span className="journey-year-pill" style={journeyStyles.yearPill}>{m.year}</span>
-                  <h3 style={journeyStyles.itemTitle}>{m.title}</h3>
+              <div className="journey-card mb-4 flex-1 rounded-[10px] border border-slate-100 bg-white p-4 shadow-sm sm:p-5 sm:px-6">
+                <div className="mb-1 flex items-center gap-2 sm:gap-3">
+                  <span className="journey-year-pill inline-block shrink-0 rounded border-[1.5px] border-sky-500 px-2 py-0.5 text-[0.7rem] font-bold leading-snug text-sky-500">
+                    {m.year}
+                  </span>
+                  <h3 className="text-base font-bold text-slate-900 sm:text-lg">{m.title}</h3>
                 </div>
-                <p style={journeyStyles.itemDesc}>{m.desc}</p>
-                <p style={journeyStyles.itemAmharic}>{m.descAm}</p>
+                <p className="mb-0.5 text-sm leading-relaxed text-slate-500">{m.desc}</p>
+                <p className="text-xs leading-normal text-slate-400 sm:text-sm">{m.descAm}</p>
               </div>
             </div>
           ))}
@@ -768,18 +772,25 @@ function LeadersSection() {
       .catch(() => {});
   }, []);
 
-  const gridCols = leaders.length <= 3
-    ? `repeat(${leaders.length}, 1fr)`
-    : leaderStyles.grid.gridTemplateColumns;
-
   return (
-    <section style={leaderStyles.section}>
-      <div style={leaderStyles.inner}>
-        <h2 style={leaderStyles.heading}>Meet Our Leaders / መሪዎቻችንን ይወቁ</h2>
-        <p style={leaderStyles.subheading}>
+    <section className="w-full bg-slate-50 px-4 py-16 sm:px-6 sm:py-20 lg:px-16">
+      <div className="w-full text-center">
+        <h2 className="mb-2 text-2xl font-bold text-slate-900 md:text-3xl lg:text-[2rem]">
+          Meet Our Leaders / መሪዎቻችንን ይወቁ
+        </h2>
+        <p className="mx-auto mb-10 max-w-[600px] text-sm leading-relaxed text-slate-500 sm:text-base md:mb-12">
           Dedicated servants committed to spreading the truth, love, and wisdom.
         </p>
-        <div style={{ ...leaderStyles.grid, gridTemplateColumns: gridCols }} ref={gridRef}>
+        <div
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8"
+          style={{
+            gridTemplateColumns:
+              leaders.length <= 3
+                ? `repeat(${leaders.length}, 1fr)`
+                : undefined,
+          }}
+          ref={gridRef}
+        >
           {leaders.map((leader, i) => {
             const socials = [
               { url: leader.facebook, Icon: FacebookIcon, label: 'Facebook' },
@@ -789,21 +800,25 @@ function LeadersSection() {
 
             return (
               <div key={leader._id || i} className="leader-card-wrap">
-                <div className="leader-card" style={leaderStyles.card}>
-                  <div className="leader-accent-line" style={leaderStyles.accentLine} />
-                  <div className="leader-photo-ring" style={leaderStyles.photoRing}>
+                <div className="leader-card rounded-xl border border-slate-100 bg-white px-5 py-7 text-center shadow-sm">
+                  <div
+                    className="leader-accent-line mb-5 h-[3px] rounded-sm opacity-0"
+                    style={{ background: 'linear-gradient(90deg, transparent, #0ea5e9, #38bdf8, transparent)' }}
+                  />
+                  <div className="leader-photo-ring mx-auto mb-4 block h-[130px] w-[130px] rounded-full">
                     <LeaderPhoto
                       src={leader.photoUrl || ''}
                       fallbackSrc={PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]}
                       alt={leader.name}
-                      style={leaderStyles.photo}
-                      className="leader-photo"
+                      className="leader-photo block h-[130px] w-[130px] rounded-full object-cover"
                     />
                   </div>
-                  <h4 className="leader-name" style={leaderStyles.name}>{leader.name}</h4>
-                  <p className="leader-role" style={leaderStyles.role}>{leader.role}</p>
-                  {leader.roleAm && <p className="leader-role" style={leaderStyles.roleAm}>{leader.roleAm}</p>}
-                  <div style={leaderStyles.socials}>
+                  <h4 className="leader-name mb-1 text-base font-bold text-slate-900">{leader.name}</h4>
+                  <p className="leader-role mb-0.5 text-sm font-medium text-sky-500">{leader.role}</p>
+                  {leader.roleAm && (
+                    <p className="leader-role mb-3 text-xs italic text-slate-400">{leader.roleAm}</p>
+                  )}
+                  <div className="flex items-center justify-center gap-2">
                     {(socials.length > 0 ? socials : [
                       { url: '#', Icon: FacebookIcon, label: 'Facebook' },
                       { url: '#', Icon: TwitterIcon, label: 'Twitter' },
@@ -814,8 +829,8 @@ function LeadersSection() {
                         href={url || '#'}
                         target={url && url !== '#' ? '_blank' : undefined}
                         rel={url && url !== '#' ? 'noreferrer' : undefined}
-                        className="leader-social leader-social-btn"
-                        style={{ ...leaderStyles.socialBtn, animationDelay: `${0.55 + si * 0.08}s` }}
+                        className="leader-social leader-social-btn flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 no-underline transition-colors duration-150"
+                        style={{ animationDelay: `${0.55 + si * 0.08}s` }}
                         aria-label={label}
                       >
                         <Icon />
@@ -865,22 +880,30 @@ function MissionVisionSection() {
   }, []);
 
   return (
-    <section ref={ref} className="mv-section" style={mvStyles.section}>
-      <div style={mvStyles.inner}>
-        <h2 className="mv-heading" style={mvStyles.heading}>Our Mission &amp; Vision</h2>
-        <p className="mv-subheading" style={mvStyles.subheading}>ዓላማ እና ራእይ</p>
-        <div style={mvStyles.grid}>
-          <div className="mv-card mv-card-left" style={mvStyles.card}>
-            <div className="mv-icon" style={mvStyles.cardIcon}><HandsHeartIcon /></div>
-            <h3 style={mvStyles.cardTitle}>Our Mission / ተልእኮ</h3>
-            <p style={mvStyles.cardText}>
+    <section ref={ref} className="mv-section w-full bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-16">
+      <div className="w-full text-center">
+        <h2 className="mv-heading mb-1 text-2xl font-bold text-slate-900 md:text-3xl lg:text-[2rem]">
+          Our Mission &amp; Vision
+        </h2>
+        <p className="mv-subheading mb-8 text-sm font-medium text-sky-500 sm:text-base md:mb-10">
+          ዓላማ እና ራእይ
+        </p>
+        <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-2 md:gap-10">
+          <div className="mv-card mv-card-left rounded-lg border-l-4 border-sky-500 bg-slate-50 p-5 sm:p-8">
+            <div className="mv-icon mb-3 flex items-center">
+              <HandsHeartIcon />
+            </div>
+            <h3 className="mb-3 text-base font-bold text-slate-900 sm:text-lg">Our Mission / ተልእኮ</h3>
+            <p className="text-sm leading-relaxed text-slate-600 sm:text-[0.92rem]">
               To preach the full gospel of Jesus Christ and build a loving Christ-like community. We strive to make disciples for the Kingdom of God, impacting our local and global communities with the love and power of God.
             </p>
           </div>
-          <div className="mv-card mv-card-right" style={mvStyles.card}>
-            <div className="mv-icon" style={mvStyles.cardIcon}><GlobeIcon /></div>
-            <h3 style={mvStyles.cardTitle}>Our Vision / ራእይ</h3>
-            <p style={mvStyles.cardText}>
+          <div className="mv-card mv-card-right rounded-lg border-l-4 border-sky-500 bg-slate-50 p-5 sm:p-8">
+            <div className="mv-icon mb-3 flex items-center">
+              <GlobeIcon />
+            </div>
+            <h3 className="mb-3 text-base font-bold text-slate-900 sm:text-lg">Our Vision / ራእይ</h3>
+            <p className="text-sm leading-relaxed text-slate-600 sm:text-[0.92rem]">
               To be a beacon of light and a hope for all nations, expanding God&rsquo;s Kingdom. We envision seeing lives transformed, communities uplifted, and the gospel reaching the unreached through our various ministries and outreach programs.
             </p>
           </div>
@@ -907,7 +930,7 @@ function CtaSection() {
   }, []);
 
   return (
-    <section ref={ref} className="cta-section" style={ctaStyles.section}>
+    <section ref={ref} className="cta-section w-full px-4 py-16 text-center sm:px-6 sm:py-18 lg:px-16">
       <div className="cta-rays" />
       <div className="cta-shapes">
         {CTA_SHAPES.map((s, i) => (
@@ -935,22 +958,31 @@ function CtaSection() {
           />
         ))}
       </div>
-      <div className="cta-inner" style={ctaStyles.inner}>
-        <h2 className="cta-text-item" style={{ ...ctaStyles.heading, animationDelay: '0s' }}>
+      <div className="cta-inner mx-auto max-w-[700px]">
+        <h2
+          className="cta-text-item mb-2 text-2xl font-extrabold text-slate-900 md:text-3xl lg:text-[2rem]"
+          style={{ animationDelay: '0s' }}
+        >
           Join Our Family This Sunday
         </h2>
-        <p className="cta-text-item" style={{ ...ctaStyles.amharic, animationDelay: '0.15s' }}>
+        <p
+          className="cta-text-item mb-4 text-sm text-slate-500 sm:text-base"
+          style={{ animationDelay: '0.15s' }}
+        >
           በዚህ እሁድ ቤተሰባችንን ይቀላቀሉ
         </p>
-        <p className="cta-text-item" style={{ ...ctaStyles.times, animationDelay: '0.3s' }}>
+        <p
+          className="cta-text-item mb-8 text-sm leading-relaxed text-slate-800 sm:text-base"
+          style={{ animationDelay: '0.3s' }}
+        >
           9:00 AM (English Service) &nbsp; 11:00 AM (Amharic Service)
         </p>
         <a
           href="https://maps.google.com/?q=Kerabu+Full+Gospel+Church+Addis+Ababa+Ethiopia"
           target="_blank"
           rel="noreferrer"
-          className="cta-btn cta-text-item"
-          style={{ ...ctaStyles.btn, animationDelay: '0.45s' }}
+          className="cta-btn cta-text-item inline-block rounded-md bg-sky-500 px-8 py-3 text-sm font-bold text-white no-underline transition-colors sm:px-9 sm:text-base"
+          style={{ animationDelay: '0.45s' }}
         >
           Get Directions / Watch
         </a>
@@ -961,19 +993,31 @@ function CtaSection() {
 
 export default function About() {
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", width: '100%', maxWidth: '100vw', minHeight: '100vh', overflowX: 'hidden', margin: 0, padding: 0 }}>
+    <div className="m-0 w-full max-w-[100vw] min-h-screen overflow-x-hidden p-0 font-['Segoe_UI',system-ui,sans-serif]">
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section style={heroStyles.section}>
-        <div style={heroStyles.overlay} />
-        <div style={heroStyles.content}>
-          <p style={heroStyles.welcome}>WELCOME HOME</p>
-          <h1 style={heroStyles.title}>Who We Are</h1>
-          <p style={heroStyles.amharicTitle}>ስለእኛ</p>
-          <p style={heroStyles.subtitle}>
+      <section
+        className="relative flex min-h-[320px] items-center bg-cover bg-top text-white sm:min-h-[380px] md:min-h-[440px]"
+        style={{ backgroundImage: "url('/hero.jpg')" }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to bottom, rgba(10,20,50,0.72) 0%, rgba(10,20,50,0.65) 100%)' }}
+        />
+        <div className="relative z-10 mx-auto max-w-[800px] px-4 py-16 text-center sm:px-8 sm:py-20 md:px-16">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/60 sm:text-sm">
+            WELCOME HOME
+          </p>
+          <h1 className="mb-1 text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl">
+            Who We Are
+          </h1>
+          <p className="mb-6 text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+            ስለእኛ
+          </p>
+          <p className="mb-1 text-sm leading-relaxed text-slate-300 sm:text-base md:text-lg">
             A community of believers dedicated to the full gospel and transforming lives with the love of Christ.
           </p>
-          <p style={heroStyles.amharicSub}>
+          <p className="text-xs italic text-slate-400 sm:text-sm md:text-base">
             የክርስት ትምህርትን ለተማሪዎች ለማስተማር እና ህይወትን ለመለወጥ የሰጠ የእምነት ማህበረሰብ።
           </p>
         </div>
@@ -983,17 +1027,19 @@ export default function About() {
       <MissionVisionSection />
 
       {/* ── Scripture Quote ──────────────────────────────── */}
-      <section style={quoteStyles.section}>
-        <div style={quoteStyles.inner}>
-          <div style={quoteStyles.quoteIcon}>
+      <section className="w-full bg-sky-100 px-4 py-14 sm:px-6 sm:py-18 lg:px-16">
+        <div className="mx-auto max-w-[750px] text-center">
+          <div className="mb-4">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="#0ea5e9">
               <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
             </svg>
           </div>
-          <blockquote style={quoteStyles.text}>
+          <blockquote className="mb-5 border-none p-0 font-serif text-lg font-medium italic leading-relaxed text-slate-800 sm:text-xl md:text-[1.35rem]">
             &ldquo;For where two or three gather in my name, there am I with them.&rdquo;
           </blockquote>
-          <p style={quoteStyles.reference}>MATTHEW 18:20</p>
+          <p className="text-xs font-bold tracking-[0.12em] text-slate-400 sm:text-sm">
+            MATTHEW 18:20
+          </p>
         </div>
       </section>
 
@@ -1011,415 +1057,3 @@ export default function About() {
     </div>
   );
 }
-
-/* ─── Style Objects ───────────────────────────────────────── */
-
-const heroStyles = {
-  section: {
-    position: 'relative',
-    minHeight: '440px',
-    display: 'flex',
-    alignItems: 'center',
-    backgroundImage: "url('/hero.jpg')",
-    backgroundSize: 'cover',
-    backgroundPosition: 'center top',
-    color: '#fff',
-  },
-  overlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(to bottom, rgba(10,20,50,0.72) 0%, rgba(10,20,50,0.65) 100%)',
-  },
-  content: {
-    position: 'relative',
-    zIndex: 1,
-    maxWidth: '800px',
-    margin: '0 auto',
-    padding: '5rem 4rem',
-    textAlign: 'center',
-  },
-  welcome: {
-    fontSize: '0.78rem',
-    fontWeight: '600',
-    letterSpacing: '0.2em',
-    color: 'rgba(255,255,255,0.6)',
-    margin: '0 0 1rem',
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontSize: 'clamp(2rem, 5vw, 3.2rem)',
-    fontWeight: '800',
-    lineHeight: 1.15,
-    margin: '0 0 0.35rem',
-    color: '#ffffff',
-  },
-  amharicTitle: {
-    fontSize: 'clamp(1.5rem, 3.5vw, 2.4rem)',
-    fontWeight: '700',
-    margin: '0 0 1.5rem',
-    color: '#ffffff',
-  },
-  subtitle: {
-    fontSize: '1.05rem',
-    color: '#cbd5e1',
-    margin: '0 0 0.35rem',
-    lineHeight: 1.5,
-  },
-  amharicSub: {
-    fontSize: '0.92rem',
-    color: '#94a3b8',
-    margin: 0,
-    fontStyle: 'italic',
-  },
-};
-
-const mvStyles = {
-  section: {
-    background: '#ffffff',
-    padding: '5rem 4rem',
-    width: '100%',
-  },
-  inner: {
-    width: '100%',
-    textAlign: 'center',
-  },
-  heading: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.35rem',
-  },
-  subheading: {
-    color: '#0ea5e9',
-    fontSize: '1rem',
-    margin: '0 0 2.5rem',
-    fontWeight: '500',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '2.5rem',
-    textAlign: 'left',
-  },
-  card: {
-    background: '#f8fafc',
-    borderLeft: '4px solid #0ea5e9',
-    borderRadius: '8px',
-    padding: '2rem',
-    transition: 'box-shadow 0.2s',
-  },
-  cardIcon: {
-    marginBottom: '0.75rem',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: '1.1rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.75rem',
-  },
-  cardText: {
-    fontSize: '0.92rem',
-    color: '#475569',
-    lineHeight: 1.65,
-    margin: 0,
-  },
-};
-
-const quoteStyles = {
-  section: {
-    background: '#e0f2fe',
-    padding: '4.5rem 4rem',
-    width: '100%',
-  },
-  inner: {
-    maxWidth: '750px',
-    margin: '0 auto',
-    textAlign: 'center',
-  },
-  quoteIcon: {
-    marginBottom: '1rem',
-  },
-  text: {
-    fontSize: '1.35rem',
-    fontWeight: '500',
-    color: '#1e293b',
-    lineHeight: 1.65,
-    fontStyle: 'italic',
-    fontFamily: 'Georgia, serif',
-    margin: '0 0 1.25rem',
-    padding: '0',
-    border: 'none',
-  },
-  reference: {
-    fontSize: '0.85rem',
-    fontWeight: '700',
-    color: '#94a3b8',
-    letterSpacing: '0.12em',
-    margin: 0,
-  },
-};
-
-const journeyStyles = {
-  section: {
-    background: '#f1f5f9',
-    padding: '5rem 4rem',
-    width: '100%',
-  },
-  inner: {
-    maxWidth: '700px',
-    margin: '0 auto',
-  },
-  heading: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.35rem',
-    textAlign: 'center',
-  },
-  subheading: {
-    color: '#64748b',
-    fontSize: '0.95rem',
-    margin: '0 0 3rem',
-    textAlign: 'center',
-  },
-  timeline: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  item: {
-    display: 'flex',
-    gap: '1.25rem',
-    alignItems: 'stretch',
-    minHeight: '120px',
-  },
-  dotCol: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    flexShrink: 0,
-    paddingTop: '1.25rem',
-  },
-  dot: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    background: '#e0f2fe',
-    border: '2px solid #0ea5e9',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  dotFilled: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    background: '#0ea5e9',
-    border: '2px solid #0ea5e9',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  line: {
-    width: '6px',
-    flex: 1,
-    position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  lineInner: {
-    width: '2px',
-    height: '100%',
-    background: '#bae6fd',
-    borderRadius: '1px',
-  },
-  itemCard: {
-    background: '#ffffff',
-    borderRadius: '10px',
-    padding: '1.25rem 1.5rem',
-    marginBottom: '1rem',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-    border: '1px solid #f1f5f9',
-    flex: 1,
-  },
-  cardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.65rem',
-    marginBottom: '0.4rem',
-  },
-  yearPill: {
-    display: 'inline-block',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    color: '#0ea5e9',
-    border: '1.5px solid #0ea5e9',
-    borderRadius: '4px',
-    padding: '0.1rem 0.5rem',
-    lineHeight: 1.4,
-    flexShrink: 0,
-  },
-  itemTitle: {
-    fontSize: '1.05rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: 0,
-  },
-  itemDesc: {
-    fontSize: '0.88rem',
-    color: '#64748b',
-    lineHeight: 1.6,
-    margin: '0 0 0.15rem',
-  },
-  itemAmharic: {
-    fontSize: '0.82rem',
-    color: '#94a3b8',
-    margin: 0,
-    lineHeight: 1.5,
-  },
-};
-
-const leaderStyles = {
-  section: {
-    background: '#f8fafc',
-    padding: '5rem 4rem',
-    width: '100%',
-  },
-  inner: {
-    width: '100%',
-    textAlign: 'center',
-  },
-  heading: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.5rem',
-  },
-  subheading: {
-    color: '#64748b',
-    fontSize: '0.95rem',
-    margin: '0 auto 3rem',
-    maxWidth: '600px',
-    lineHeight: 1.5,
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '2rem',
-  },
-  card: {
-    background: '#ffffff',
-    borderRadius: '12px',
-    padding: '1.75rem 1.25rem',
-    textAlign: 'center',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-    border: '1px solid #f1f5f9',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
-  accentLine: {
-    height: '3px',
-    background: 'linear-gradient(90deg, transparent, #0ea5e9, #38bdf8, transparent)',
-    borderRadius: '3px',
-    marginBottom: '1.25rem',
-    opacity: 0,
-  },
-  photoRing: {
-    width: '130px',
-    height: '130px',
-    borderRadius: '50%',
-    margin: '0 auto 1.1rem',
-    display: 'block',
-  },
-  photo: {
-    width: '130px',
-    height: '130px',
-    borderRadius: '50%',
-    display: 'block',
-    objectFit: 'cover',
-  },
-  initials: {
-    fontSize: '2.75rem',
-    fontWeight: '800',
-    userSelect: 'none',
-  },
-  name: {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 0.2rem',
-  },
-  role: {
-    fontSize: '0.85rem',
-    color: '#0ea5e9',
-    margin: '0 0 0.12rem',
-    fontWeight: '500',
-  },
-  roleAm: {
-    fontSize: '0.78rem',
-    color: '#94a3b8',
-    margin: '0 0 0.85rem',
-    fontStyle: 'italic',
-  },
-  socials: {
-    display: 'flex',
-    gap: '0.5rem',
-    justifyContent: 'center',
-  },
-  socialBtn: {
-    width: '30px',
-    height: '30px',
-    borderRadius: '50%',
-    border: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#94a3b8',
-    textDecoration: 'none',
-    background: '#fff',
-    cursor: 'pointer',
-    transition: 'color 0.15s, border-color 0.15s',
-  },
-};
-
-const ctaStyles = {
-  section: {
-    padding: '4.5rem 4rem',
-    textAlign: 'center',
-    width: '100%',
-  },
-  inner: {
-    maxWidth: '700px',
-    margin: '0 auto',
-  },
-  heading: {
-    fontSize: '2rem',
-    fontWeight: '800',
-    color: '#0f172a',
-    margin: '0 0 0.5rem',
-  },
-  amharic: {
-    fontSize: '1rem',
-    color: '#64748b',
-    margin: '0 0 1rem',
-  },
-  times: {
-    fontSize: '0.95rem',
-    color: '#1e293b',
-    margin: '0 0 2rem',
-    lineHeight: 1.6,
-  },
-  btn: {
-    display: 'inline-block',
-    background: '#0ea5e9',
-    color: '#ffffff',
-    textDecoration: 'none',
-    padding: '0.8rem 2.25rem',
-    borderRadius: '6px',
-    fontWeight: '700',
-    fontSize: '0.95rem',
-    transition: 'background 0.15s',
-  },
-};

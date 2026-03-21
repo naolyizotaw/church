@@ -4,8 +4,6 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dbConnect } from "./config/dbConnect.js";
-
-// Import routes
 import authRoutes from "./routes/authRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import pageRoutes from "./routes/pageRoutes.js";
@@ -24,10 +22,9 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import mediaRoutes from "./routes/mediaRoutes.js";
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const app = express();
 

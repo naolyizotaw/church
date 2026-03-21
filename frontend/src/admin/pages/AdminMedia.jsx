@@ -709,7 +709,7 @@ export default function AdminMedia() {
             ))}
           </div>
         ) : (
-          <div style={st.tableWrap}>
+          <div className="admin-table-wrap" style={st.tableWrap}>
             <table style={st.table}>
               <thead>
                 <tr>

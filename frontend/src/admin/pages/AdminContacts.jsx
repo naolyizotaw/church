@@ -72,6 +72,7 @@ export default function AdminContacts() {
         {loading ? <p style={st.empty}>Loading...</p> : filtered.length === 0 ? (
           <p style={st.empty}>No messages found</p>
         ) : (
+          <div className="admin-table-wrap">
           <table style={st.table}>
             <thead>
               <tr>
@@ -109,6 +110,7 @@ export default function AdminContacts() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
