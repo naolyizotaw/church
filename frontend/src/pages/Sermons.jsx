@@ -153,84 +153,6 @@ const pageCSS = `
 }
 `;
 
-const fallbackSermons = [
-  {
-    _id: '1',
-    title: 'The Power of Prayer',
-    description: 'Discover how persistent prayer can shift the atmosphere and bring breakthrough in your daily life.',
-    speaker: 'Pastor Abebe',
-    date: '2023-10-12',
-    series: 'FAITH SERIES',
-    topic: 'Prayer',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=260&fit=crop',
-    duration: '43:20',
-  },
-  {
-    _id: '2',
-    title: 'Living with Purpose',
-    description: 'God has a unique plan for everyone. Learn to identify your calling and walk in it confidently.',
-    speaker: 'Pastor John',
-    date: '2023-10-05',
-    series: 'PURPOSE',
-    topic: 'Purpose',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&h=260&fit=crop',
-    duration: '55:15',
-  },
-  {
-    _id: '3',
-    title: '\u12E8\u12A0\u12DD\u1218\u1295\u1275\u12CE\u127D \u134D\u1245\u122D (God\'s Love)',
-    description: 'Exploring the depth and breadth of God\'s unconditional love for His children.',
-    speaker: 'Guest Speaker',
-    date: '2023-09-28',
-    series: 'SUNDAY SERVICE',
-    topic: 'Amharic Service',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=400&h=260&fit=crop',
-    duration: '52:00',
-  },
-  {
-    _id: '4',
-    title: 'Serving One Another',
-    description: 'True leadership is service. How can we better serve our neighbors and our church family?',
-    speaker: 'Pastor Abebe',
-    date: '2023-09-21',
-    series: 'COMMUNITY',
-    topic: 'Service',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=260&fit=crop',
-    duration: '41:00',
-  },
-  {
-    _id: '5',
-    title: 'Understanding Romans',
-    description: 'A deep dive into the book of Romans, exploring Paul\'s theology and message to the early church.',
-    speaker: 'Pastor John',
-    date: '2023-09-14',
-    series: 'BIBLE STUDY',
-    topic: 'Bible Study',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?w=400&h=260&fit=crop',
-    duration: '48:10',
-  },
-  {
-    _id: '6',
-    title: 'Mountains Will Move',
-    description: 'Have faith as small as a mustard seed, and you can say to this mountain, \'Move from here to there,\' and...',
-    speaker: 'Pastor Abebe',
-    date: '2023-09-01',
-    series: 'FAITH SERIES',
-    topic: 'Faith',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=260&fit=crop',
-    duration: '42:05',
-  },
-];
-
-const fallbackFeatured = {
-  _id: 'featured',
-  title: 'Walking in Faith: Overcoming the Impossible',
-  speaker: 'Pastor Abebe',
-  date: '2023-10-15',
-  series: 'LATEST MESSAGE',
-  thumbnailUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=260&fit=crop',
-};
-
 const PlayIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
     <circle cx="12" cy="12" r="12" fill="#0ea5e9"/>
@@ -288,27 +210,23 @@ const PersonIcon = () => (
   </svg>
 );
 
-const seriesColors = {
-  'FAITH SERIES': '#0ea5e9',
-  'PURPOSE': '#f59e0b',
-  'SUNDAY SERVICE': '#f59e0b',
-  'COMMUNITY': '#0ea5e9',
-  'BIBLE STUDY': '#0ea5e9',
-  'LATEST MESSAGE': '#f59e0b',
-};
-
-function getSeriesColor(series) {
-  return seriesColors[series] || '#0ea5e9';
-}
-
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+const MOSAIC_PLACEHOLDER_GRADIENTS = [
+  'linear-gradient(145deg, #1e3a5f 0%, #16213e 100%)',
+  'linear-gradient(145deg, #243b55 0%, #1a1a2e 100%)',
+  'linear-gradient(145deg, #2d4a6f 0%, #1e2a3a 100%)',
+  'linear-gradient(145deg, #1a2744 0%, #243352 100%)',
+];
+
 export default function Sermons() {
   const [sermons, setSermons] = useState([]);
   const [featured, setFeatured] = useState(null);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [sermonsLoadError, setSermonsLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({ series: '', speaker: '', topic: '' });
@@ -329,18 +247,14 @@ export default function Sermons() {
   useEffect(() => {
     api.get('/sermons/featured')
       .then(res => setFeatured(res.data))
-      .catch(() => setFeatured(fallbackFeatured));
+      .catch(() => setFeatured(null))
+      .finally(() => setFeaturedLoading(false));
   }, []);
 
   useEffect(() => {
     api.get('/sermons/filters')
       .then(res => setFilterOptions(res.data))
-      .catch(() => {
-        const series = [...new Set(fallbackSermons.map(s => s.series).filter(Boolean))];
-        const speakers = [...new Set(fallbackSermons.map(s => s.speaker).filter(Boolean))];
-        const topics = [...new Set(fallbackSermons.map(s => s.topic).filter(Boolean))];
-        setFilterOptions({ series, speakers, topics });
-      });
+      .catch(() => setFilterOptions({ series: [], speakers: [], topics: [] }));
   }, []);
 
   useEffect(() => {
@@ -353,6 +267,7 @@ export default function Sermons() {
 
     api.get('/sermons', { params })
       .then(res => {
+        setSermonsLoadError(false);
         if (page === 1) {
           setSermons(res.data.sermons || []);
         } else {
@@ -361,20 +276,13 @@ export default function Sermons() {
         setTotalPages(res.data.pages || 1);
       })
       .catch(() => {
-        let data = [...fallbackSermons];
-        if (filters.series) data = data.filter(s => s.series === filters.series);
-        if (filters.speaker) data = data.filter(s => s.speaker === filters.speaker);
-        if (filters.topic) data = data.filter(s => s.topic === filters.topic);
-        if (search) {
-          const q = search.toLowerCase();
-          data = data.filter(s =>
-            s.title.toLowerCase().includes(q) ||
-            (s.description && s.description.toLowerCase().includes(q)) ||
-            (s.topic && s.topic.toLowerCase().includes(q))
-          );
+        if (page === 1) {
+          setSermonsLoadError(true);
+          setSermons([]);
+          setTotalPages(1);
+        } else {
+          setTotalPages(Math.max(1, page - 1));
         }
-        setSermons(data);
-        setTotalPages(1);
       })
       .finally(() => setLoading(false));
   }, [page, filters, search]);
@@ -396,75 +304,104 @@ export default function Sermons() {
     setPage(1);
   };
 
-  const heroData = featured || fallbackFeatured;
-
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: '#faf8f5', minHeight: '100vh' }}>
 
       {/* ── Hero / Featured Sermon ── */}
       <section style={heroStyles.section}>
-        {/* Mosaic background */}
         <div style={heroStyles.mosaicWrap}>
           <div className="sermon-mosaic-grid" style={heroStyles.mosaicGrid}>
-            {(() => {
-              const pool = sermons.length > 0 ? sermons : fallbackSermons;
-              const tiles = [];
-              for (let i = 0; i < 12; i++) {
-                const s = pool[i % pool.length];
-                tiles.push(
-                  <div key={i} style={heroStyles.mosaicTile}>
-                    <img src={s.thumbnailUrl || 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300&h=200&fit=crop'} alt="" style={heroStyles.mosaicImg} />
-                  </div>
-                );
-              }
-              return tiles;
-            })()}
+            {sermons.length > 0
+              ? Array.from({ length: 12 }, (_, i) => {
+                  const s = sermons[i % sermons.length];
+                  return (
+                    <div key={i} style={heroStyles.mosaicTile}>
+                      <img
+                        src={s.thumbnailUrl || '/hero.jpg'}
+                        alt=""
+                        style={heroStyles.mosaicImg}
+                      />
+                    </div>
+                  );
+                })
+              : Array.from({ length: 12 }, (_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      ...heroStyles.mosaicTile,
+                      background: MOSAIC_PLACEHOLDER_GRADIENTS[i % MOSAIC_PLACEHOLDER_GRADIENTS.length],
+                      minHeight: '100%',
+                    }}
+                  />
+                ))}
           </div>
           <div style={heroStyles.mosaicOverlay} />
         </div>
 
-        {/* Content */}
         <div className="sermon-hero-inner" style={heroStyles.inner}>
-          <div style={heroStyles.textCol}>
-            <span style={heroStyles.tag}>{heroData.series || 'LATEST MESSAGE'}</span>
-            <h1 style={heroStyles.title}>{heroData.title}</h1>
-            <div style={heroStyles.meta}>
-              <span style={heroStyles.metaItem}>
-                <PersonIcon /> {heroData.speaker}
-              </span>
-              <span style={heroStyles.metaDot}>&bull;</span>
-              <span style={heroStyles.metaItem}>
-                <CalendarIcon /> {formatDate(heroData.date)}
-              </span>
+          {featuredLoading ? (
+            <div style={heroStyles.textCol}>
+              <span style={heroStyles.tag}>LATEST MESSAGE</span>
+              <h1 style={heroStyles.title}>Sermons</h1>
+              <p style={heroStyles.placeholderText}>Loading featured message…</p>
             </div>
-            <div className="sermon-hero-actions" style={heroStyles.actions}>
-              <Link to={`/sermons/${heroData._id}?play=1`} className="sermon-watch-btn" style={{ ...heroStyles.watchBtn, textDecoration: 'none' }}>
-                <PlayIcon /> Watch Now
-              </Link>
-              <button className="sermon-share-btn" style={heroStyles.shareBtn} onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/sermons/${heroData._id}`);
-              }}>
-                <ShareIcon /> Share
-              </button>
-            </div>
-          </div>
-          <Link to={`/sermons/${heroData._id}?play=1`} className="sermon-hero-thumb" style={heroStyles.playerFrame}>
-            <div style={heroStyles.playerImgWrap}>
-              <img
-                src={heroData.thumbnailUrl || '/hero.jpg'}
-                alt={heroData.title}
-                style={heroStyles.playerImg}
-              />
-              <div className="sermon-thumb-play" style={heroStyles.playerPlayBtn}>
-                <div style={heroStyles.playerPlayCircle}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="9,5 19,12 9,19"/></svg>
+          ) : featured ? (
+            <>
+              <div style={heroStyles.textCol}>
+                <span style={heroStyles.tag}>{featured.series || 'LATEST MESSAGE'}</span>
+                <h1 style={heroStyles.title}>{featured.title}</h1>
+                <div style={heroStyles.meta}>
+                  <span style={heroStyles.metaItem}>
+                    <PersonIcon /> {featured.speaker}
+                  </span>
+                  <span style={heroStyles.metaDot}>&bull;</span>
+                  <span style={heroStyles.metaItem}>
+                    <CalendarIcon /> {formatDate(featured.date)}
+                  </span>
+                </div>
+                <div className="sermon-hero-actions" style={heroStyles.actions}>
+                  <Link to={`/sermons/${featured._id}?play=1`} className="sermon-watch-btn" style={{ ...heroStyles.watchBtn, textDecoration: 'none' }}>
+                    <PlayIcon /> Watch Now
+                  </Link>
+                  <button
+                    type="button"
+                    className="sermon-share-btn"
+                    style={heroStyles.shareBtn}
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/sermons/${featured._id}`);
+                    }}
+                  >
+                    <ShareIcon /> Share
+                  </button>
                 </div>
               </div>
+              <Link to={`/sermons/${featured._id}?play=1`} className="sermon-hero-thumb" style={heroStyles.playerFrame}>
+                <div style={heroStyles.playerImgWrap}>
+                  <img
+                    src={featured.thumbnailUrl || '/hero.jpg'}
+                    alt={featured.title}
+                    style={heroStyles.playerImg}
+                  />
+                  <div className="sermon-thumb-play" style={heroStyles.playerPlayBtn}>
+                    <div style={heroStyles.playerPlayCircle}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="9,5 19,12 9,19"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div style={heroStyles.playerBar}>
+                  <div style={heroStyles.playerProgress} />
+                </div>
+              </Link>
+            </>
+          ) : (
+            <div style={heroStyles.textCol}>
+              <span style={heroStyles.tag}>MESSAGES</span>
+              <h1 style={heroStyles.title}>Sermons</h1>
+              <p style={heroStyles.placeholderText}>
+                No featured sermon is available right now. When the server is online, the latest message will appear here.
+              </p>
             </div>
-            <div style={heroStyles.playerBar}>
-              <div style={heroStyles.playerProgress} />
-            </div>
-          </Link>
+          )}
         </div>
       </section>
 
@@ -529,7 +466,11 @@ export default function Sermons() {
           </div>
         ) : sermons.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 0', color: '#8a8494' }}>
-            <div style={{ fontSize: '1.1rem' }}>No sermons found.</div>
+            <div style={{ fontSize: '1.1rem' }}>
+              {sermonsLoadError
+                ? 'Could not load sermons. Check that the server is running and try again.'
+                : 'No sermons found.'}
+            </div>
           </div>
         ) : (
           <div className="sermon-cards-grid" style={cardStyles.grid}>
@@ -613,7 +554,7 @@ function SermonCard({ sermon, index }) {
       <div style={cardStyles.imgWrap}>
         <img
           className="sermon-card-img"
-          src={sermon.thumbnailUrl || 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=260&fit=crop'}
+          src={sermon.thumbnailUrl || '/hero.jpg'}
           alt={sermon.title}
           style={cardStyles.img}
         />
@@ -721,6 +662,13 @@ const heroStyles = {
     margin: '0 0 16px',
     maxWidth: '600px',
     textShadow: '0 2px 16px rgba(0,0,0,0.35)',
+  },
+  placeholderText: {
+    color: 'rgba(232,224,208,0.88)',
+    fontSize: '1.05rem',
+    lineHeight: 1.6,
+    maxWidth: '520px',
+    margin: 0,
   },
   meta: {
     display: 'flex',
