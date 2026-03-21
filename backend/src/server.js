@@ -76,7 +76,15 @@ if (process.env.NODE_ENV === "production") {
 
 
 const PORT = process.env.PORT || 6001;
-app.listen(PORT, () => {
-    console.log(`Server is running at port ${PORT}`)
-    dbConnect();
+
+async function start() {
+    await dbConnect();
+    app.listen(PORT, () => {
+        console.log(`Server is running at port ${PORT}`);
+    });
+}
+
+start().catch((err) => {
+    console.error("[server] Failed to start:", err);
+    process.exit(1);
 });
