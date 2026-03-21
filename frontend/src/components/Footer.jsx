@@ -60,6 +60,79 @@ const footerCSS = `
 }
 .footer-link:hover { color: #0ea5e9; }
 .footer-link:hover::after { width: 100%; }
+
+/* Church nav: obvious tap targets on small screens; classic text links on lg */
+.footer-church-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: #0369a1;
+  background: #fff;
+  border: 1px solid #bae6fd;
+  border-radius: 9999px;
+  padding: 0.45rem 0.9rem;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.footer-church-link:hover {
+  color: #0c4a6e;
+  background: #f0f9ff;
+  border-color: #7dd3fc;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.14);
+}
+.footer-church-link:active {
+  transform: scale(0.97);
+}
+.footer-church-link:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+@media (min-width: 1024px) {
+  .footer-church-link {
+    display: inline-block;
+    font-weight: 500;
+    font-size: 0.88rem;
+    letter-spacing: normal;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .footer-church-link:hover {
+    color: #0ea5e9;
+    background: transparent;
+    box-shadow: none;
+  }
+  .footer-church-link:active {
+    transform: none;
+  }
+  .footer-church-link:focus-visible {
+    outline-offset: 3px;
+  }
+  .footer-church-link::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background: #0ea5e9;
+    transition: width 0.3s ease;
+  }
+  .footer-church-link:hover::after {
+    width: 100%;
+  }
+}
+
 @keyframes footerMapGlow {
   0%, 100% { box-shadow: 0 0 0 1px #e2e8f0; }
   50% { box-shadow: 0 0 12px 2px rgba(14,165,233,0.2), 0 0 0 1px #bae6fd; }
@@ -127,6 +200,13 @@ const PhoneIcon = () => (
   </svg>
 );
 
+const CHURCH_NAV_LINKS = [
+  { to: '/about', label: 'About' },
+  { to: '/ministries', label: 'Ministries' },
+  { to: '/sermons', label: 'Sermons' },
+  { to: '/contact', label: 'Contact' },
+];
+
 export default function Footer() {
   const gridRef = useRef(null);
   const styleRef = useRef(null);
@@ -179,7 +259,7 @@ export default function Footer() {
       </div>
 
       <div
-        className="footer-grid w-full px-4 sm:px-6 lg:px-16 pt-8 pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10"
+        className="footer-grid w-full px-4 sm:px-6 lg:px-16 pt-6 pb-8 sm:pt-8 sm:pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7 lg:gap-10"
         ref={gridRef}
       >
         {/* Col 1: Brand */}
@@ -202,16 +282,23 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Col 2: Church Links */}
-        <div className="footer-col flex flex-col gap-2.5" style={{ animationDelay: '0.12s' }}>
-          <h4 className="font-bold text-[0.85rem] text-slate-900 mb-2 tracking-wider">CHURCH</h4>
-          <ul className="list-none p-0 m-0 flex flex-col gap-2">
-            <li><Link to="/about" className="footer-link text-slate-500 no-underline text-[0.88rem] leading-relaxed">About Us</Link></li>
-            <li><Link to="/ministries" className="footer-link text-slate-500 no-underline text-[0.88rem] leading-relaxed">Ministries</Link></li>
-            <li><Link to="/sermons" className="footer-link text-slate-500 no-underline text-[0.88rem] leading-relaxed">Sermons</Link></li>
-            <li><Link to="/contact" className="footer-link text-slate-500 no-underline text-[0.88rem] leading-relaxed">Contact</Link></li>
+        {/* Col 2: Church — one short wrap row on small screens; vertical list on lg */}
+        <nav
+          className="footer-col flex flex-col gap-1.5 lg:gap-2.5"
+          style={{ animationDelay: '0.12s' }}
+          aria-label="Church pages"
+        >
+          <h4 className="font-bold text-[0.85rem] text-slate-900 tracking-wider max-lg:sr-only lg:mb-2">CHURCH</h4>
+          <ul className="list-none p-0 m-0 flex flex-wrap gap-2 lg:flex-col lg:gap-2">
+            {CHURCH_NAV_LINKS.map(({ to, label }) => (
+              <li key={to}>
+                <Link to={to} className="footer-church-link">
+                  {label}
+                </Link>
+              </li>
+            ))}
           </ul>
-        </div>
+        </nav>
 
         {/* Col 3: Contact */}
         <div className="footer-col flex flex-col gap-2.5" style={{ animationDelay: '0.24s' }}>
@@ -236,8 +323,7 @@ export default function Footer() {
               title="Church Location"
               src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQ)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
               width="100%"
-              height="130"
-              className="border-0 rounded-lg block"
+              className="border-0 rounded-lg block h-[96px] w-full sm:h-[130px]"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />
