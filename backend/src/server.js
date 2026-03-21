@@ -19,6 +19,7 @@ import leaderRoutes from "./routes/leaderRoutes.js";
 import verseRoutes from "./routes/verseRoutes.js";
 import youtubeRoutes from "./routes/youtubeRoutes.js";
 import siteContentRoutes from "./routes/siteContentRoutes.js";
+import donationRoutes from "./routes/donationRoutes.js";
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use("/api/leaders", leaderRoutes);
 app.use("/api/verses", verseRoutes);
 app.use("/api/youtube", youtubeRoutes);
 app.use("/api/site-content", siteContentRoutes);
+app.use("/api/donations", donationRoutes);
 
 
 
