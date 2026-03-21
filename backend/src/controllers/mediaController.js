@@ -1,6 +1,14 @@
 import Media from "../models/Media.js";
+import Sermon from "../models/Sermon.js";
+import Event from "../models/Event.js";
+import Leader from "../models/Leader.js";
+import Service from "../models/Service.js";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function getCategory(mimeType) {
   if (mimeType.startsWith("image/")) return "image";
@@ -111,6 +119,143 @@ export const deleteMedia = async (req, res) => {
     res.json({ message: "File deleted successfully" });
   } catch (error) {
     console.error("Delete media error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+function guessMimeType(ext) {
+  const map = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+    ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
+    ".mp4": "video/mp4", ".webm": "video/webm", ".avi": "video/x-msvideo",
+    ".mov": "video/quicktime", ".mp3": "audio/mpeg", ".wav": "audio/wav",
+    ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".pdf": "application/pdf",
+    ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  };
+  return map[ext.toLowerCase()] || "application/octet-stream";
+}
+
+function categoryFromExt(ext) {
+  const e = ext.toLowerCase();
+  if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"].includes(e)) return "image";
+  if ([".mp4", ".webm", ".avi", ".mov"].includes(e)) return "video";
+  if ([".mp3", ".wav", ".ogg", ".m4a"].includes(e)) return "audio";
+  return "document";
+}
+
+export const syncMedia = async (req, res) => {
+  try {
+    let synced = 0;
+    const uploadsDir = path.join(__dirname, "../../uploads");
+    const existingUrls = new Set((await Media.find({}, "url")).map((m) => m.url));
+
+    const sources = [
+      { model: Sermon, modelName: "Sermon", fields: [
+        { urlField: "fileUrl", nameField: "title", fileType: null },
+        { urlField: "thumbnailUrl", nameField: "title", fileType: "image" },
+      ]},
+      { model: Event, modelName: "Event", fields: [
+        { urlField: "posterUrl", nameField: "title", fileType: "image" },
+      ]},
+      { model: Leader, modelName: "Leader", fields: [
+        { urlField: "photoUrl", nameField: "name", fileType: "image" },
+      ]},
+      { model: Service, modelName: "Service", fields: [
+        { urlField: "imageUrl", nameField: "title", fileType: "image" },
+      ]},
+    ];
+
+    for (const src of sources) {
+      const docs = await src.model.find();
+      for (const doc of docs) {
+        for (const field of src.fields) {
+          const url = doc[field.urlField];
+          if (!url || existingUrls.has(url)) continue;
+
+          if (url.startsWith("http://") || url.startsWith("https://")) {
+            const ext = path.extname(new URL(url).pathname) || ".jpg";
+            const originalName = `${doc[field.nameField] || src.modelName}${ext}`;
+            const category = field.fileType || categoryFromExt(ext);
+            await Media.create({
+              filename: path.basename(url),
+              originalName,
+              mimeType: guessMimeType(ext),
+              size: 0,
+              path: "",
+              url,
+              category,
+              usedBy: [{ model: src.modelName, modelId: doc._id, field: field.urlField }],
+              uploadedBy: req.user._id,
+            });
+            existingUrls.add(url);
+            synced++;
+            continue;
+          }
+
+          const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+          if (existingUrls.has(normalizedUrl)) continue;
+
+          const filename = path.basename(normalizedUrl);
+          const diskPath = path.join(uploadsDir, filename);
+          const ext = path.extname(filename);
+          const category = field.fileType || categoryFromExt(ext);
+          let fileSize = 0;
+
+          try {
+            if (fs.existsSync(diskPath)) {
+              fileSize = fs.statSync(diskPath).size;
+            }
+          } catch { /* file may not exist yet */ }
+
+          const originalName = `${doc[field.nameField] || src.modelName} - ${field.urlField}${ext}`;
+
+          await Media.create({
+            filename,
+            originalName,
+            mimeType: guessMimeType(ext),
+            size: fileSize,
+            path: diskPath,
+            url: normalizedUrl,
+            category,
+            usedBy: [{ model: src.modelName, modelId: doc._id, field: field.urlField }],
+            uploadedBy: req.user._id,
+          });
+          existingUrls.add(normalizedUrl);
+          synced++;
+        }
+      }
+    }
+
+    if (fs.existsSync(uploadsDir)) {
+      const diskFiles = fs.readdirSync(uploadsDir).filter((f) => f !== ".gitkeep");
+      for (const filename of diskFiles) {
+        const url = `/uploads/${filename}`;
+        if (existingUrls.has(url)) continue;
+
+        const diskPath = path.join(uploadsDir, filename);
+        let stat;
+        try { stat = fs.statSync(diskPath); } catch { continue; }
+        if (!stat.isFile()) continue;
+
+        const ext = path.extname(filename);
+        await Media.create({
+          filename,
+          originalName: filename,
+          mimeType: guessMimeType(ext),
+          size: stat.size,
+          path: diskPath,
+          url,
+          category: categoryFromExt(ext),
+          uploadedBy: req.user._id,
+        });
+        existingUrls.add(url);
+        synced++;
+      }
+    }
+
+    res.json({ message: `Sync complete. ${synced} new file(s) indexed.`, synced });
+  } catch (error) {
+    console.error("Sync media error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

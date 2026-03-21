@@ -359,6 +359,26 @@ export default function AdminMedia() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [detailId, setDetailId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+
+  const runSync = useCallback(async (silent = false) => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      const res = await api.post('/media/sync');
+      if (!silent && res.data?.synced > 0) {
+        setSyncDone(true);
+        setTimeout(() => setSyncDone(false), 3000);
+      }
+      return res.data?.synced || 0;
+    } catch (e) {
+      console.error('Media sync error:', e);
+      return 0;
+    } finally {
+      setSyncing(false);
+    }
+  }, [syncing]);
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
@@ -402,6 +422,19 @@ export default function AdminMedia() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    let mounted = true;
+    const autoSync = async () => {
+      const synced = await runSync(true);
+      if (mounted && synced > 0) {
+        fetchStats();
+        fetchList({ offset: 0, append: false });
+      }
+    };
+    autoSync();
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 300);
@@ -454,14 +487,38 @@ export default function AdminMedia() {
 
   return (
     <div>
+      <style>{`@keyframes media-spin { to { transform: rotate(360deg); } }`}</style>
       <div style={st.headerRow}>
         <div>
           <h1 style={st.title}>Media Library</h1>
           <p style={st.subtitle}>Upload, organize, and manage church media assets</p>
         </div>
-        <button type="button" style={st.uploadBtn} onClick={() => setUploadOpen(true)}>
-          Upload Files
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {syncDone && <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>Synced!</span>}
+          <button
+            type="button"
+            style={st.syncBtn}
+            disabled={syncing}
+            onClick={async () => {
+              const synced = await runSync(false);
+              if (synced > 0) {
+                fetchStats();
+                fetchList({ offset: 0, append: false });
+              }
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={syncing ? { animation: 'media-spin 1s linear infinite' } : {}}>
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+            </svg>
+            {syncing ? 'Syncing...' : 'Sync Files'}
+          </button>
+          <button type="button" style={st.uploadBtn} onClick={() => setUploadOpen(true)}>
+            Upload Files
+          </button>
+        </div>
       </div>
 
       <div style={st.statsGrid}>
@@ -857,6 +914,11 @@ const st = {
     padding: '10px 22px', fontSize: 14, fontWeight: 700, color: '#fff',
     background: '#0ea5e9', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
     boxShadow: '0 2px 8px rgba(14,165,233,0.35)',
+  },
+  syncBtn: {
+    display: 'flex', alignItems: 'center', gap: 7,
+    padding: '10px 18px', fontSize: 13, fontWeight: 700, color: '#334155',
+    background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit',
   },
   statsGrid: {
     display: 'grid',

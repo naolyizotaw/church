@@ -16,11 +16,11 @@ const mediaSchema = new mongoose.Schema(
     },
     size: {
       type: Number,
-      required: true,
+      default: 0,
     },
     path: {
       type: String,
-      required: true,
+      default: "",
     },
     url: {
       type: String,

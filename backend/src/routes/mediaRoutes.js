@@ -9,6 +9,7 @@ import {
   getMediaById,
   deleteMedia,
   getMediaStats,
+  syncMedia,
 } from "../controllers/mediaController.js";
 import { protect } from "../middleware/auth.js";
 import { admin } from "../middleware/admin.js";
@@ -34,6 +35,7 @@ const router = express.Router();
 
 router.get("/", protect, admin, getMediaFiles);
 router.get("/stats", protect, admin, getMediaStats);
+router.post("/sync", protect, admin, syncMedia);
 router.post("/upload", protect, admin, upload.single("file"), uploadMedia);
 router.post("/upload-bulk", protect, admin, upload.array("files", 20), uploadBulkMedia);
 router.get("/:id", protect, admin, getMediaById);
