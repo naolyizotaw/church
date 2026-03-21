@@ -52,7 +52,6 @@ const pageCSS = `
 }
 
 .sermon-card {
-  animation: sermonFadeUp 0.5s ease forwards;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .sermon-card:hover {
@@ -139,17 +138,95 @@ const pageCSS = `
   color: #b8860b;
 }
 
+/* ── E. Page entrance ── */
+@keyframes sermonPageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.sermon-page-enter { animation: sermonPageIn 0.4s ease forwards; }
+
+/* ── A & C. Scroll-reveal (section header, filter row) ── */
+@keyframes sermonSectionIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.sermon-scroll-reveal { opacity: 0; }
+.sermon-scroll-reveal.visible {
+  animation: sermonSectionIn 0.6s ease forwards;
+}
+
+/* ── B. Staggered card reveal ── */
+@keyframes sermonCardReveal {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sermon-card-reveal .sermon-card { opacity: 0; }
+.sermon-card-reveal.visible .sermon-card {
+  animation: sermonCardReveal 0.5s ease forwards;
+}
+
+/* ── D. Hero thumbnail entrance + float ── */
+@keyframes sermonThumbEnter {
+  from { opacity: 0; transform: translateX(30px) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+.sermon-hero-thumb-enter {
+  opacity: 0;
+  animation: sermonThumbEnter 0.7s ease 0.3s forwards;
+}
+.sermon-hero-thumb-enter.entered {
+  animation: thumbFloat 4s ease-in-out infinite;
+  opacity: 1;
+}
+
+/* ── Accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+  .sermon-page-enter,
+  .sermon-scroll-reveal.visible,
+  .sermon-card-reveal.visible .sermon-card,
+  .sermon-hero-thumb-enter,
+  .sermon-hero-thumb-enter.entered {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 @media (max-width: 1024px) {
   .sermon-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .sermon-hero-inner { flex-direction: column !important; align-items: center !important; }
   .sermon-hero-text { align-items: center !important; }
-  .sermon-hero-thumb { width: 100% !important; max-width: 480px; }
+  .sermon-hero-thumb { width: 100% !important; max-width: 420px; }
   .sermon-hero-actions { justify-content: center !important; }
   .sermon-mosaic-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .sermon-section-wrap { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+  .sermon-hero-section { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
 }
 @media (max-width: 640px) {
   .sermon-cards-grid { grid-template-columns: 1fr !important; }
   .sermon-mosaic-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Hero: smaller title, centered meta with more spacing */
+  .sermon-hero-inner h1 {
+    font-size: clamp(1.65rem, 4vw + 0.65rem, 2.1rem) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 14px !important;
+  }
+  .sermon-hero-meta {
+    justify-content: center !important;
+    gap: 20px !important;
+  }
+
+  /* Section header & filters */
+  .sermon-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .sermon-hero-thumb { max-width: 320px !important; }
+  .sermon-section-search { width: 100% !important; }
+  .sermon-filter-row { gap: 8px !important; }
+  .sermon-filter-row .sermon-filter-btn { padding: 6px 12px !important; font-size: 0.8rem !important; }
 }
 `;
 
@@ -215,12 +292,68 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+/** Keeps "Mar 22, 2026" on one line (comma + year won’t split across rows). */
+function formatHeroDate(dateStr) {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  const s = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return s.replace(/,\s+/, ',\u00a0');
+}
+
 const MOSAIC_PLACEHOLDER_GRADIENTS = [
   'linear-gradient(145deg, #1e3a5f 0%, #16213e 100%)',
   'linear-gradient(145deg, #243b55 0%, #1a1a2e 100%)',
   'linear-gradient(145deg, #2d4a6f 0%, #1e2a3a 100%)',
   'linear-gradient(145deg, #1a2744 0%, #243352 100%)',
 ];
+
+function useScrollReveal(threshold = 0.15) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); obs.unobserve(el); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return ref;
+}
+
+function useCardReveal(itemCount, threshold = 0.1) {
+  const ref = useRef(null);
+  const revealed = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || itemCount === 0) return;
+    if (revealed.current) {
+      el.querySelectorAll('.sermon-card').forEach((card) => {
+        if (card.style.opacity !== '1' && !card.style.animationDelay) {
+          card.style.opacity = '1';
+        }
+      });
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          revealed.current = true;
+          el.classList.add('visible');
+          el.querySelectorAll('.sermon-card').forEach((card, i) => {
+            card.style.animationDelay = `${i * 0.1}s`;
+          });
+          obs.unobserve(el);
+        }
+      },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold, itemCount]);
+  return ref;
+}
 
 export default function Sermons() {
   const [sermons, setSermons] = useState([]);
@@ -235,6 +368,11 @@ export default function Sermons() {
   const [totalPages, setTotalPages] = useState(1);
   const [openDropdown, setOpenDropdown] = useState(null);
   const styleRef = useRef(null);
+  const thumbRef = useRef(null);
+
+  const sectionHeaderRef = useScrollReveal(0.15);
+  const filterRowRef = useScrollReveal(0.15);
+  const cardsGridRef = useCardReveal(sermons.length, 0.1);
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -305,10 +443,10 @@ export default function Sermons() {
   };
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: '#faf8f5', minHeight: '100vh' }}>
+    <div className="sermon-page-enter" style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: '#faf8f5', minHeight: '100vh' }}>
 
       {/* ── Hero / Featured Sermon ── */}
-      <section style={heroStyles.section}>
+      <section className="sermon-hero-section" style={heroStyles.section}>
         <div style={heroStyles.mosaicWrap}>
           <div className="sermon-mosaic-grid" style={heroStyles.mosaicGrid}>
             {sermons.length > 0
@@ -350,14 +488,22 @@ export default function Sermons() {
               <div style={heroStyles.textCol}>
                 <span style={heroStyles.tag}>{featured.series || 'LATEST MESSAGE'}</span>
                 <h1 style={heroStyles.title}>{featured.title}</h1>
-                <div style={heroStyles.meta}>
-                  <span style={heroStyles.metaItem}>
-                    <PersonIcon /> {featured.speaker}
+                <div className="sermon-hero-meta" style={heroStyles.meta}>
+                  <div style={heroStyles.metaGroupSpeaker}>
+                    <span style={heroStyles.metaIcon} aria-hidden>
+                      <PersonIcon />
+                    </span>
+                    <span style={heroStyles.metaSpeaker}>{featured.speaker || 'Speaker'}</span>
+                  </div>
+                  <span className="sermon-hero-meta-sep" style={heroStyles.metaDot} aria-hidden>
+                    &bull;
                   </span>
-                  <span style={heroStyles.metaDot}>&bull;</span>
-                  <span style={heroStyles.metaItem}>
-                    <CalendarIcon /> {formatDate(featured.date)}
-                  </span>
+                  <div style={heroStyles.metaGroupDate}>
+                    <span style={heroStyles.metaIcon} aria-hidden>
+                      <CalendarIcon />
+                    </span>
+                    <span style={heroStyles.metaDate}>{formatHeroDate(featured.date)}</span>
+                  </div>
                 </div>
                 <div className="sermon-hero-actions" style={heroStyles.actions}>
                   <Link to={`/sermons/${featured._id}?play=1`} className="sermon-watch-btn" style={{ ...heroStyles.watchBtn, textDecoration: 'none' }}>
@@ -375,7 +521,17 @@ export default function Sermons() {
                   </button>
                 </div>
               </div>
-              <Link to={`/sermons/${featured._id}?play=1`} className="sermon-hero-thumb" style={heroStyles.playerFrame}>
+              <Link
+                to={`/sermons/${featured._id}?play=1`}
+                className="sermon-hero-thumb sermon-hero-thumb-enter"
+                ref={thumbRef}
+                onAnimationEnd={(e) => {
+                  if (e.animationName === 'sermonThumbEnter') {
+                    e.currentTarget.classList.add('entered');
+                  }
+                }}
+                style={heroStyles.playerFrame}
+              >
                 <div style={heroStyles.playerImgWrap}>
                   <img
                     src={featured.thumbnailUrl || '/hero.jpg'}
@@ -406,10 +562,10 @@ export default function Sermons() {
       </section>
 
       {/* ── Recent Sermons Header ── */}
-      <section style={sectionStyles.wrapper}>
-        <div style={sectionStyles.header}>
+      <section className="sermon-section-wrap" style={sectionStyles.wrapper}>
+        <div className="sermon-section-header sermon-scroll-reveal" ref={sectionHeaderRef} style={sectionStyles.header}>
           <h2 style={sectionStyles.title}>Recent Sermons</h2>
-          <div style={sectionStyles.searchWrap}>
+          <div className="sermon-section-search" style={sectionStyles.searchWrap}>
             <SearchIcon />
             <input
               className="sermon-search-input"
@@ -423,7 +579,7 @@ export default function Sermons() {
         </div>
 
         {/* ── Filters ── */}
-        <div style={filterStyles.row}>
+        <div className="sermon-filter-row sermon-scroll-reveal" ref={filterRowRef} style={filterStyles.row}>
           <FilterButton
             label={filters.series || 'All Series'}
             active={!!filters.series}
@@ -473,7 +629,7 @@ export default function Sermons() {
             </div>
           </div>
         ) : (
-          <div className="sermon-cards-grid" style={cardStyles.grid}>
+          <div className="sermon-cards-grid sermon-card-reveal" ref={cardsGridRef} style={cardStyles.grid}>
             {sermons.map((sermon, i) => (
               <SermonCard key={sermon._id} sermon={sermon} index={i} />
             ))}
@@ -672,19 +828,55 @@ const heroStyles = {
   },
   meta: {
     display: 'flex',
+    flexWrap: 'nowrap',
     alignItems: 'center',
     gap: '8px',
     marginBottom: '24px',
   },
-  metaItem: {
-    display: 'flex',
+  metaGroupSpeaker: {
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',
-    color: '#e8e0d0',
-    fontSize: '0.85rem',
+    minWidth: 0,
+  },
+  metaGroupDate: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    flexShrink: 0,
+  },
+  metaIcon: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'rgba(248,244,234,0.92)',
+    flexShrink: 0,
+    lineHeight: 0,
+  },
+  metaSpeaker: {
+    color: '#f0ebe3',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    lineHeight: 1.3,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  metaDate: {
+    color: '#f0ebe3',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    lineHeight: 1.3,
+    whiteSpace: 'nowrap',
   },
   metaDot: {
     color: '#a89880',
+    flexShrink: 0,
+    fontSize: '0.6rem',
+    lineHeight: 1,
+    paddingBottom: '1px',
   },
   actions: {
     display: 'flex',
@@ -782,11 +974,13 @@ const sectionStyles = {
   wrapper: {
     width: '100%',
     padding: '2.5rem 4rem 3rem',
+    boxSizing: 'border-box',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '12px',
     marginBottom: '1.25rem',
   },
   title: {
@@ -794,6 +988,7 @@ const sectionStyles = {
     fontWeight: '700',
     color: '#1a1a2e',
     margin: 0,
+    whiteSpace: 'nowrap',
   },
   searchWrap: {
     display: 'flex',
@@ -803,7 +998,8 @@ const sectionStyles = {
     border: '1px solid #e8e0d0',
     borderRadius: '10px',
     padding: '9px 14px',
-    width: '300px',
+    width: '100%',
+    maxWidth: '300px',
   },
   searchInput: {
     border: 'none',
