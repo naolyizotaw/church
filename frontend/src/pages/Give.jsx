@@ -485,7 +485,7 @@ export default function Give() {
 
       {/* Main Content - Two Column */}
       <section style={mainStyles.section}>
-        <div style={mainStyles.grid}>
+        <div className="give-page-grid" style={mainStyles.grid}>
 
           {/* Left Column - Donation Form */}
           <div className="give-left-card give-pop-in give-pop-d1" style={mainStyles.leftCard}>
@@ -564,7 +564,7 @@ export default function Give() {
             </div>
 
             <p style={formStyles.amountLabel}>Select Amount / መጠን ይምረጡ</p>
-            <div style={formStyles.amountGrid}>
+            <div className="give-amounts-grid" style={formStyles.amountGrid}>
               {amounts.map((amt) => {
                 const isActive = selectedAmount === amt && !customAmount;
                 return (

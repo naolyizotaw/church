@@ -263,7 +263,7 @@ export default function AdminDonations() {
             </p>
           </div>
         ) : (
-          <div style={st.tableWrap}>
+          <div className="admin-table-wrap" style={st.tableWrap}>
             <table style={st.table}>
               <thead>
                 <tr>

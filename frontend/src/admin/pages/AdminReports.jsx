@@ -673,7 +673,7 @@ export default function AdminReports() {
                   {topDonors.length === 0 ? (
                     <p style={st.muted}>No donors in this range.</p>
                   ) : (
-                    <div style={st.tableWrap}>
+                    <div className="admin-table-wrap" style={st.tableWrap}>
                       <table style={st.table}>
                         <thead>
                           <tr>
@@ -715,7 +715,7 @@ export default function AdminReports() {
                   {donationsList.length === 0 ? (
                     <p style={st.muted}>No rows for the selected filters.</p>
                   ) : (
-                    <div style={st.tableWrap}>
+                    <div className="admin-table-wrap" style={st.tableWrap}>
                       <table style={st.table}>
                         <thead>
                           <tr>

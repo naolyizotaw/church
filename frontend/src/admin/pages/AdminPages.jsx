@@ -519,7 +519,7 @@ function PagesSection({ showToast }) {
             <p style={st.emptyStateText}>Try a different title or slug.</p>
           </div>
         ) : (
-          <div style={st.tableWrap}>
+          <div className="admin-table-wrap" style={st.tableWrap}>
             <table style={st.table}>
               <thead>
                 <tr>
@@ -1090,7 +1090,7 @@ function MinistriesSection({ showToast }) {
             <button type="button" style={st.addBtn} onClick={openCreate}>+ Add Ministry</button>
           </div>
         ) : (
-          <div style={st.tableWrap}>
+          <div className="admin-table-wrap" style={st.tableWrap}>
           <table style={st.table}>
             <thead>
               <tr>
@@ -1402,7 +1402,7 @@ function VerseSection({ showToast }) {
             <p style={st.emptyStateText}>Try a different search term.</p>
           </div>
         ) : (
-          <div style={st.tableWrap}>
+          <div className="admin-table-wrap" style={st.tableWrap}>
           <table style={st.table}>
             <thead>
               <tr>

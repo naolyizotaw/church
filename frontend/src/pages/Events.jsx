@@ -688,35 +688,29 @@ function CalendarWidget({ currentDate, eventDays = [15] }) {
   const isEventDay = (day) => eventDays.includes(day);
 
   return (
-    <div className="events-calendar-wrap" style={calStyles.wrapper}>
-      <div style={calStyles.header}>
-        <button className="events-nav-arrow" onClick={prevMonth} style={calStyles.arrow}>
+    <div className="events-calendar-wrap bg-white rounded-[14px] p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-slate-100">
+      <div className="flex justify-between items-center mb-6 px-1">
+        <button className="events-nav-arrow w-[30px] h-[30px] rounded-full border-none bg-transparent text-slate-500 text-base flex items-center justify-center cursor-pointer outline-none font-semibold leading-none p-0" onClick={prevMonth}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
-        <span style={calStyles.monthLabel}>{MONTH_FULL[calMonth]} {calYear}</span>
-        <button className="events-nav-arrow" onClick={nextMonth} style={calStyles.arrow}>
+        <span className="text-base font-bold text-slate-900">{MONTH_FULL[calMonth]} {calYear}</span>
+        <button className="events-nav-arrow w-[30px] h-[30px] rounded-full border-none bg-transparent text-slate-500 text-base flex items-center justify-center cursor-pointer outline-none font-semibold leading-none p-0" onClick={nextMonth}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
         </button>
       </div>
-      <div style={calStyles.dayNames}>
+      <div className="grid grid-cols-7 mb-3">
         {DAY_ABBR.map((d, i) => (
-          <span key={i} style={calStyles.dayName}>{d}</span>
+          <span key={i} className="text-center text-xs font-semibold text-slate-400 py-1">{d}</span>
         ))}
       </div>
-      <div style={calStyles.grid}>
+      <div className="grid grid-cols-7 gap-y-2">
         {days.map((day, i) => {
           const today_ = isToday(day);
           const event_ = isEventDay(day) && !today_;
           return (
             <span
               key={i}
-              className={`${day ? 'events-cal-day' : ''} ${today_ ? 'events-cal-today' : ''}`}
-              style={{
-                ...calStyles.day,
-                ...(day === null ? { visibility: 'hidden' } : {}),
-                ...(today_ ? calStyles.today : {}),
-                ...(event_ ? calStyles.eventDay : {}),
-              }}
+              className={`text-center text-[0.82rem] rounded-full w-[34px] h-[34px] flex items-center justify-center mx-auto font-medium ${day ? 'events-cal-day text-gray-700' : 'invisible'} ${today_ ? 'events-cal-today bg-sky-500 text-white font-bold' : ''} ${event_ ? 'border-2 border-sky-500 text-slate-900 font-semibold' : ''}`}
             >
               {day}
             </span>
@@ -729,9 +723,9 @@ function CalendarWidget({ currentDate, eventDays = [15] }) {
 
 function WeeklyGatherings() {
   return (
-    <div className="events-gather-wrap" style={gatherStyles.wrapper}>
-      <h4 style={gatherStyles.heading}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <div className="events-gather-wrap bg-[#e8f7fa] rounded-[14px] px-5 py-5 border border-[#d1eef5]">
+      <h4 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2.5">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
           <rect x="3" y="4" width="18" height="18" rx="2" stroke="#0ea5e9" strokeWidth="2" fill="none"/>
           <path d="M3 10h18" stroke="#0ea5e9" strokeWidth="2"/>
           <path d="M8 2v4M16 2v4" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round"/>
@@ -742,12 +736,9 @@ function WeeklyGatherings() {
         Weekly Gatherings
       </h4>
       {WEEKLY_GATHERINGS.map((g, i) => (
-        <div key={i} style={{
-          ...gatherStyles.row,
-          ...(i === WEEKLY_GATHERINGS.length - 1 ? { borderBottom: 'none' } : {}),
-        }}>
-          <span style={gatherStyles.name}>{g.name}</span>
-          <span style={gatherStyles.time}>{g.time}</span>
+        <div key={i} className={`flex justify-between items-center py-2.5 ${i < WEEKLY_GATHERINGS.length - 1 ? 'border-b border-sky-500/12' : ''}`}>
+          <span className="text-[0.88rem] text-gray-700 font-medium">{g.name}</span>
+          <span className="text-[0.88rem] text-slate-900 font-bold">{g.time}</span>
         </div>
       ))}
     </div>
@@ -884,57 +875,57 @@ function EventDetailModal({ event, onClose }) {
   };
 
   return (
-    <div style={modalStyles.overlay} onClick={onClose}>
-      <div style={modalStyles.modal} onClick={e => e.stopPropagation()}>
-        <button style={modalStyles.closeBtn} onClick={onClose}>&times;</button>
-        <img src={imgSrc} alt={event.title} style={modalStyles.poster} />
-        <div style={modalStyles.body}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-            <span style={{ ...modalStyles.catPill, background: catColor }}>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-            {event.requiresRegistration && <span style={modalStyles.regPill}>Registration Required</span>}
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[300] p-3 sm:p-4" onClick={onClose}>
+      <div className="events-detail-modal relative bg-white rounded-2xl w-full max-w-full sm:max-w-[560px] max-h-[90vh] overflow-y-auto shadow-[0_25px_60px_rgba(0,0,0,0.2)]" onClick={e => e.stopPropagation()}>
+        <button className="absolute top-3.5 right-3.5 w-[34px] h-[34px] rounded-full border-none bg-black/50 text-white text-xl cursor-pointer flex items-center justify-center z-10 leading-none" onClick={onClose}>&times;</button>
+        <img src={imgSrc} alt={event.title} className="w-full h-[180px] sm:h-[260px] object-cover block rounded-t-2xl" />
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="inline-block px-3 py-1 rounded-[14px] text-white text-[0.72rem] font-bold capitalize tracking-wide" style={{ background: catColor }}>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            {event.requiresRegistration && <span className="inline-block px-2.5 py-1 rounded-[14px] bg-amber-100 text-amber-800 text-[0.72rem] font-bold tracking-wide">Registration Required</span>}
           </div>
-          <h2 style={modalStyles.title}>{event.title}</h2>
-          <p style={modalStyles.desc}>{event.description}</p>
-          <div style={modalStyles.metaSection}>
-            <div style={modalStyles.metaItem}>
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-3 leading-snug">{event.title}</h2>
+          <p className="text-sm text-slate-600 mb-5 leading-relaxed">{event.description}</p>
+          <div className="flex flex-col gap-2 mb-5 p-3 sm:p-4 bg-slate-50 rounded-[10px] border border-slate-100">
+            <div className="flex items-center gap-2.5 text-[0.88rem] text-slate-700 font-medium">
               <ClockIcon />
               <span>{isMultiDay ? `${dateStr} – ${endDateStr}` : `${dateStr} at ${timeStr}${modalEndTimeStr ? ` – ${modalEndTimeStr}` : ''}`}</span>
             </div>
             {event.location && (
-              <div style={modalStyles.metaItem}>
+              <div className="flex items-center gap-2.5 text-[0.88rem] text-slate-700 font-medium">
                 <LocationIcon />
                 <span>{event.location}</span>
               </div>
             )}
           </div>
-          <div style={modalStyles.actionRow}>
-            <button className="events-modal-action events-modal-cal" style={modalStyles.calBtn} onClick={() => generateICS(event)}>
+          <div className="flex gap-2.5 mb-4">
+            <button className="events-modal-action events-modal-cal flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-[10px] border border-slate-200 bg-slate-50 text-slate-700 text-[0.85rem] font-semibold cursor-pointer outline-none" onClick={() => generateICS(event)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              Add to Calendar
+              Calendar
             </button>
-            <button className="events-modal-action events-modal-share" style={modalStyles.shareBtn} onClick={() => handleShare(event)}>
+            <button className="events-modal-action events-modal-share flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-[10px] border border-slate-200 bg-slate-50 text-slate-700 text-[0.85rem] font-semibold cursor-pointer outline-none" onClick={() => handleShare(event)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
               Share
             </button>
           </div>
 
           {event.requiresRegistration && (
-            <div style={modalStyles.regSection}>
-              <h3 style={modalStyles.regTitle}>Register for this Event</h3>
+            <div className="border-t border-slate-100 pt-5">
+              <h3 className="text-base font-bold text-slate-900 mb-3">Register for this Event</h3>
               {regStatus === 'success' ? (
-                <div style={modalStyles.successMsg}>
+                <div className="flex items-center gap-2.5 p-4 bg-green-50 rounded-[10px] border border-green-200 text-green-700 text-sm font-semibold">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                   <span>You have been registered successfully!</span>
                 </div>
               ) : (
-                <form onSubmit={handleRegSubmit} style={modalStyles.regForm}>
+                <form onSubmit={handleRegSubmit} className="flex flex-col gap-2.5">
                   {typeof regStatus === 'string' && regStatus !== 'success' && (
-                    <div style={modalStyles.errorMsg}>{regStatus}</div>
+                    <div className="px-4 py-2.5 bg-red-50 rounded-lg border border-red-200 text-red-600 text-[0.85rem] font-medium">{regStatus}</div>
                   )}
-                  <input style={modalStyles.regInput} placeholder="Full Name *" required value={regForm.name} onChange={e => setRegForm({ ...regForm, name: e.target.value })} />
-                  <input style={modalStyles.regInput} type="tel" placeholder="Phone Number *" required value={regForm.phone} onChange={e => setRegForm({ ...regForm, phone: e.target.value })} />
-                  <input style={modalStyles.regInput} type="email" placeholder="Email Address (optional)" value={regForm.email} onChange={e => setRegForm({ ...regForm, email: e.target.value })} />
-                  <button type="submit" style={modalStyles.regSubmitBtn} disabled={submitting}>
+                  <input className="px-4 py-3 rounded-[10px] border border-slate-200 text-sm text-slate-900 outline-none bg-slate-50" placeholder="Full Name *" required value={regForm.name} onChange={e => setRegForm({ ...regForm, name: e.target.value })} />
+                  <input className="px-4 py-3 rounded-[10px] border border-slate-200 text-sm text-slate-900 outline-none bg-slate-50" type="tel" placeholder="Phone Number *" required value={regForm.phone} onChange={e => setRegForm({ ...regForm, phone: e.target.value })} />
+                  <input className="px-4 py-3 rounded-[10px] border border-slate-200 text-sm text-slate-900 outline-none bg-slate-50" type="email" placeholder="Email Address (optional)" value={regForm.email} onChange={e => setRegForm({ ...regForm, email: e.target.value })} />
+                  <button type="submit" className="px-4 py-3 rounded-[10px] border-none bg-sky-500 text-white text-sm font-bold cursor-pointer mt-1 hover:bg-sky-600 transition-colors" disabled={submitting}>
                     {submitting ? 'Registering...' : 'Register Now'}
                   </button>
                 </form>
@@ -971,42 +962,42 @@ function EventCard({ event, index, onViewDetails }) {
 
   return (
     <div className="events-card-anim events-card-wrap">
-      <div className="events-card-inner" style={{ ...cardStyles.card, cursor: 'pointer' }} onClick={handleCardClick}>
+      <div className="events-card-inner bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)] border border-[#e8ecf1] cursor-pointer" onClick={handleCardClick}>
         <div className="events-card-top-accent" />
-        <div style={cardStyles.imageWrap}>
-          <img className="events-card-img" src={imgSrc} alt={event.title} style={cardStyles.image} />
+        <div className="relative h-[180px] sm:h-[210px] overflow-hidden">
+          <img className="events-card-img w-full h-full object-cover block" src={imgSrc} alt={event.title} />
           <div className="events-card-overlay" />
-          <div className="events-badge-wrap" style={cardStyles.dateBadge}>
-            <span style={cardStyles.badgeMonth}>{month}</span>
-            <span style={cardStyles.badgeDay}>{isMultiDay ? `${day}–${endRaw.getDate()}` : day}</span>
+          <div className="events-badge-wrap absolute top-3.5 left-3.5 bg-white rounded-[10px] px-3 py-[7px] text-center shadow-[0_4px_14px_rgba(0,0,0,0.12)] min-w-[48px] z-[2]">
+            <span className="block text-[0.6rem] font-extrabold text-red-500 tracking-widest uppercase leading-snug">{month}</span>
+            <span className="block text-2xl font-extrabold text-slate-900 leading-none">{isMultiDay ? `${day}–${endRaw.getDate()}` : day}</span>
             {isMultiDay && MONTH_ABBR[endRaw.getMonth()] !== month && (
-              <span style={{ ...cardStyles.badgeMonth, fontSize: 9, marginTop: -2 }}>{MONTH_ABBR[endRaw.getMonth()]}</span>
+              <span className="block text-[9px] font-extrabold text-red-500 tracking-widest uppercase -mt-0.5">{MONTH_ABBR[endRaw.getMonth()]}</span>
             )}
           </div>
-          <span className="events-cat-pill" style={{ ...cardStyles.categoryTag, background: catColor }}>
+          <span className="events-cat-pill absolute top-3.5 right-3.5 text-white text-[0.68rem] font-bold px-3 py-1 rounded-[14px] tracking-wide capitalize shadow-[0_2px_8px_rgba(0,0,0,0.15)] z-[2]" style={{ background: catColor }}>
             {catLabel}
           </span>
         </div>
-        <div style={cardStyles.body}>
-          <h3 style={cardStyles.title}>{event.title}</h3>
-          <p style={cardStyles.desc}>{event.description}</p>
-          <div style={cardStyles.metaRow}>
+        <div className="p-4 sm:p-5">
+          <h3 className="text-base sm:text-[1.08rem] font-bold text-slate-900 mb-2 leading-snug">{event.title}</h3>
+          <p className="text-[0.86rem] text-slate-500 mb-4 leading-relaxed line-clamp-2">{event.description}</p>
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="events-meta-icon"><ClockIcon /></span>
-            <span style={cardStyles.metaText}>
+            <span className="text-[0.84rem] text-slate-600 font-medium">
               {isMultiDay
                 ? `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endRaw.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                 : `${timeStr}${endTimeStr ? ` – ${endTimeStr}` : ''}`}
             </span>
           </div>
           {event.location && (
-            <div style={cardStyles.metaRow}>
+            <div className="flex items-center gap-2 mb-1.5">
               <span className="events-meta-icon"><LocationIcon /></span>
-              <span style={cardStyles.metaText}>{event.location}</span>
+              <span className="text-[0.84rem] text-slate-600 font-medium">{event.location}</span>
             </div>
           )}
-          <div style={cardStyles.btnRow}>
+          <div className="flex gap-2 mt-3 items-center">
             {event.requiresRegistration && (
-              <button className="events-cta-btn" style={cardStyles.registerBtn} onClick={() => onViewDetails(event)}>
+              <button className="events-cta-btn flex-1 px-4 py-2.5 bg-sky-500 text-white border-none rounded-[10px] text-[0.85rem] font-semibold cursor-pointer outline-none text-center tracking-wide" onClick={() => onViewDetails(event)}>
                 Register
               </button>
             )}
@@ -1073,72 +1064,52 @@ export default function Events() {
   });
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div className="font-[Segoe_UI,system-ui,sans-serif]">
 
-      {/* ── Hero ─────────────────────────────────────────── */}
-      <section style={heroStyles.section}>
-        <div style={heroStyles.overlay} />
+      {/* Hero */}
+      <section className="relative min-h-[280px] sm:min-h-[340px] flex items-center justify-center bg-cover bg-center-top text-white" style={{ backgroundImage: "url('/hero.jpg')" }}>
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,20,50,0.75) 0%, rgba(10,20,50,0.68) 100%)' }} />
         <div className="events-hero-particles">
           {HERO_PARTICLES.map((p, i) => (
-            <div
-              key={i}
-              className="events-hero-particle"
-              style={{
-                left: p.left, bottom: p.bottom,
-                width: p.width, height: p.width,
-                animationDelay: p.delay, animationDuration: p.duration,
-              }}
-            />
+            <div key={i} className="events-hero-particle" style={{ left: p.left, bottom: p.bottom, width: p.width, height: p.width, animationDelay: p.delay, animationDuration: p.duration }} />
           ))}
         </div>
-        <div className="events-hero-content" style={heroStyles.content}>
-          <h1 style={heroStyles.title}>
+        <div className="events-hero-content relative z-[1] text-center px-4 sm:px-6 py-12 sm:py-16 md:py-18 max-w-[700px]">
+          <h1 className="text-[clamp(1.5rem,4vw,2.6rem)] font-extrabold leading-[1.2] mb-4 sm:mb-5 text-white">
             Church Events / የቤተክርስቲያን<br />ፕሮግራሞች
           </h1>
-          <p style={heroStyles.scripture}>
+          <p className="text-sm sm:text-base text-slate-400 m-0 italic leading-relaxed">
             &ldquo;Not neglecting to meet together...&rdquo; - Hebrews 10:25
           </p>
         </div>
       </section>
 
-      {/* ── Tabs & Filters ──────────────────────────────── */}
-      <section style={filterStyles.section}>
-        <div style={filterStyles.inner}>
-          <div style={filterStyles.tabGroup}>
-            <div style={filterStyles.tabPill}>
+      {/* Tabs & Filters */}
+      <section className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex">
+            <div className="flex bg-slate-100 rounded-lg p-1">
               <button
-                className="events-tab-btn"
+                className={`events-tab-btn px-4 sm:px-5 py-2 border-none text-[0.88rem] font-medium cursor-pointer outline-none rounded-md ${activeTab === 'upcoming' ? 'bg-white text-slate-900 font-semibold shadow-sm' : 'bg-transparent text-slate-400'}`}
                 onClick={() => setActiveTab('upcoming')}
-                style={{
-                  ...filterStyles.tab,
-                  ...(activeTab === 'upcoming' ? filterStyles.tabActive : {}),
-                }}
               >
-                Upcoming Events
+                Upcoming
               </button>
               <button
-                className="events-tab-btn"
+                className={`events-tab-btn px-4 sm:px-5 py-2 border-none text-[0.88rem] font-medium cursor-pointer outline-none rounded-md ${activeTab === 'past' ? 'bg-white text-slate-900 font-semibold shadow-sm' : 'bg-transparent text-slate-400'}`}
                 onClick={() => setActiveTab('past')}
-                style={{
-                  ...filterStyles.tab,
-                  ...(activeTab === 'past' ? filterStyles.tabActive : {}),
-                }}
               >
-                Past Events
+                Past
               </button>
             </div>
           </div>
-          <div style={filterStyles.filterGroup}>
-            <span style={filterStyles.filterLabel}>Filter by:</span>
+          <div className="flex items-center gap-2 flex-wrap overflow-x-auto pb-1">
+            <span className="text-[0.85rem] text-slate-500 font-medium mr-1 hidden sm:inline">Filter:</span>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.key}
-                className="events-filter-btn"
+                className={`events-filter-btn px-3 sm:px-4 py-1.5 border rounded-full text-[0.82rem] font-medium cursor-pointer outline-none whitespace-nowrap ${activeFilter === cat.key ? 'bg-sky-500 text-white border-sky-500 font-semibold' : 'bg-white text-slate-500 border-slate-200'}`}
                 onClick={() => setActiveFilter(cat.key)}
-                style={{
-                  ...filterStyles.filterBtn,
-                  ...(activeFilter === cat.key ? filterStyles.filterActive : {}),
-                }}
               >
                 {cat.label}
               </button>
@@ -1147,58 +1118,25 @@ export default function Events() {
         </div>
       </section>
 
-      {/* ── Main Content: Calendar + Events Grid ────────── */}
-      <section style={mainStyles.section}>
+      {/* Main Content */}
+      <section className="relative bg-[#f8f8f8] px-4 sm:px-6 lg:px-8 py-8 sm:py-10 overflow-hidden" style={{ backgroundImage: 'radial-gradient(circle, #e2e8f0 0.8px, transparent 0.8px)', backgroundSize: '24px 24px' }}>
         <div className="events-bg-elements">
-          {BG_CROSSES.map((c, i) => (
-            <span
-              key={`cross-${i}`}
-              className="events-float-cross"
-              style={{ left: c.left, animationDelay: c.delay, animationDuration: c.duration }}
-            >
-              ✝
-            </span>
-          ))}
-          {BG_ORBS.map((o, i) => (
-            <div
-              key={`orb-${i}`}
-              className="events-float-orb"
-              style={{
-                left: o.left, width: o.width, height: o.width,
-                animationDelay: o.delay, animationDuration: o.duration,
-              }}
-            />
-          ))}
-          {BG_DOVES.map((d, i) => (
-            <span
-              key={`dove-${i}`}
-              className="events-float-dove"
-              style={{ left: d.left, animationDelay: d.delay, animationDuration: d.duration }}
-            >
-              🕊
-            </span>
-          ))}
+          {BG_CROSSES.map((c, i) => (<span key={`cross-${i}`} className="events-float-cross" style={{ left: c.left, animationDelay: c.delay, animationDuration: c.duration }}>✝</span>))}
+          {BG_ORBS.map((o, i) => (<div key={`orb-${i}`} className="events-float-orb" style={{ left: o.left, width: o.width, height: o.width, animationDelay: o.delay, animationDuration: o.duration }} />))}
+          {BG_DOVES.map((d, i) => (<span key={`dove-${i}`} className="events-float-dove" style={{ left: d.left, animationDelay: d.delay, animationDuration: d.duration }}>🕊</span>))}
         </div>
-        <div style={mainStyles.inner}>
-
-          {/* Left Sidebar: Calendar + Weekly Gatherings */}
-          <aside className="events-calendar-anim" style={mainStyles.sidebar}>
+        <div className="relative z-[1] max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+          <aside className="events-calendar-anim hidden lg:flex lg:flex-col lg:w-[280px] lg:shrink-0 gap-6">
             <CalendarWidget currentDate={now} />
             <WeeklyGatherings />
           </aside>
-
-          {/* Right: Events Grid */}
-          <div style={mainStyles.eventsArea}>
+          <div className="flex-1 min-w-0 w-full">
             {loading ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '3rem' }}>
-                Loading events...
-              </p>
+              <p className="text-gray-500 text-center py-12">Loading events...</p>
             ) : filteredEvents.length === 0 ? (
-              <p style={{ color: '#6b7280', textAlign: 'center', padding: '3rem' }}>
-                No {activeTab} events{activeFilter !== 'all' ? ` in ${activeFilter}` : ''} at this time.
-              </p>
+              <p className="text-gray-500 text-center py-12">No {activeTab} events{activeFilter !== 'all' ? ` in ${activeFilter}` : ''} at this time.</p>
             ) : (
-              <div style={mainStyles.eventsGrid}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                 {filteredEvents.map((event, i) => (
                   <EventCard key={event._id} event={event} index={i} onViewDetails={setDetailEvent} />
                 ))}
@@ -1208,58 +1146,29 @@ export default function Events() {
         </div>
       </section>
 
-      {/* ── Stay Connected ───────────────────────────────── */}
-      <section style={newsletterStyles.section}>
-        <div style={newsletterStyles.wrapper}>
+      {/* Stay Connected */}
+      <section className="py-10 sm:py-14 px-4 sm:px-6 w-full bg-white">
+        <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-12 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #bae6fd 0%, #e0f2fe 40%, #f0f9ff 100%)' }}>
           <div className="events-stay-rays" />
           <div className="events-stay-shapes">
-            {STAY_SHAPES.map((s, i) => (
-              <span
-                key={i}
-                className="events-stay-shape"
-                style={{ left: s.left, animationDelay: s.delay, animationDuration: s.duration }}
-              >
-                {s.symbol}
-              </span>
-            ))}
+            {STAY_SHAPES.map((s, i) => (<span key={i} className="events-stay-shape" style={{ left: s.left, animationDelay: s.delay, animationDuration: s.duration }}>{s.symbol}</span>))}
           </div>
           <div className="events-stay-sparkles">
-            {STAY_SPARKLES.map((s, i) => (
-              <span
-                key={i}
-                className="events-stay-sparkle"
-                style={{
-                  left: s.left, width: s.size, height: s.size,
-                  animationDelay: s.delay, animationDuration: s.duration,
-                }}
-              />
-            ))}
+            {STAY_SPARKLES.map((s, i) => (<span key={i} className="events-stay-sparkle" style={{ left: s.left, width: s.size, height: s.size, animationDelay: s.delay, animationDuration: s.duration }} />))}
           </div>
-          <div style={newsletterStyles.inner}>
-            <div style={newsletterStyles.textCol}>
-              <h2 style={newsletterStyles.heading}>Stay Connected</h2>
-              <p style={newsletterStyles.sub}>
-                Get the latest updates on events and church news.
-              </p>
-              <p style={newsletterStyles.subAm}>
-                ስለ ዝግጅቶች እና የቤተክርስቲያን ዜናዎች ያግኙ።
-              </p>
+          <div className="relative z-[1] w-full flex flex-col md:flex-row items-center justify-between gap-6 flex-wrap">
+            <div className="flex-1 min-w-[200px] text-center md:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Stay Connected</h2>
+              <p className="text-sm sm:text-[0.95rem] text-slate-600 mb-1 leading-relaxed">Get the latest updates on events and church news.</p>
+              <p className="text-[0.88rem] text-slate-500 m-0 italic leading-relaxed">ስለ ዝግጅቶች እና የቤተክርስቲያን ዜናዎች ያግኙ።</p>
             </div>
-            <div style={newsletterStyles.formCol}>
+            <div className="flex items-center">
               {subscribed ? (
-                <p style={newsletterStyles.thanks}>Thank you for subscribing!</p>
+                <p className="text-sky-500 font-bold text-base m-0 bg-white px-6 py-2.5 rounded-lg shadow-sm">Thank you for subscribing!</p>
               ) : (
-                <form onSubmit={handleSubscribe} style={newsletterStyles.form}>
-                  <input
-                    type="email"
-                    className="events-email-input"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    style={newsletterStyles.input}
-                  />
-                  <button type="submit" className="events-sub-btn" style={newsletterStyles.btn}>Subscribe</button>
+                <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
+                  <input type="email" className="events-email-input px-4 py-3 border-[1.5px] border-slate-300 rounded-[10px] text-sm bg-white text-slate-900 outline-none w-full sm:w-[280px] shadow-sm" placeholder="Enter your email address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <button type="submit" className="events-sub-btn text-white border-none px-6 sm:px-8 py-3 rounded-[10px] font-bold text-[0.88rem] cursor-pointer tracking-wide uppercase" style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%)', boxShadow: '0 4px 15px rgba(14,165,233,0.3), inset 0 1px 0 rgba(255,255,255,0.15)' }}>Subscribe</button>
                 </form>
               )}
             </div>
@@ -1268,14 +1177,13 @@ export default function Events() {
       </section>
 
       {detailEvent && <EventDetailModal event={detailEvent} onClose={() => setDetailEvent(null)} />}
-
       <Footer />
     </div>
   );
 }
 
-/* ─── Hero Styles ──────────────────────────────────────────── */
-const heroStyles = {
+/* Style objects removed - all styling via Tailwind classes */
+const _styles_removed = {
   section: {
     position: 'relative',
     minHeight: '340px',

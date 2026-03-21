@@ -181,6 +181,7 @@ export default function AdminEvents() {
         {loading ? <p style={st.empty}>Loading...</p> : filtered.length === 0 ? (
           <p style={st.empty}>No events found</p>
         ) : (
+          <div className="admin-table-wrap">
           <table style={st.table}>
             <thead>
               <tr>
@@ -244,6 +245,7 @@ export default function AdminEvents() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

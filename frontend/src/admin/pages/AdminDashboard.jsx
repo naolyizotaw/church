@@ -233,7 +233,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div style={s.statsGrid}>
+      <div className="admin-stats-grid" style={s.statsGrid}>
         {statCards.map((card, i) => (
           <div key={i} style={s.statCard}>
             <div style={s.statTop}>
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts + Events Row */}
-      <div style={s.midRow}>
+      <div className="admin-mid-row" style={s.midRow}>
         {/* Donation Trends */}
         <div style={s.chartCard}>
           <div style={s.chartHeader}>
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Bottom Row: Sermons + Contact Messages */}
-      <div style={s.bottomRow}>
+      <div className="admin-bottom-row" style={s.bottomRow}>
         {/* Recent Sermon Uploads */}
         <div style={s.sermonsCard}>
           <div style={s.sermonsHeader}>

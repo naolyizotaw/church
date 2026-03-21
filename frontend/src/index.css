@@ -1,56 +1,41 @@
-*, *::before, *::after {
-  box-sizing: border-box;
+@import "tailwindcss";
+
+@layer base {
+  html {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f8f8f8;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  img, iframe {
+    max-width: 100%;
+    display: block;
+  }
+
+  button {
+    font-family: inherit;
+  }
 }
 
-html {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  width: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: #f8f8f8;
-  color: #0f172a;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-}
-
-a {
-  color: inherit;
-}
-
-img, iframe {
-  max-width: 100%;
-  display: block;
-}
-
-ul {
-  margin: 0;
-  padding: 0;
-}
-
-button {
-  font-family: inherit;
-}
+/* ═══ KEYFRAMES ═══ */
 
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -61,7 +46,18 @@ button {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 /* ═══ SHARED EVENT CARD ANIMATIONS ═══ */
+
 @keyframes eventsCardEntry {
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
@@ -255,6 +251,7 @@ button {
 }
 
 /* ═══ DIVINE LIGHT RAYS — Upcoming Events Background ═══ */
+
 @keyframes homeLightRotate {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
@@ -371,6 +368,7 @@ button {
 .home-sparkles span:nth-child(15) { left: 8%;  bottom: 22%; animation-delay: 2.8s; animation-duration: 5.2s, 2.9s; }
 
 /* ═══ SCRIPTURE OF THE DAY — Heavenly Glow ═══ */
+
 @keyframes scriptureGlowPulse {
   0%, 100% {
     background: radial-gradient(ellipse at center, rgba(14,165,233,0.08) 0%, rgba(14,165,233,0.03) 35%, transparent 65%);
@@ -432,6 +430,7 @@ button {
 .scripture-sparkles span:nth-child(8) { left: 72%; bottom: 4%;  animation-delay: 0.4s; animation-duration: 4.7s, 3.3s; }
 
 /* ═══ SCRIPTURE CARD — Glass Morphism + Living Gradient ═══ */
+
 @keyframes scriptureLivingGradient {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
@@ -468,7 +467,6 @@ button {
 
 /* ═══ PAGE ENTRANCE ANIMATIONS ═══ */
 
-/* Base hidden state -- applied before reveal */
 .reveal {
   opacity: 0;
   transform: translateY(40px);
@@ -479,7 +477,6 @@ button {
   transform: translateY(0);
 }
 
-/* Hero -- dramatic fade-in + scale */
 .reveal-hero {
   opacity: 0;
   transform: scale(0.96);
@@ -490,7 +487,6 @@ button {
   transform: scale(1);
 }
 
-/* Hero children -- each from a different direction */
 .reveal-hero .hero-title,
 .reveal-hero .hero-amharic,
 .reveal-hero .hero-sub,
@@ -526,7 +522,6 @@ button {
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* Decorative glow sweep across the hero */
 .hero-glow-sweep {
   position: absolute;
   top: 0; left: -100%; bottom: 0;
@@ -546,6 +541,7 @@ button {
 }
 
 /* ── Hero Buttons — Glow & Effects ── */
+
 .hero-btn-primary {
   position: relative;
   overflow: hidden;
@@ -560,7 +556,6 @@ button {
   transform: translateY(0) scale(0.98);
 }
 
-/* Shimmer sweep on primary button */
 .hero-btn-primary::after {
   content: '';
   position: absolute;
@@ -576,7 +571,6 @@ button {
   100% { left: 120%; }
 }
 
-/* Pulsing glow ring behind primary button */
 .hero-btn-primary::before {
   content: '';
   position: absolute;
@@ -594,7 +588,6 @@ button {
   50%      { background-position: 100% 50%; }
 }
 
-/* Secondary button glow */
 .hero-btn-secondary {
   position: relative;
   overflow: hidden;
@@ -611,7 +604,6 @@ button {
   transform: translateY(0) scale(0.98);
 }
 
-/* Subtle shimmer on secondary button */
 .hero-btn-secondary::after {
   content: '';
   position: absolute;
@@ -622,7 +614,6 @@ button {
   animation: heroBtnShimmer 4s ease-in-out 2.5s infinite;
 }
 
-/* Play icon pulse on secondary button */
 @keyframes heroPlayPulse {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50%      { transform: scale(1.15); opacity: 1; }
@@ -631,7 +622,6 @@ button {
   animation: heroPlayPulse 2s ease-in-out infinite;
 }
 
-/* Scripture card -- float up with slight rotation */
 .reveal-scripture {
   opacity: 0;
   transform: translateY(50px) rotate(-1deg);
@@ -642,7 +632,6 @@ button {
   transform: translateY(0) rotate(0deg);
 }
 
-/* Event cards -- stagger from bottom */
 .reveal-events .events-card-anim {
   opacity: 0;
   transform: translateY(60px) scale(0.95);
@@ -652,7 +641,6 @@ button {
 .reveal-events.visible .events-card-anim:nth-child(2) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.25s; }
 .reveal-events.visible .events-card-anim:nth-child(3) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.4s; }
 
-/* Events header fade-in */
 .reveal-events .events-header-anim {
   opacity: 0;
   transform: translateX(-30px);
@@ -663,7 +651,6 @@ button {
   transform: translateX(0);
 }
 
-/* Newsletter -- slide up */
 .reveal-newsletter {
   opacity: 0;
   transform: translateY(35px);
@@ -672,17 +659,4 @@ button {
 .reveal-newsletter.visible {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* Admin Pages dashboard animations */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(24px); }
-  to { opacity: 1; transform: translateX(0); }
 }

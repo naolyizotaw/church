@@ -197,9 +197,24 @@ export default function AdminLayout() {
     ? (searchResults.sermons?.length || 0) + (searchResults.events?.length || 0) + (searchResults.contacts?.length || 0)
     : 0;
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div style={styles.wrapper}>
-      <aside style={styles.sidebar}>
+      {/* Mobile hamburger button */}
+      <button
+        className="fixed top-4 left-4 z-[201] lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-white shadow-md text-gray-600 hover:bg-gray-50 transition-colors"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle sidebar"
+      >
+        {sidebarOpen ? (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        )}
+      </button>
+      {sidebarOpen && <div className="admin-sidebar-overlay lg:hidden" onClick={() => setSidebarOpen(false)} style={{ display: 'block', position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 199 }} />}
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`} style={styles.sidebar}>
         <div style={styles.logoArea}>
           <img src="/logo.png" alt="Kerabu FGBC" style={styles.logoImg} />
           <div>
@@ -247,8 +262,8 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main style={styles.main}>
-        <header style={styles.topbar}>
+      <main className="admin-main-content" style={styles.main}>
+        <header className="admin-topbar" style={styles.topbar}>
           <div style={styles.searchBox} ref={searchRef}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }}>
               <circle cx="8" cy="8" r="5.5" stroke="#94a3b8" strokeWidth="1.5"/>
