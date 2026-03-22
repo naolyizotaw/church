@@ -34,8 +34,9 @@ img, video, iframe {
 }
 
 /* ── Give Page ── */
+
+/* -- Tablet (≤ 900px) -- */
 @media (max-width: 900px) {
-  /* Stack the two-column give layout */
   .give-page-grid {
     grid-template-columns: 1fr !important;
     padding: 1.5rem 1rem !important;
@@ -43,17 +44,105 @@ img, video, iframe {
   .give-page-grid > div {
     max-width: 100% !important;
   }
+  .give-quote-card {
+    padding: 2rem 2rem 1.75rem !important;
+  }
+  .give-quote-section {
+    padding: 0 1.25rem !important;
+  }
+  .give-main-section {
+    padding: 1.5rem 1.25rem 3rem !important;
+  }
 }
 
+/* -- Regular phones (≤ 640px) -- */
 @media (max-width: 640px) {
   .give-page-grid {
     gap: 1.5rem !important;
     padding: 1rem !important;
   }
-  /* Amount buttons grid */
   .give-amounts-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.5rem !important;
+  }
+  .give-name-row {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+  .give-quote-card {
+    padding: 1.5rem 1.25rem 1.25rem !important;
+  }
+  .give-quote-section {
+    padding: 0 0.75rem !important;
+  }
+  .give-hero-content {
+    padding: 2rem 1rem !important;
+  }
+  .give-left-card {
+    padding: 1.25rem 1.25rem 1.75rem !important;
+  }
+  .give-main-section {
+    padding: 1.25rem 0.75rem 2.5rem !important;
+  }
+  .give-toggle-btn {
+    font-size: 0.8rem !important;
+    padding: 0.55rem 0.5rem !important;
+  }
+  .give-submit-btn {
+    font-size: 0.85rem !important;
+    padding: 0.85rem 1rem !important;
+  }
+  .give-info-card {
+    padding: 1.25rem !important;
+  }
+  .give-secure-card {
+    padding: 0.85rem 1rem !important;
+  }
+}
+
+/* -- Small phones (≤ 375px) -- */
+@media (max-width: 375px) {
+  .give-quote-card {
+    padding: 1.25rem 1rem !important;
+  }
+  .give-hero-title {
+    font-size: 1.4rem !important;
+  }
+  .give-hero-content {
+    padding: 1.75rem 0.75rem !important;
+  }
+  .give-amounts-grid {
+    gap: 0.4rem !important;
+  }
+  .give-amount-btn {
+    font-size: 0.82rem !important;
+    padding: 0.6rem 0.25rem !important;
+  }
+  .give-info-card {
+    padding: 1rem !important;
+  }
+  .give-left-card {
+    padding: 1rem 1rem 1.5rem !important;
+  }
+  .give-main-section {
+    padding: 1rem 0.5rem 2rem !important;
+  }
+  .give-page-grid {
+    gap: 1.25rem !important;
+    padding: 0.75rem 0 !important;
+  }
+  .give-submit-btn {
+    font-size: 0.8rem !important;
+    padding: 0.8rem 0.75rem !important;
+  }
+  .give-pay-card {
+    padding: 1rem 0.75rem 0.85rem !important;
+  }
+  .give-secure-card {
+    flex-direction: column !important;
+    text-align: center;
+    gap: 0.5rem !important;
+    padding: 0.85rem !important;
   }
 }
 
