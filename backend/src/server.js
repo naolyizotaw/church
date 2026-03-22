@@ -36,8 +36,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -67,7 +65,7 @@ if (process.env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
     app.get("*", (req, res) => {
-        if (!req.path.startsWith("/api") && !req.path.startsWith("/uploads")) {
+        if (!req.path.startsWith("/api")) {
             res.sendFile(path.resolve(__dirname, "../../frontend/dist", "index.html"));
         }
     });
