@@ -425,6 +425,26 @@ const journeyAnimCSS = `
   animation: mvIconFloat 3s ease-in-out 1.5s infinite;
 }
 
+/* ── Mobile: disable heavy glows to prevent overflow & save battery ── */
+@media (max-width: 639px) {
+  .mv-section.visible .mv-card,
+  .mv-section.visible .mv-card-left,
+  .mv-section.visible .mv-card-right {
+    animation: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+  }
+  .mv-section.visible .mv-card-left {
+    animation: mvCardLeft 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.25s forwards !important;
+  }
+  .mv-section.visible .mv-card-right {
+    animation: mvCardRight 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.4s forwards !important;
+  }
+  .journey-item.visible .journey-card {
+    animation: journeyCardSlideUp 0.5s ease 0.15s forwards !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+  }
+}
+
 /* ════════════════════════════════════════════════════════════
    CTA SECTION ANIMATIONS
    ════════════════════════════════════════════════════════════ */
@@ -773,22 +793,20 @@ function LeadersSection() {
   }, []);
 
   return (
-    <section className="w-full bg-slate-50 px-4 py-16 sm:px-6 sm:py-20 lg:px-16">
+    <section className="w-full bg-slate-50 px-4 py-12 sm:px-6 sm:py-16 lg:px-16 lg:py-20">
       <div className="w-full text-center">
         <h2 className="mb-2 text-2xl font-bold text-slate-900 md:text-3xl lg:text-[2rem]">
           Meet Our Leaders / መሪዎቻችንን ይወቁ
         </h2>
-        <p className="mx-auto mb-10 max-w-[600px] text-sm leading-relaxed text-slate-500 sm:text-base md:mb-12">
+        <p className="mx-auto mb-8 max-w-[600px] text-sm leading-relaxed text-slate-500 sm:text-base md:mb-12">
           Dedicated servants committed to spreading the truth, love, and wisdom.
         </p>
         <div
-          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8"
-          style={{
-            gridTemplateColumns:
-              leaders.length <= 3
-                ? `repeat(${leaders.length}, 1fr)`
-                : undefined,
-          }}
+          className={`grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:gap-8${
+            leaders.length === 1 ? ' lg:grid-cols-1' :
+            leaders.length === 2 ? ' lg:grid-cols-2' :
+            leaders.length === 3 ? ' lg:grid-cols-3' : ''
+          }`}
           ref={gridRef}
         >
           {leaders.map((leader, i) => {
@@ -805,12 +823,12 @@ function LeadersSection() {
                     className="leader-accent-line mb-5 h-[3px] rounded-sm opacity-0"
                     style={{ background: 'linear-gradient(90deg, transparent, #0ea5e9, #38bdf8, transparent)' }}
                   />
-                  <div className="leader-photo-ring mx-auto mb-4 block h-[130px] w-[130px] rounded-full">
+                  <div className="leader-photo-ring mx-auto mb-4 block h-[100px] w-[100px] rounded-full sm:h-[130px] sm:w-[130px]">
                     <LeaderPhoto
                       src={leader.photoUrl || ''}
                       fallbackSrc={PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]}
                       alt={leader.name}
-                      className="leader-photo block h-[130px] w-[130px] rounded-full object-cover"
+                      className="leader-photo block h-[100px] w-[100px] rounded-full object-cover sm:h-[130px] sm:w-[130px]"
                     />
                   </div>
                   <h4 className="leader-name mb-1 text-base font-bold text-slate-900">{leader.name}</h4>
@@ -880,15 +898,15 @@ function MissionVisionSection() {
   }, []);
 
   return (
-    <section ref={ref} className="mv-section w-full bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-16">
+    <section ref={ref} className="mv-section w-full overflow-hidden bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-16 lg:py-20">
       <div className="w-full text-center">
         <h2 className="mv-heading mb-1 text-2xl font-bold text-slate-900 md:text-3xl lg:text-[2rem]">
           Our Mission &amp; Vision
         </h2>
-        <p className="mv-subheading mb-8 text-sm font-medium text-sky-500 sm:text-base md:mb-10">
+        <p className="mv-subheading mb-6 text-sm font-medium text-sky-500 sm:mb-8 sm:text-base md:mb-10">
           ዓላማ እና ራእይ
         </p>
-        <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-2 md:gap-10">
+        <div className="grid grid-cols-1 gap-4 text-left sm:gap-6 md:grid-cols-2 md:gap-10">
           <div className="mv-card mv-card-left rounded-lg border-l-4 border-sky-500 bg-slate-50 p-5 sm:p-8">
             <div className="mv-icon mb-3 flex items-center">
               <HandsHeartIcon />
@@ -997,21 +1015,21 @@ export default function About() {
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section
-        className="relative flex min-h-[320px] items-center bg-cover bg-top text-white sm:min-h-[380px] md:min-h-[440px]"
+        className="relative flex min-h-[260px] items-center bg-cover bg-top text-white sm:min-h-[380px] md:min-h-[440px]"
         style={{ backgroundImage: "url('/hero.jpg')" }}
       >
         <div
           className="absolute inset-0"
           style={{ background: 'linear-gradient(to bottom, rgba(10,20,50,0.72) 0%, rgba(10,20,50,0.65) 100%)' }}
         />
-        <div className="relative z-10 mx-auto max-w-[800px] px-4 py-16 text-center sm:px-8 sm:py-20 md:px-16">
+        <div className="relative z-10 mx-auto max-w-[800px] px-4 py-10 text-center sm:px-8 sm:py-20 md:px-16">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/60 sm:text-sm">
             WELCOME HOME
           </p>
-          <h1 className="mb-1 text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl">
+          <h1 className="mb-1 text-2xl font-extrabold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
             Who We Are
           </h1>
-          <p className="mb-6 text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+          <p className="mb-4 text-xl font-bold text-white sm:mb-6 sm:text-2xl md:text-3xl lg:text-4xl">
             ስለእኛ
           </p>
           <p className="mb-1 text-sm leading-relaxed text-slate-300 sm:text-base md:text-lg">
@@ -1027,7 +1045,7 @@ export default function About() {
       <MissionVisionSection />
 
       {/* ── Scripture Quote ──────────────────────────────── */}
-      <section className="w-full bg-sky-100 px-4 py-14 sm:px-6 sm:py-18 lg:px-16">
+      <section className="w-full bg-sky-100 px-4 py-10 sm:px-6 sm:py-14 lg:px-16 lg:py-18">
         <div className="mx-auto max-w-[750px] text-center">
           <div className="mb-4">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="#0ea5e9">
