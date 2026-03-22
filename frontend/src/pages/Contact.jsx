@@ -404,6 +404,23 @@ const contactCSS = `
   animation: quoteRefIn 0.7s ease 0.5s both;
 }
 
+/* ── Scroll Reveal Directions ── */
+.reveal-base {
+  opacity: 0;
+  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-base.revealed {
+  opacity: 1 !important;
+  transform: translate(0, 0) scale(1) !important;
+}
+.reveal-down  { transform: translateY(-36px); }
+.reveal-up    { transform: translateY(36px); }
+.reveal-left  { transform: translateX(-50px); }
+.reveal-right { transform: translateX(50px); }
+.reveal-zoom  { transform: scale(0.88); }
+
 @media (max-width: 900px) {
   .contact-main-grid {
     grid-template-columns: 1fr !important;
@@ -412,6 +429,75 @@ const contactCSS = `
 @media (max-width: 600px) {
   .contact-form-row {
     grid-template-columns: 1fr !important;
+  }
+  .contact-header-section {
+    padding: 2rem 1rem 1.25rem !important;
+  }
+  .contact-main-section {
+    padding: 1.25rem 0.75rem 2rem !important;
+  }
+  .contact-form-card {
+    padding: 1.5rem 1rem 1.75rem !important;
+    border-radius: 12px !important;
+  }
+  .contact-form-title {
+    font-size: 1.1rem !important;
+  }
+  .contact-btn {
+    width: 100% !important;
+    align-self: stretch !important;
+    padding: 0.95rem 1.5rem !important;
+    font-size: 0.93rem !important;
+  }
+  .contact-info-card {
+    padding: 1.5rem 1.15rem !important;
+    border-radius: 12px !important;
+  }
+  .contact-times-card {
+    padding: 1.25rem 1.15rem 1rem !important;
+    border-radius: 12px !important;
+  }
+  .service-time-row {
+    margin: 0 !important;
+    padding: 0.6rem 0.5rem !important;
+  }
+  .contact-map-card {
+    display: none !important;
+  }
+  .contact-quote-card {
+    padding: 1.5rem 1.15rem !important;
+    border-radius: 12px !important;
+  }
+  .contact-quote-card .quote-text {
+    font-size: 0.95rem !important;
+  }
+  .contact-subtitle {
+    font-size: 0.92rem !important;
+  }
+  .contact-success-msg,
+  .contact-error-msg {
+    font-size: 0.85rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+}
+@media (max-width: 400px) {
+  .contact-header-section {
+    padding: 1.5rem 0.75rem 1rem !important;
+  }
+  .contact-main-section {
+    padding: 1rem 0.5rem 1.5rem !important;
+  }
+  .contact-form-card {
+    padding: 1.25rem 0.85rem 1.5rem !important;
+  }
+  .contact-info-card,
+  .contact-times-card,
+  .contact-quote-card {
+    padding: 1.15rem 0.85rem !important;
+  }
+  .contact-input {
+    padding: 0.65rem 0.75rem !important;
+    font-size: 0.9rem !important;
   }
 }
 `;
@@ -446,6 +532,24 @@ export default function Contact() {
     return () => style.remove();
   }, []);
 
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal-base');
+    if (!els.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -30px 0px' }
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
@@ -467,12 +571,12 @@ export default function Contact() {
     <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* Header */}
-      <section style={s.headerSection}>
+      <section className="contact-header-section reveal-base reveal-down" style={s.headerSection}>
         <div style={s.headerInner}>
           <h1 style={s.title}>
             Get in Touch / <span style={s.titleAmharic}>አግኙን</span>
           </h1>
-          <p style={s.subtitle}>
+          <p className="contact-subtitle" style={s.subtitle}>
             We would love to hear from you. Reach out with prayer requests, questions, or
             just to say hello. We are here to serve you.
           </p>
@@ -480,28 +584,28 @@ export default function Contact() {
       </section>
 
       {/* Main Content */}
-      <section style={s.mainSection}>
+      <section className="contact-main-section" style={s.mainSection}>
         <div className="contact-main-grid" style={s.mainGrid}>
 
           {/* Left: Contact Form */}
-          <div className="contact-form-card" style={s.formCard}>
+          <div className="contact-form-card reveal-base reveal-left" style={{...s.formCard, transitionDelay: '0.1s'}}>
             <div style={s.formHeader}>
               <div className="contact-form-icon-wrap">
                 <span className="contact-form-icon">
                   <EmailIcon size={20} color="#0ea5e9" />
                 </span>
               </div>
-              <h2 style={s.formTitle}>Send us a Message</h2>
+              <h2 className="contact-form-title" style={s.formTitle}>Send us a Message</h2>
             </div>
 
             {status === 'success' && (
-              <div className="contact-success" style={s.successMsg}>
+              <div className="contact-success contact-success-msg" style={s.successMsg}>
                 <span className="contact-success-check">&#10003;</span>
                 Message sent! We will get back to you soon.
               </div>
             )}
             {status === 'error' && (
-              <div className="contact-error" style={s.errorMsg}>
+              <div className="contact-error contact-error-msg" style={s.errorMsg}>
                 Something went wrong. Please try again.
               </div>
             )}
@@ -582,7 +686,7 @@ export default function Contact() {
           <div style={s.sidebar}>
 
             {/* Contact Info Card */}
-            <div className="info-card" style={s.infoCard}>
+            <div className="info-card contact-info-card reveal-base reveal-right" style={{...s.infoCard, transitionDelay: '0.2s'}}>
               <div className="info-card-shimmer" />
               <h3 className="info-title" style={s.infoTitle}>Contact Info</h3>
 
@@ -619,7 +723,7 @@ export default function Contact() {
             </div>
 
             {/* Service Times Card */}
-            <div className="service-times-card" style={s.timesCard}>
+            <div className="service-times-card contact-times-card reveal-base reveal-right" style={{...s.timesCard, transitionDelay: '0.3s'}}>
               <div className="service-times-accent" />
               <div style={s.timesHeader}>
                 <span className="service-clock-icon">
@@ -637,7 +741,7 @@ export default function Contact() {
             </div>
 
             {/* Map Card */}
-            <div style={s.mapCard}>
+            <div className="contact-map-card reveal-base reveal-up" style={{...s.mapCard, transitionDelay: '0.35s'}}>
               <div style={s.mapContainer}>
                 <iframe
                   title="Church Location"
@@ -662,7 +766,7 @@ export default function Contact() {
             </div>
 
             {/* Scripture Quote Card */}
-            <div className="quote-card" style={s.quoteCard}>
+            <div className="quote-card contact-quote-card reveal-base reveal-zoom" style={{...s.quoteCard, transitionDelay: '0.4s'}}>
               <div className="quote-shimmer" />
               <div className="quote-icon-wrap" style={s.quoteIconWrap}>
                 <QuoteIcon />
