@@ -454,20 +454,20 @@ export default function Give() {
     }
   };
 
-  const amounts = [250, 500, 1000];
+  const amounts = [100, 250, 500, 1000];
 
   return (
     <div>
       {/* Hero Banner */}
       <section className="give-hero-section" style={heroStyles.section}>
         <div style={heroStyles.overlay} />
-        <div style={heroStyles.content}>
+        <div className="give-hero-content" style={heroStyles.content}>
           <h1 className="give-hero-title" style={heroStyles.title}>GIVING | መስጠት</h1>
         </div>
       </section>
 
       {/* Scripture Quote */}
-      <section style={quoteStyles.section}>
+      <section className="give-quote-section" style={quoteStyles.section}>
         <div className="give-quote-entrance">
           <div className="give-quote-card" style={quoteStyles.card}>
             <div className="give-quote-icon" style={quoteStyles.iconWrap}>
@@ -484,7 +484,7 @@ export default function Give() {
       </section>
 
       {/* Main Content - Two Column */}
-      <section style={mainStyles.section}>
+      <section className="give-main-section" style={mainStyles.section}>
         <div className="give-page-grid" style={mainStyles.grid}>
 
           {/* Left Column - Donation Form */}
@@ -522,7 +522,7 @@ export default function Give() {
               </button>
             </div>
 
-            <div style={formStyles.nameRow}>
+            <div className="give-name-row" style={formStyles.nameRow}>
               <div style={formStyles.inputWrap}>
                 <input
                   type="text"
@@ -542,7 +542,7 @@ export default function Give() {
                 />
               </div>
             </div>
-            <div style={formStyles.nameRow}>
+            <div className="give-name-row" style={formStyles.nameRow}>
               <div style={formStyles.inputWrap}>
                 <input
                   type="email"
