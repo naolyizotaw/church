@@ -805,7 +805,8 @@ function LeadersSection() {
           className={`grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:gap-8${
             leaders.length === 1 ? ' lg:grid-cols-1' :
             leaders.length === 2 ? ' lg:grid-cols-2' :
-            leaders.length === 3 ? ' lg:grid-cols-3' : ''
+            leaders.length === 3 ? ' lg:grid-cols-3' :
+            leaders.length === 4 ? ' lg:grid-cols-4' : ' lg:grid-cols-4'
           }`}
           ref={gridRef}
         >
